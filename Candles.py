@@ -8,7 +8,7 @@ class Candles:
         self.client = client
         self.klines_ready = False
 
-    def getCancdle(self, currency_pair, time_frame, start_date, end_date):
+    def getCandle(self, currency_pair, time_frame, start_date, end_date):
         """
         :type currency_pair: string
         :param end_date: string
@@ -49,21 +49,21 @@ class Candles:
             return self.timeUTC
 
     def getClose(self):
-        if self.close:
+        if self.close.any():
             return self.close
 
     def getOpen(self):
-        if self.open:
+        if self.open.any():
             return self.open
 
     def getHigh(self):
-        if self.high:
+        if self.high.any():
             return self.high
 
     def getLow(self):
-        if self.low:
+        if self.low.any():
             return self.low
 
     def getVolume(self):
-        if self.volume:
+        if self.volume.any():
             return self.volume
