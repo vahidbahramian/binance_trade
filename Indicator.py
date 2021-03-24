@@ -1,5 +1,5 @@
 import talib
-
+from ta import trend
 
 class Indicator:
 
@@ -27,3 +27,19 @@ class Indicator:
     def STOCASTIC(high_data, low_data, close_data, fastk, fastd):
         return talib.STOCHF(high_data, low_data, close_data, fastk_period=fastk, fastd_period=fastd,
                                     fastd_matype=0)
+
+    @staticmethod
+    def ICHIMOKU_A(high_data, low_data, win1, win2):
+        return trend.ichimoku_a(high_data, low_data, win1, win2, False, True)
+
+    @staticmethod
+    def ICHIMOKU_B(high_data, low_data, win2, win3):
+        return trend.ichimoku_b(high_data, low_data, win2, win3, False, True)
+
+    @staticmethod
+    def ICHIMOKU_Base_Line(high_data, low_data, win1, win2):
+        return trend.ichimoku_base_line(high_data, low_data, win1, win2)
+
+    @staticmethod
+    def ICHIMOKU_Conversion_Line(high_data, low_data, win1, win2):
+        return trend.ichimoku_conversion_line(high_data, low_data, win1, win2)
