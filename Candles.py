@@ -8,7 +8,7 @@ class Candles:
         self.client = client
         self.klines_ready = False
 
-    def getCandle(self, currency_pair, time_frame, start_date, end_date):
+    def getKlines(self, currency_pair, time_frame, start_date, end_date):
         """
         :type currency_pair: string
         :param end_date: string
@@ -17,6 +17,9 @@ class Candles:
         """
         self.klines_ready = True
         return self.client.get_historical_klines(currency_pair, time_frame, start_date, end_date)
+
+    def getCandle(self, currency_pair, time_frame):
+        return self.client.get_klines(symbol=currency_pair, interval=time_frame)
 
     def unpackCandle(self, klines):
         """

@@ -23,7 +23,8 @@ def main(client):
     :type client: type of binance client
     """
     # candle = Candles(client)
-    # klines = candle.getCandle("BTCUSDT", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2020", "1 Jan, 2021")
+    # klines = candle.getKlines("BTCUSDT", Client.KLINE_INTERVAL_1HOUR, "1 hour ago UTC", "")
+    # # c = candle.getCandle('BTCUSDT', Client.KLINE_INTERVAL_1HOUR)
     # candle.unpackCandle(klines)
     # high_series = pd.Series(candle.high)
     # low_series = pd.Series(candle.low)
