@@ -31,7 +31,7 @@ def main(client):
     # alg = Algorithm_1(klines, high_series, low_series, candle.close)
     # alg.RunAlgorithm()
 
-    trade = Trade(client)
+    trade = Trade(client, "BTC", "USDT")
     trade.RunTradeThread()
 
 if __name__ == "__main__":
