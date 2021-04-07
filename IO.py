@@ -47,3 +47,10 @@ class CSVFiles:
             print("CSV File not open!")
         except ValueError as e:
             print(e)
+
+class WritePrintToFile():
+    @staticmethod
+    def Write(obj):
+        sourceFile = open('info.txt', 'a')
+        print(obj, file=sourceFile)
+        sourceFile.close()

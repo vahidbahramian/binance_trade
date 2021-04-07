@@ -1,3 +1,5 @@
+import sys
+import traceback
 from datetime import datetime
 import threading
 from binance.client import Client
@@ -9,6 +11,9 @@ from Candles import Candles
 import pandas as pd
 import numpy
 import logging
+import time
+import datetime
+from IO import WritePrintToFile
 
 class Trade:
     def __init__(self, client, firstCurrency, secondCurrency):
@@ -42,11 +47,11 @@ class Trade:
     def InitLogger(self):
         # Create a logging instance
         self.logger = logging.getLogger('my_application')
-        self.logger.setLevel(logging.INFO)  # you can set this to be DEBUG, INFO, ERROR
+        self.logger.setLevel(logging.ERROR)  # you can set this to be DEBUG, INFO, ERROR
 
         # Assign a file-handler to that instance
-        fh = logging.FileHandler("log.txt")
-        fh.setLevel(logging.INFO)  # again, you can set this differently
+        fh = logging.FileHandler("log.log")
+        fh.setLevel(logging.ERROR)  # again, you can set this differently
 
         # Format your logs (optional)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -100,6 +105,8 @@ class Trade:
         try:
             th = threading.Thread(target=self.RunTrade_1, args=())
             th.start()
+            # self.updateCandleTimer = threading.Timer(10, self.UpdateCandle, [self.currency_pair, "1 hour ago UTC"])
+            # self.updateCandleTimer.start()
         except:
             print("Error: unable to start thread")
 
@@ -110,6 +117,7 @@ class Trade:
         return self.ichi_2_strategy.SellStrategy(len(self.ichi_2_strategy.close_data) - 1, 18)
 
     def UpdateCandle(self, currency_pair, time):
+        WritePrintToFile.Write(datetime.datetime.now())
         c = self.candle.getKlines(currency_pair, Client.KLINE_INTERVAL_1HOUR, time, "")
         self.candle.unpackCandle(c)
         if len(self.candle.timeUTC) != 0:
@@ -135,58 +143,60 @@ class Trade:
                 self.LastTimeOfCandle = self.candle.timeUTC[0]
 
     def RunTrade_1(self):
-        try:
-            if round(float(self.GetBalance(self.first_currency)['free']),6)-0.000001 > 0:
-                isPosition = True
-            else:
-                isPosition = False
-            while True:
-                self.UpdateCandle(self.currency_pair, "1 hour ago UTC")
-                try:
-                    open_order = self.client.get_open_orders(symbol=self.currency_pair)
-                    if len(open_order) == 0:
-                        if not isPosition and self.BuyOrderCondition():
-                            self.usdt_balance = self.GetBalance(self.second_currency)
-                            self.buy_price = self.GetPrice(self.currency_pair)
-                            order = self.SetMarketBuyOrder(self.currency_pair, round(float(self.usdt_balance['free']) / float(self.buy_price), 6)-0.000001)
+        # try:
+        if round(float(self.GetBalance(self.first_currency)['free']), 6)-0.000001 > 0:
+            isPosition = True
+        else:
+            isPosition = False
+        while True:
+            self.UpdateCandle(self.currency_pair, "1 hour ago UTC")
+            time.sleep(1)
+            try:
+                open_order = self.client.get_open_orders(symbol=self.currency_pair)
+                if len(open_order) == 0:
+                    if not isPosition and self.BuyOrderCondition():
+                        self.usdt_balance = self.GetBalance(self.second_currency)
+                        self.buy_price = self.GetPrice(self.currency_pair)
+                        order = self.SetMarketBuyOrder(self.currency_pair, round(float(self.usdt_balance['free']) / float(self.buy_price), 6)-0.000001)
+                        print(order)
+                        isPosition = True
+                    if isPosition:
+                        if self.SellOrderCondition():
+                            self.btc_balance = self.GetBalance(self.first_currency)
+                            self.sell_price = self.GetPrice(self.currency_pair)
+                            order = self.SetMarketSellOrder(self.currency_pair, round(float(self.btc_balance['free']),6)-0.000001)
                             print(order)
-                            isPosition = True
-                        if isPosition:
-                            if self.SellOrderCondition():
-                                self.btc_balance = self.GetBalance(self.first_currency)
-                                self.sell_price = self.GetPrice(self.currency_pair)
-                                order = self.SetMarketSellOrder(self.currency_pair, round(float(self.btc_balance['free']),6)-0.000001)
-                                print(order)
-                                isPosition = False
-                    else:
-                        if open_order[0]['side'] == "SELL":
-                            self.sell_price = open_order[0]['price']
                             isPosition = False
-                        if open_order[0]['side'] == "BUY":
-                            self.buy_price = open_order[0]['price']
-                            isPosition = True
-                except ConnectionAbortedError as e:
-                    print(e)
-                except ConnectionError as e:
-                    print(e)
-                except ConnectionResetError as e:
-                    print(e)
-                except BinanceAPIException as e:
-                    print(e)
-                except BinanceWithdrawException as e:
-                    print(e)
-                except BinanceRequestException as e:
-                    print(e)
-                except BinanceOrderException as e:
-                    print(e)
-                except Timeout as e:
-                    print(e)
-                except TooManyRedirects as e:
-                    print(e)
-                except RequestException as e:
-                    print(e)
-        except Exception as e:
-            self.logger.exception(e)
+                else:
+                    if open_order[0]['side'] == "SELL":
+                        self.sell_price = open_order[0]['price']
+                        isPosition = False
+                    if open_order[0]['side'] == "BUY":
+                        self.buy_price = open_order[0]['price']
+                        isPosition = True
+            except ConnectionAbortedError as e:
+                WritePrintToFile.Write(e)
+            except ConnectionError as e:
+                WritePrintToFile.Write(e)
+            except ConnectionResetError as e:
+                WritePrintToFile.Write(e)
+            except BinanceAPIException as e:
+                WritePrintToFile.Write(e)
+            except BinanceWithdrawException as e:
+                WritePrintToFile.Write(e)
+            except BinanceRequestException as e:
+                WritePrintToFile.Write(e)
+            except BinanceOrderException as e:
+                WritePrintToFile.Write(e)
+            except Timeout as e:
+                WritePrintToFile.Write(e)
+            except TooManyRedirects as e:
+                WritePrintToFile.Write(e)
+            except RequestException as e:
+                WritePrintToFile.Write(e)
+        # except Exception as e:
+        #     traceback.print_exc(file=sys.stdout)
+        #     # self.logger.exception(e)
 
 
     def RunTrade(self):

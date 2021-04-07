@@ -88,7 +88,7 @@ class ICHIMOKU_2_Strategy(IStrategy):
 
     def SellStrategy(self, i, t):
         if i - t > 0:
-            if (self.close_data[i] < self.ich_base_line[i - t - 1] and
+            if (self.close_data[i] < self.ich_b[i - t - 1] and
                     self.close_data[i] < self.ich_a[i - t - 1]):
                 return True
         return False
