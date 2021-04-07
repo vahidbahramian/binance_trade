@@ -117,7 +117,7 @@ class Trade:
         return self.ichi_2_strategy.SellStrategy(len(self.ichi_2_strategy.close_data) - 1, 18)
 
     def UpdateCandle(self, currency_pair, time):
-        WritePrintToFile.Write(datetime.datetime.now())
+        print(datetime.datetime.now())
         c = self.candle.getKlines(currency_pair, Client.KLINE_INTERVAL_1HOUR, time, "")
         self.candle.unpackCandle(c)
         if len(self.candle.timeUTC) != 0:
