@@ -18,7 +18,7 @@ from IO import WritePrintToFile
 class Trade:
     def __init__(self, client, firstCurrency, secondCurrency):
         self.client = client
-        # self.SetLastSellBuyPrice('BTCUSDT')
+        self.SetLastSellBuyPrice('XRPBNB')
         self.first_currency = firstCurrency
         self.second_currency = secondCurrency
         self.currency_pair = firstCurrency + secondCurrency
@@ -47,11 +47,11 @@ class Trade:
     def InitLogger(self):
         # Create a logging instance
         self.logger = logging.getLogger('my_application')
-        self.logger.setLevel(logging.ERROR)  # you can set this to be DEBUG, INFO, ERROR
+        self.logger.setLevel(logging.INFO)  # you can set this to be DEBUG, INFO, ERROR
 
         # Assign a file-handler to that instance
         fh = logging.FileHandler("log.log")
-        fh.setLevel(logging.ERROR)  # again, you can set this differently
+        fh.setLevel(logging.INFO)  # again, you can set this differently
 
         # Format your logs (optional)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -66,17 +66,17 @@ class Trade:
         setBuy = False
         for i,item in enumerate(reversed(my_trade)):
             if item['isBuyer'] and not setBuy:
-                self.buy_price = item['price']
+                self.buy_price_xrp = item['price']
                 setBuy = True
             elif not item['isBuyer'] and not setSell:
-                self.sell_price = item['price']
+                self.sell_price_xrp = item['price']
                 setSell = True
             elif setBuy and setSell:
                 break
             elif i == len(my_trade) and not setSell:
-                self.sell_price = 0
+                self.sell_price_xrp = 0
             elif i == len(my_trade) and not setBuy:
-                self.buy_price = 0
+                self.buy_price_xrp = 0
 
     def GetPrice(self, currency_Pair):
         symbol_info = self.client.get_recent_trades(symbol=currency_Pair)
@@ -107,6 +107,8 @@ class Trade:
             th.start()
             # self.updateCandleTimer = threading.Timer(10, self.UpdateCandle, [self.currency_pair, "1 hour ago UTC"])
             # self.updateCandleTimer.start()
+            th1 = threading.Thread(target=self.RunTrade, args=())
+            th1.start()
         except:
             print("Error: unable to start thread")
 
@@ -117,7 +119,6 @@ class Trade:
         return self.ichi_2_strategy.SellStrategy(len(self.ichi_2_strategy.close_data) - 1, 18)
 
     def UpdateCandle(self, currency_pair, time):
-        print(datetime.datetime.now())
         c = self.candle.getKlines(currency_pair, Client.KLINE_INTERVAL_1HOUR, time, "")
         self.candle.unpackCandle(c)
         if len(self.candle.timeUTC) != 0:
@@ -142,6 +143,8 @@ class Trade:
 
                 self.LastTimeOfCandle = self.candle.timeUTC[0]
 
+                print(datetime.datetime.now())
+
     def RunTrade_1(self):
         # try:
         if round(float(self.GetBalance(self.first_currency)['free']), 6)-0.000001 > 0:
@@ -158,14 +161,14 @@ class Trade:
                         self.usdt_balance = self.GetBalance(self.second_currency)
                         self.buy_price = self.GetPrice(self.currency_pair)
                         order = self.SetMarketBuyOrder(self.currency_pair, round(float(self.usdt_balance['free']) / float(self.buy_price), 6)-0.000001)
-                        print(order)
+                        self.logger.info(order)
                         isPosition = True
                     if isPosition:
                         if self.SellOrderCondition():
                             self.btc_balance = self.GetBalance(self.first_currency)
                             self.sell_price = self.GetPrice(self.currency_pair)
                             order = self.SetMarketSellOrder(self.currency_pair, round(float(self.btc_balance['free']),6)-0.000001)
-                            print(order)
+                            self.logger.info(order)
                             isPosition = False
                 else:
                     if open_order[0]['side'] == "SELL":
@@ -200,45 +203,52 @@ class Trade:
 
 
     def RunTrade(self):
-        if int(float(self.GetBalance('DOGE')['free'])) == 0:
+        if int(float(self.GetBalance('XRP')['free'])) == 0:
             isPosition = False
         else:
             isPosition = True
         while True:
             try:
-                open_order = self.client.get_open_orders(symbol='DOGEBTC')
+                open_order = self.client.get_open_orders(symbol='XRPBNB')
                 if len(open_order) == 0:
-                    if not isPosition and (float(self.GetPrice("DOGEBTC")) <= float(self.sell_price) * 0.99 or
-                            float(self.GetPrice("DOGEBTC")) >= float(self.sell_price) * 1.03):
-                        self.btc_balance = self.GetBalance('BTC')
-                        self.buy_price = self.GetPrice("DOGEBTC")
-                        self.SetLimitBuyOrder("DOGEBTC", int(float(self.btc_balance['free'])/float(self.buy_price)), self.buy_price)
-                        isPosition = True
+                    if not isPosition and (float(self.GetPrice("XRPBNB")) <= float(self.sell_price_xrp) * 0.97 or
+                            float(self.GetPrice("XRPBNB")) >= float(self.sell_price) * 1.04):
+                        self.bnb_balance = self.GetBalance('BNB')
+                        self.buy_price_xrp = self.GetPrice("XRPBNB")
+                        order = self.SetMarketBuyOrder("XRPBNB", int(float(self.bnb_balance['free'])/float(self.buy_price_xrp)))
+                        self.logger.info(order)
                     if isPosition:
-                        if (float(self.GetPrice("DOGEBTC")) >= float(self.buy_price) * 1.01 or
-                                float(self.GetPrice("DOGEBTC")) <= float(self.buy_price) * 0.97):
-                            self.doge_balance = self.GetBalance('DOGE')
-                            self.sell_price = self.GetPrice("DOGEBTC")
-                            self.SetLimitSellOrder("DOGEBTC", int(float(self.doge_balance['free'])), self.sell_price)
+                        if (float(self.GetPrice("XRPBNB")) >= float(self.buy_price_xrp) * 1.03 or
+                                float(self.GetPrice("XRPBNB")) <= float(self.buy_price_xrp) * 0.96):
+                            self.xrp_balance = self.GetBalance('XRP')
+                            self.sell_price_xrp = self.GetPrice("XRPBNB")
+                            order = self.SetMarketSellOrder("XRPBNB", int(float(self.xrp_balance['free'])))
+                            self.logger.info(order)
                             isPosition = False
                 else:
                     if open_order[0]['side'] == "SELL":
-                        self.sell_price = open_order[0]['price']
+                        self.sell_price_xrp = open_order[0]['price']
                         isPosition = False
                     if open_order[0]['side'] == "BUY":
-                        self.buy_price = open_order[0]['price']
+                        self.buy_price_xrp = open_order[0]['price']
                         isPosition = True
+            except ConnectionAbortedError as e:
+                WritePrintToFile.Write(e)
+            except ConnectionError as e:
+                WritePrintToFile.Write(e)
+            except ConnectionResetError as e:
+                WritePrintToFile.Write(e)
             except BinanceAPIException as e:
-                print(e)
+                WritePrintToFile.Write(e)
             except BinanceWithdrawException as e:
-                print(e)
+                WritePrintToFile.Write(e)
             except BinanceRequestException as e:
-                print(e)
+                WritePrintToFile.Write(e)
             except BinanceOrderException as e:
-                print(e)
+                WritePrintToFile.Write(e)
             except Timeout as e:
-                print(e)
+                WritePrintToFile.Write(e)
             except TooManyRedirects as e:
-                print(e)
+                WritePrintToFile.Write(e)
             except RequestException as e:
-                print(e)
+                WritePrintToFile.Write(e)
