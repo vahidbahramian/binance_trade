@@ -64,6 +64,8 @@ class Trade:
         my_trade = self.client.get_my_trades(symbol=currency_pair)
         setSell = False
         setBuy = False
+        self.sell_price_xrp = 0
+        self.buy_price_xrp = 0
         for i,item in enumerate(reversed(my_trade)):
             if item['isBuyer'] and not setBuy:
                 self.buy_price_xrp = item['price']
@@ -73,11 +75,6 @@ class Trade:
                 setSell = True
             elif setBuy and setSell:
                 break
-            elif i == len(my_trade) and not setSell:
-                self.sell_price_xrp = 0
-            elif i == len(my_trade) and not setBuy:
-                self.buy_price_xrp = 0
-
     def GetPrice(self, currency_Pair):
         symbol_info = self.client.get_recent_trades(symbol=currency_Pair)
         return symbol_info[-1]['price']
@@ -212,7 +209,7 @@ class Trade:
                 open_order = self.client.get_open_orders(symbol='XRPBNB')
                 if len(open_order) == 0:
                     if not isPosition and (float(self.GetPrice("XRPBNB")) <= float(self.sell_price_xrp) * 0.97 or
-                            float(self.GetPrice("XRPBNB")) >= float(self.sell_price) * 1.04):
+                            float(self.GetPrice("XRPBNB")) >= float(self.sell_price_xrp) * 1.04):
                         self.bnb_balance = self.GetBalance('BNB')
                         self.buy_price_xrp = self.GetPrice("XRPBNB")
                         order = self.SetMarketBuyOrder("XRPBNB", int(float(self.bnb_balance['free'])/float(self.buy_price_xrp)))

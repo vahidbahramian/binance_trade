@@ -1,2 +1,6 @@
 
 *.csv
+info.txt
+log.log
+.idea/binance_trade.iml
+.idea/misc.xml

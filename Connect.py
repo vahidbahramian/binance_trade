@@ -12,7 +12,7 @@ class Connect:
     @property
     def ConnectTo(self):
         try:
-            client = Client(api_key, api_secret, {"timeout": 500})
+            client = Client(api_key, api_secret, {"timeout": 100})
         except BinanceAPIException as e:
             print(e)
         except BinanceWithdrawException as e:
