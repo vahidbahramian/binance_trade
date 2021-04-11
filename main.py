@@ -12,9 +12,11 @@ from ta import trend
 
 from Connect import Connect
 from Candles import Candles
-from OnlineTrade import Trade
+from OnlineTrade import Algo_1
 from BackTest import Algorithm_1
 import Strategy
+
+from threading import Lock
 
 
 def main(client):
@@ -30,9 +32,15 @@ def main(client):
     # low_series = pd.Series(candle.low)
     # alg = Algorithm_1(klines, high_series, low_series, candle.close)
     # alg.RunAlgorithm()
+    mutex = Lock()
+    candle = Candles(client, mutex)
+    btc_trade = Algo_1(client, candle, "BTC", "USDT", ignoreLastTrade=True)
+    btc_trade.SetAlgorithmParam(36, 48, 144, 18, 0, 0.04)
+    btc_trade.RunTradeThread()
 
-    trade = Trade(client, "BTC", "USDT")
-    trade.RunTradeThread()
+    eth_trade = Algo_1(client, candle, "ETH", "USDT", ignoreLastTrade=True)
+    eth_trade.SetAlgorithmParam(9, 24, 96, 26, 0, 0.04)
+    eth_trade.RunTradeThread()
 
 if __name__ == "__main__":
     connectToBinance = Connect()

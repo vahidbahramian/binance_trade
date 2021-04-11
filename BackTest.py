@@ -81,7 +81,7 @@ class Algorithm_1(OfflineAlgorithm):
                                             # print("Order ", profit_count + loss_count, " Buy_Price = ", buy_price,
                                             #       "Date = ", order_time)
                                             i += 1
-                                            volume = balance
+                                            volume = 1000
                                         if not isNotPos:
                                             if self.ichi_2_strategy.SellStrategy(i, t) or\
                                                 ((buy_price - self.close_data[i]) / buy_price) > SL:

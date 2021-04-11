@@ -4,9 +4,10 @@ import numpy
 
 class Candles:
 
-    def __init__(self, client):
+    def __init__(self, client, mutex):
         self.client = client
         self.klines_ready = False
+        self.mutex = mutex
 
     def getKlines(self, currency_pair, time_frame, start_date, end_date):
         """
@@ -16,7 +17,10 @@ class Candles:
         :param time_frame: KLINE_INTERVAL from binance.client
         """
         self.klines_ready = True
-        return self.client.get_historical_klines(currency_pair, time_frame, start_date, end_date)
+        self.mutex.acquire()
+        historical_klines = self.client.get_historical_klines(currency_pair, time_frame, start_date, end_date)
+        self.mutex.release()
+        return historical_klines
 
     def getCandle(self, currency_pair, time_frame):
         return self.client.get_klines(symbol=currency_pair, interval=time_frame)
