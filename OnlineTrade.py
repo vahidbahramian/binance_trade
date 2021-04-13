@@ -144,7 +144,7 @@ class Algo_1(OnlineAlgorithm):
 
                 self.LastTimeOfCandle = self.candle.timeUTC[0]
 
-                print(datetime.datetime.now())
+                WritePrintToFile.Write(datetime.datetime.now())
 
     def RunTrade(self):
         # try:
