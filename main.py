@@ -8,6 +8,7 @@ from datetime import datetime
 from enum import Enum
 import csv
 import matplotlib.pyplot as plt
+from binance.websockets import BinanceSocketManager
 from ta import trend
 
 from Connect import Connect
@@ -17,29 +18,35 @@ from BackTest import Algorithm_1
 import Strategy
 
 from threading import Lock
-
+def btc_trade_history(msg):
+    pass
 
 def main(client):
     """
 
     :type client: type of binance client
     """
-    # candle = Candles(client)
-    # klines = candle.getKlines("BTCUSDT", Client.KLINE_INTERVAL_1HOUR, "1 hour ago UTC", "")
+    # mutex = Lock()
+    # candle = Candles(client, mutex)
+    # klines = candle.getKlines("BNBBTC", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2018", "1 Jan, 2020")
     # # c = candle.getCandle('BTCUSDT', Client.KLINE_INTERVAL_1HOUR)
     # candle.unpackCandle(klines)
     # high_series = pd.Series(candle.high)
     # low_series = pd.Series(candle.low)
     # alg = Algorithm_1(klines, high_series, low_series, candle.close)
     # alg.RunAlgorithm()
+
+    bsm = BinanceSocketManager(client)
+    bsm.start()
+
     mutex = Lock()
-    candle = Candles(client, mutex)
-    btc_trade = Algo_1(client, candle, "BTC", "USDT", ignoreLastTrade=True)
-    btc_trade.SetAlgorithmParam(36, 48, 144, 18, 0, 0.04)
+    candle = Candles(client,mutex)
+    btc_trade = Algo_1(client, bsm , candle, "BTC", "USDT", ignoreLastTrade=True)
+    btc_trade.SetAlgorithmParam(window1=36, window2=48, window3=144, t=18, a=0, b=0.04)
     btc_trade.RunTradeThread()
 
-    eth_trade = Algo_1(client, candle, "ETH", "USDT", ignoreLastTrade=True)
-    eth_trade.SetAlgorithmParam(9, 24, 96, 26, 0, 0.04)
+    eth_trade = Algo_1(client, bsm ,candle, "ETH", "USDT", ignoreLastTrade=True)
+    eth_trade.SetAlgorithmParam(window1=9, window2=24, window3=96, t=26, a=0, b=0.04)
     eth_trade.RunTradeThread()
 
 if __name__ == "__main__":

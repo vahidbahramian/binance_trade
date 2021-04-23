@@ -1,4 +1,5 @@
 import abc
+from binance.client import Client
 
 class OfflineAlgorithm(abc.ABC):
     @abc.abstractmethod
@@ -20,8 +21,16 @@ class OfflineAlgorithm(abc.ABC):
     @abc.abstractmethod
     def WriteResult(self):
         pass
-    
+
 class OnlineAlgorithm(abc.ABC):
+    def __init__(self, client, bsm, firstCurrency, secondCurrency):
+        self.client = client
+        self.first_currency = firstCurrency
+        self.second_currency = secondCurrency
+        self.currency_pair = firstCurrency + secondCurrency
+        self.InitLogger()
+
+        self.conn_key = bsm.start_kline_socket(self.currency_pair, self.UpdateCandle, interval=Client.KLINE_INTERVAL_1HOUR)
     def GetPrice(self, currency_Pair):
         symbol_info = self.client.get_recent_trades(symbol=currency_Pair)
         return symbol_info[-1]['price']
