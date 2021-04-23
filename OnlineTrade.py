@@ -19,8 +19,6 @@ from Algorithm import OnlineAlgorithm
 class Algo_1(OnlineAlgorithm):
     def __init__(self, client, bsm, candle, firstCurrency, secondCurrency, ignoreLastTrade):
         super().__init__(client, bsm, candle, firstCurrency, secondCurrency)
-        self.candle = candle
-        self.bsm = bsm
         # self.SetLastSellBuyPrice('XRPBNB')
 
         self.ignoreLastTrade = ignoreLastTrade
@@ -86,6 +84,8 @@ class Algo_1(OnlineAlgorithm):
         try:
             th = threading.Thread(target=self.RunTrade, args=())
             th.start()
+            self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
+                                                   interval=Client.KLINE_INTERVAL_1HOUR)
             # self.updateCandleTimer = threading.Timer(10, self.UpdateCandle, [self.currency_pair, "1 hour ago UTC"])
             # self.updateCandleTimer.start()
             # th1 = threading.Thread(target=self.RunTrade, args=())
@@ -100,9 +100,10 @@ class Algo_1(OnlineAlgorithm):
         return self.ichi_2_strategy.SellStrategy(len(self.ichi_2_strategy.close_data) - 1, self.t)
 
     def UpdateCandle(self, msg):#currency_pair, time):
-        if msg['e'] != 'error':
+        if msg['e'] == 'error':
             self.bsm.stop_socket(self.conn_key)
-            self.bsm.start()
+            self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
+                                                        interval=Client.KLINE_INTERVAL_1HOUR)
         else:
             time = datetime.datetime.utcfromtimestamp(msg["k"]["t"] / 1000)
             if time > self.LastTimeOfCandle:
@@ -114,10 +115,10 @@ class Algo_1(OnlineAlgorithm):
 
 
                 self.ichi_2_strategy.high_data = \
-                    self.ichi_2_strategy.high_data.append(pd.Series(msg["k"]["h"]), ignore_index=True)
+                    self.ichi_2_strategy.high_data.append(pd.Series(float(msg["k"]["h"])), ignore_index=True)
                 self.ichi_2_strategy.low_data = \
-                    self.ichi_2_strategy.low_data.append(pd.Series(msg["k"]["l"]), ignore_index=True)
-                self.ichi_2_strategy.close_data = numpy.append(self.ichi_2_strategy.close_data, msg["k"]["c"])
+                    self.ichi_2_strategy.low_data.append(pd.Series(float(msg["k"]["l"])), ignore_index=True)
+                self.ichi_2_strategy.close_data = numpy.append(self.ichi_2_strategy.close_data, float(msg["k"]["c"]))
 
                 self.ichi_2_strategy.ComputeIchimoku_A(self.win1, self.win2)
                 self.ichi_2_strategy.ComputeIchimoku_B(self.win2, self.win3)

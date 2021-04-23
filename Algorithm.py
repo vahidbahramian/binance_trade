@@ -23,14 +23,15 @@ class OfflineAlgorithm(abc.ABC):
         pass
 
 class OnlineAlgorithm(abc.ABC):
-    def __init__(self, client, bsm, firstCurrency, secondCurrency):
+    def __init__(self, client, bsm, candle, firstCurrency, secondCurrency):
         self.client = client
+        self.candle = candle
+        self.bsm = bsm
         self.first_currency = firstCurrency
         self.second_currency = secondCurrency
         self.currency_pair = firstCurrency + secondCurrency
         self.InitLogger()
 
-        self.conn_key = bsm.start_kline_socket(self.currency_pair, self.UpdateCandle, interval=Client.KLINE_INTERVAL_1HOUR)
     def GetPrice(self, currency_Pair):
         symbol_info = self.client.get_recent_trades(symbol=currency_Pair)
         return symbol_info[-1]['price']
