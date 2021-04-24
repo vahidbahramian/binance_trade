@@ -127,6 +127,7 @@ class Algo_1(OnlineAlgorithm):
 
                 self.LastTimeOfCandle = time
 
+                WritePrintToFile(datetime.datetime.now())
                 print(datetime.datetime.now())
         # c = self.candle.getKlines(currency_pair, Client.KLINE_INTERVAL_1HOUR, time, "")
         # self.candle.unpackCandle(c)
