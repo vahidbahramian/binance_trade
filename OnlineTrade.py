@@ -13,7 +13,7 @@ import numpy
 import logging
 import time
 import datetime
-from IO import WritePrintToFile
+from IO import FileWorking
 from Algorithm import OnlineAlgorithm
 
 class Algo_1(OnlineAlgorithm):
@@ -127,7 +127,7 @@ class Algo_1(OnlineAlgorithm):
 
                 self.LastTimeOfCandle = time
 
-                WritePrintToFile.Write(datetime.datetime.now())
+                FileWorking.Write(datetime.datetime.now())
                 print(datetime.datetime.now())
         # c = self.candle.getKlines(currency_pair, Client.KLINE_INTERVAL_1HOUR, time, "")
         # self.candle.unpackCandle(c)
@@ -196,35 +196,35 @@ class Algo_1(OnlineAlgorithm):
                 #         self.buy_price = open_order[0]['price']
                 #         isPosition = True
             except ConnectionAbortedError as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
             except ConnectionError as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
             except ConnectionResetError as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
             except BinanceAPIException as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
             except BinanceWithdrawException as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
             except BinanceRequestException as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
             except BinanceOrderException as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
             except Timeout as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
             except TooManyRedirects as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
             except RequestException as e:
-                WritePrintToFile.Write(self.currency_pair)
-                WritePrintToFile.Write(e)
+                FileWorking.Write(self.currency_pair)
+                FileWorking.Write(e)
         # except Exception as e:
         #     traceback.print_exc(file=sys.stdout)
         #     # self.logger.exception(e)

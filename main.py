@@ -16,10 +16,8 @@ from Candles import Candles
 from OnlineTrade import Algo_1
 from BackTest import Algorithm_1
 import Strategy
-
+from IO import FileWorking
 from threading import Lock
-def btc_trade_history(msg):
-    pass
 
 def main(client):
     """
@@ -28,14 +26,16 @@ def main(client):
     """
     # mutex = Lock()
     # candle = Candles(client, mutex)
-    # klines = candle.getKlines("BNBBTC", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2018", "1 Jan, 2020")
+    # klines = candle.getKlines("BNBUSDT", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2018", "1 Jan, 2020")
+    # with open("BNBBTC_1HOUR_1.1.2018_1.1.2020.txt", "w") as file:
+    #     file.write(json.dumps(klines))
+    # FileWorking.WriteKlines(klines, "Data\\BNBUSDT_1HOUR_1.1.2018_1.1.2020.txt")
     # # c = candle.getCandle('BTCUSDT', Client.KLINE_INTERVAL_1HOUR)
     # candle.unpackCandle(klines)
     # high_series = pd.Series(candle.high)
     # low_series = pd.Series(candle.low)
     # alg = Algorithm_1(klines, high_series, low_series, candle.close)
     # alg.RunAlgorithm()
-
     bsm = BinanceSocketManager(client)
     bsm.start()
 

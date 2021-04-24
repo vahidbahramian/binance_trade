@@ -1,4 +1,5 @@
 import csv
+import json
 
 class CSVFiles:
 
@@ -48,9 +49,21 @@ class CSVFiles:
         except ValueError as e:
             print(e)
 
-class WritePrintToFile():
+class FileWorking():
     @staticmethod
     def Write(obj):
         sourceFile = open('info.txt', 'a')
         print(obj, file=sourceFile)
         sourceFile.close()
+
+    @staticmethod
+    def WriteKlines(klines, path):
+        with open(path, "w") as file:
+            file.write(json.dumps(klines))
+
+    @staticmethod
+    def ReadKlines(path):
+        with open(path, "r") as file:
+            data = file.read()
+            return json.loads(data)
+
