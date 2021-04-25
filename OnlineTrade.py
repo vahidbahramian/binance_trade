@@ -129,34 +129,8 @@ class Algo_1(OnlineAlgorithm):
 
                 FileWorking.Write(datetime.datetime.now())
                 print(datetime.datetime.now())
-        # c = self.candle.getKlines(currency_pair, Client.KLINE_INTERVAL_1HOUR, time, "")
-        # self.candle.unpackCandle(c)
-        # if len(self.candle.timeUTC) != 0:
-        #     if self.candle.timeUTC[0] > self.LastTimeOfCandle:
-        #         self.ichi_2_strategy.high_data.pop(0)
-        #         self.ichi_2_strategy.high_data.reset_index(drop=True, inplace=True)
-        #         self.ichi_2_strategy.low_data.pop(0)
-        #         self.ichi_2_strategy.low_data.reset_index(drop=True, inplace=True)
-        #         self.ichi_2_strategy.close_data = numpy.delete(self.ichi_2_strategy.close_data, 0)
-        #
-        #
-        #         self.ichi_2_strategy.high_data = \
-        #             self.ichi_2_strategy.high_data.append(pd.Series(self.candle.high[0]), ignore_index=True)
-        #         self.ichi_2_strategy.low_data = \
-        #             self.ichi_2_strategy.low_data.append(pd.Series(self.candle.low[0]), ignore_index=True)
-        #         self.ichi_2_strategy.close_data = numpy.append(self.ichi_2_strategy.close_data, self.candle.close[0])
-        #
-        #         self.ichi_2_strategy.ComputeIchimoku_A(self.win1, self.win2)
-        #         self.ichi_2_strategy.ComputeIchimoku_B(self.win2, self.win3)
-        #         self.ichi_2_strategy.ComputeIchimoku_Base_Line(self.win1, self.win2)
-        #         self.ichi_2_strategy.ComputeIchimoku_Conversion_Line(self.win1, self.win2)
-        #
-        #         self.LastTimeOfCandle = self.candle.timeUTC[0]
-        #
-        #         print(datetime.datetime.now())
 
     def RunTrade(self):
-        # try:
         last_trade = self.client.get_my_trades(symbol=self.currency_pair)
         if len(last_trade) > 0 and last_trade[-1]['isBuyer']:
             isPosition = True
@@ -225,9 +199,6 @@ class Algo_1(OnlineAlgorithm):
             except RequestException as e:
                 FileWorking.Write(self.currency_pair)
                 FileWorking.Write(e)
-        # except Exception as e:
-        #     traceback.print_exc(file=sys.stdout)
-        #     # self.logger.exception(e)
 
 
     # def RunTrade(self):

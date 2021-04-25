@@ -11,7 +11,7 @@ class OfflineAlgorithm(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def CheckStrategy(self):
+    def BuyStrategy(self):
         pass
 
     # @abc.abstractmethod
