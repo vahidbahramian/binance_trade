@@ -104,6 +104,7 @@ class Algo_1(OnlineAlgorithm):
 
     def UpdateCandle(self, msg):#currency_pair, time):
         if msg['e'] == 'error':
+            print(msg)
             self.bsm.stop_socket(self.conn_key)
             self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
                                                         interval=Client.KLINE_INTERVAL_1HOUR)
@@ -181,8 +182,9 @@ class Algo_1(OnlineAlgorithm):
                     else:
                         self.usdt_balance = 50
                     self.buy_price = self.GetPrice(self.currency_pair)
-                    order = self.SetMarketBuyOrder(self.currency_pair, round(float(self.usdt_balance['free']) / float(self.buy_price), 6)-0.000001)
+                    order = self.SetMarketBuyOrder(self.currency_pair, round(float(self.usdt_balance) / float(self.buy_price), 6)-0.000001)
                     self.logger.info(order)
+                    print(order)
                     isPosition = True
                 if isPosition:
                     if self.SellOrderCondition():
@@ -190,6 +192,7 @@ class Algo_1(OnlineAlgorithm):
                         self.sell_price = self.GetPrice(self.currency_pair)
                         order = self.SetMarketSellOrder(self.currency_pair, round(float(self.self.first_currency_balance['free']), 6) - 0.000001)
                         self.logger.info(order)
+                        print(order)
                         isPosition = False
                 # else:
                 #     if open_order[0]['side'] == "SELL":
