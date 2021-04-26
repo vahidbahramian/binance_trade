@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import Enum
 import csv
 import matplotlib.pyplot as plt
-from binance.websockets import BinanceSocketManager
+
 from ta import trend
 
 from Connect import Connect
@@ -17,6 +17,7 @@ from OnlineTrade import Algo_1
 import BackTest
 import Strategy
 from threading import Lock
+from binance.websockets import BinanceSocketManager
 
 def main(client):
     """

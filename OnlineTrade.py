@@ -20,7 +20,6 @@ class Algo_1(OnlineAlgorithm):
     def __init__(self, client, bsm, candle, firstCurrency, secondCurrency, ignoreLastTrade):
         super().__init__(client, bsm, candle, firstCurrency, secondCurrency)
         # self.SetLastSellBuyPrice('XRPBNB')
-
         self.ignoreLastTrade = ignoreLastTrade
 
     def SetAlgorithmParam(self, window1, window2, window3, t, a, b):
@@ -81,11 +80,15 @@ class Algo_1(OnlineAlgorithm):
 
     def RunTradeThread(self):
         self.InitCandle()
+
+        self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
+                                                    interval=Client.KLINE_INTERVAL_1HOUR)
+        if not self.bsm.is_alive():
+            self.bsm.start()
+
         try:
             th = threading.Thread(target=self.RunTrade, args=())
             th.start()
-            self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
-                                                   interval=Client.KLINE_INTERVAL_1HOUR)
             # self.updateCandleTimer = threading.Timer(10, self.UpdateCandle, [self.currency_pair, "1 hour ago UTC"])
             # self.updateCandleTimer.start()
             # th1 = threading.Thread(target=self.RunTrade, args=())
