@@ -10,9 +10,9 @@ class OfflineAlgorithm(abc.ABC):
     def RunAlgorithm(self):
         pass
 
-    @abc.abstractmethod
-    def BuyStrategy(self):
-        pass
+    # @abc.abstractmethod
+    # def BuyStrategy(self):
+    #     pass
 
     # @abc.abstractmethod
     # def CheckProfitOrLoss(self):

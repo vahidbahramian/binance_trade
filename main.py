@@ -30,7 +30,10 @@ def main(client):
     candle = Candles(client, mutex)
 
     if back_test:
-        alg = BackTest.Algorithm_1(candle)
+        # alg = BackTest.Algorithm_1(candle)
+        # alg.RunAlgorithm()
+        currency_pair = ["BTCUSDT", "ETHUSDT", "ETHBTC"]
+        alg = BackTest.Algorithm_2(candle, currency_pair)
         alg.RunAlgorithm()
     else:
         bsm = BinanceSocketManager(client)
