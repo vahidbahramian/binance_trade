@@ -32,8 +32,10 @@ def main(client):
     if back_test:
         # alg = BackTest.Algorithm_1(candle)
         # alg.RunAlgorithm()
-        currency_pair = ["BTCUSDT", "ETHUSDT", "ETHBTC"]
-        alg = BackTest.Algorithm_2(candle, currency_pair)
+        currency = ["BTCUSDT", "ETHUSDT"]
+        currency_pair = ["ETHBTC"]
+        correspond = {"ETHBTC": "ETHUSDT"}
+        alg = BackTest.Algorithm_3(candle, currency, currency_pair, correspond)
         alg.RunAlgorithm()
     else:
         bsm = BinanceSocketManager(client)
