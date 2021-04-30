@@ -13,6 +13,7 @@ from ta import trend
 
 from Connect import Connect
 from Candles import Candles
+from IO import FileWorking
 from OnlineTrade import Algo_1
 import BackTest
 import Strategy
@@ -28,13 +29,18 @@ def main(client):
 
     mutex = Lock()
     candle = Candles(client, mutex)
-
+    # start_time = "1.1.2020"
+    # end_time = "1.1.2021"
+    # klines = (candle.getKlines("BNBBTC", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2020", "1 Jan, 2021"))
+    # FileWorking.WriteKlines(klines, "Data\\" + "BNBBTC" + "_1HOUR_" + start_time + "_" + end_time + ".txt")
     if back_test:
         # alg = BackTest.Algorithm_1(candle)
         # alg.RunAlgorithm()
-        currency = ["BTCUSDT", "ETHUSDT"]
-        currency_pair = ["ETHBTC"]
-        correspond = {"ETHBTC": "ETHUSDT"}
+        currency = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
+        currency_pair = ["ETHBTC", "BNBBTC"]
+        correspond = {}
+        for i, item in enumerate(currency_pair):
+            correspond[item] = currency[i+1]
         alg = BackTest.Algorithm_3(candle, currency, currency_pair, correspond)
         alg.RunAlgorithm()
     else:
