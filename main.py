@@ -34,15 +34,17 @@ def main(client):
     # klines = (candle.getKlines("BNBBTC", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2020", "1 Jan, 2021"))
     # FileWorking.WriteKlines(klines, "Data\\" + "BNBBTC" + "_1HOUR_" + start_time + "_" + end_time + ".txt")
     if back_test:
-        # alg = BackTest.Algorithm_1(candle)
-        # alg.RunAlgorithm()
-        currency = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
-        currency_pair = ["ETHBTC", "BNBBTC"]
-        correspond = {}
-        for i, item in enumerate(currency_pair):
-            correspond[item] = currency[i+1]
-        alg = BackTest.Algorithm_3(candle, currency, currency_pair, correspond)
+        currency = ["BTCUSDT", "ETHUSDT", "ETHBTC"]
+        alg = BackTest.Algorithm_2(candle, currency)
         alg.RunAlgorithm()
+
+        # currency = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
+        # currency_pair = ["ETHBTC", "BNBBTC"]
+        # correspond = {}
+        # for i, item in enumerate(currency_pair):
+        #     correspond[item] = currency[i+1]
+        # alg = BackTest.Algorithm_3(candle, currency, currency_pair, correspond)
+        # alg.RunAlgorithm()
     else:
         bsm = BinanceSocketManager(client)
         bsm.start()
