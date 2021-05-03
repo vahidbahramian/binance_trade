@@ -10,7 +10,7 @@ from Strategy import ICHIMOKU_2_Strategy
 from Candles import Candles
 import pandas as pd
 import numpy
-import logging
+
 import time
 import datetime
 from IO import FileWorking
@@ -18,7 +18,10 @@ from Algorithm import OnlineAlgorithm
 
 class Algo_1(OnlineAlgorithm):
     def __init__(self, client, bsm, candle, firstCurrency, secondCurrency, ignoreLastTrade):
-        super().__init__(client, bsm, candle, firstCurrency, secondCurrency)
+        super().__init__(client, bsm, candle)
+        self.first_currency = firstCurrency
+        self.second_currency = secondCurrency
+        self.currency_pair = firstCurrency + secondCurrency
         # self.SetLastSellBuyPrice('XRPBNB')
         self.ignoreLastTrade = ignoreLastTrade
 
@@ -45,22 +48,6 @@ class Algo_1(OnlineAlgorithm):
         self.ichi_2_strategy.ComputeIchimoku_Conversion_Line(self.win1, self.win2)
 
         self.LastTimeOfCandle = self.candle.timeUTC[-1]
-
-    def InitLogger(self):
-        # Create a logging instance
-        self.logger = logging.getLogger('my_application')
-        self.logger.setLevel(logging.INFO)  # you can set this to be DEBUG, INFO, ERROR
-
-        # Assign a file-handler to that instance
-        fh = logging.FileHandler("log.log")
-        fh.setLevel(logging.INFO)  # again, you can set this differently
-
-        # Format your logs (optional)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh.setFormatter(formatter)  # This will set the format to the file handler
-
-        # Add the handler to your logging instance
-        self.logger.addHandler(fh)
 
     # def SetLastSellBuyPrice(self, currency_pair):
     #     my_trade = self.client.get_my_trades(symbol=currency_pair)
@@ -206,54 +193,154 @@ class Algo_1(OnlineAlgorithm):
                 FileWorking.Write(self.currency_pair)
                 FileWorking.Write(e)
 
+class Algo_2(OnlineAlgorithm):
+    klines = {}
+    ichi_2_strategy = {}
+    param = {}
+    def __init__(self, client, bsm, candle, currency):
+        super().__init__(client, bsm, candle)
+        self.currency = currency
+        self.currency_pair = []
+        for i in self.currency[:-1]:
+            self.currency_pair.append(i+self.currency[-1])
+        self.currency_pair_secondery = []
+        for i in self.currency[1:-1]:
+            self.currency_pair_secondery.append(i+self.currency[0])
+        self.correspond = {}
+        for i, item in enumerate(self.currency_pair_secondery):
+            self.correspond[item] = self.currency[i+1]
+        pass
 
-    # def RunTrade(self):
-    #     if int(float(self.GetBalance('XRP')['free'])) == 0:
-    #         isPosition = False
-    #     else:
-    #         isPosition = True
-    #     while True:
-    #         try:
-    #             open_order = self.client.get_open_orders(symbol='XRPBNB')
-    #             if len(open_order) == 0:
-    #                 if not isPosition and (float(self.GetPrice("XRPBNB")) <= float(self.sell_price_xrp) * 0.97 or
-    #                         float(self.GetPrice("XRPBNB")) >= float(self.sell_price_xrp) * 1.04):
-    #                     self.bnb_balance = self.GetBalance('BNB')
-    #                     self.buy_price_xrp = self.GetPrice("XRPBNB")
-    #                     order = self.SetMarketBuyOrder("XRPBNB", int(float(self.bnb_balance['free'])/float(self.buy_price_xrp)))
-    #                     self.logger.info(order)
-    #                 if isPosition:
-    #                     if (float(self.GetPrice("XRPBNB")) >= float(self.buy_price_xrp) * 1.03 or
-    #                             float(self.GetPrice("XRPBNB")) <= float(self.buy_price_xrp) * 0.96):
-    #                         self.xrp_balance = self.GetBalance('XRP')
-    #                         self.sell_price_xrp = self.GetPrice("XRPBNB")
-    #                         order = self.SetMarketSellOrder("XRPBNB", int(float(self.xrp_balance['free'])))
-    #                         self.logger.info(order)
-    #                         isPosition = False
-    #             else:
-    #                 if open_order[0]['side'] == "SELL":
-    #                     self.sell_price_xrp = open_order[0]['price']
-    #                     isPosition = False
-    #                 if open_order[0]['side'] == "BUY":
-    #                     self.buy_price_xrp = open_order[0]['price']
-    #                     isPosition = True
-    #         except ConnectionAbortedError as e:
-    #             WritePrintToFile.Write(e)
-    #         except ConnectionError as e:
-    #             WritePrintToFile.Write(e)
-    #         except ConnectionResetError as e:
-    #             WritePrintToFile.Write(e)
-    #         except BinanceAPIException as e:
-    #             WritePrintToFile.Write(e)
-    #         except BinanceWithdrawException as e:
-    #             WritePrintToFile.Write(e)
-    #         except BinanceRequestException as e:
-    #             WritePrintToFile.Write(e)
-    #         except BinanceOrderException as e:
-    #             WritePrintToFile.Write(e)
-    #         except Timeout as e:
-    #             WritePrintToFile.Write(e)
-    #         except TooManyRedirects as e:
-    #             WritePrintToFile.Write(e)
-    #         except RequestException as e:
-    #             WritePrintToFile.Write(e)
+    def SetAlgorithmParam(self, currency_pair, window1, window2, window3, t, a, b):
+        self.param[currency_pair]["Win1"] = window1
+        self.param[currency_pair]["Win2"] = window2
+        self.param[currency_pair]["Win3"] = window3
+        self.param[currency_pair]["t"] = t
+        self.param[currency_pair]["a"] = a
+        self.param[currency_pair]["b"] = b
+
+    def InitCandle(self):
+        for i in self.currency_pair:
+            self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
+        for i in self.currency_pair_secondery:
+            self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
+
+        for currency, kline in self.klines.items():
+            self.candle.unpackCandle(kline)
+            high_series = pd.Series(self.candle.high)
+            low_series = pd.Series(self.candle.low)
+            self.ichi_2_strategy[kline] = ICHIMOKU_2_Strategy(high_series, low_series, self.candle.close)
+
+        for i, p in self.param.items():
+            self.ichi_2_strategy[i].ComputeIchimoku_A(p["Win1"], p["Win2"])
+            self.ichi_2_strategy[i].ComputeIchimoku_B(p["Win2"], p["Win3"])
+            self.ichi_2_strategy[i].ComputeIchimoku_Base_Line(p["Win1"], p["Win2"])
+            self.ichi_2_strategy[i].ComputeIchimoku_Conversion_Line(p["Win1"], p["Win2"])
+
+        self.LastTimeOfCandle = self.candle.timeUTC[-1]
+
+    def UpdateCandle(self, msg):
+        if msg['e'] == 'error':
+            print(msg)
+            self.bsm.stop_socket(self.conn_key)
+            self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
+                                                        interval=Client.KLINE_INTERVAL_1HOUR)
+        else:
+            time = datetime.datetime.utcfromtimestamp(msg["k"]["t"] / 1000)
+            if time > self.LastTimeOfCandle:
+                for i, p in self.param.items():
+                    self.ichi_2_strategy[i].high_data.pop(0)
+                    self.ichi_2_strategy[i].high_data.reset_index(drop=True, inplace=True)
+                    self.ichi_2_strategy[i].low_data.pop(0)
+                    self.ichi_2_strategy[i].low_data.reset_index(drop=True, inplace=True)
+                    self.ichi_2_strategy[i].close_data = numpy.delete(self.ichi_2_strategy[i].close_data, 0)
+
+
+                    self.ichi_2_strategy[i].high_data = \
+                        self.ichi_2_strategy[i].high_data.append(pd.Series(float(msg["k"]["h"])), ignore_index=True)
+                    self.ichi_2_strategy[i].low_data = \
+                        self.ichi_2_strategy[i].low_data.append(pd.Series(float(msg["k"]["l"])), ignore_index=True)
+                    self.ichi_2_strategy[i].close_data = numpy.append(self.ichi_2_strategy[i].close_data, float(msg["k"]["c"]))
+
+                    self.ichi_2_strategy[i].ComputeIchimoku_A(p["Win1"], p["Win2"])
+                    self.ichi_2_strategy[i].ComputeIchimoku_B(p["Win2"], p["Win3"])
+                    self.ichi_2_strategy[i].ComputeIchimoku_Base_Line(p["Win1"], p["Win2"])
+                    self.ichi_2_strategy[i].ComputeIchimoku_Conversion_Line(p["Win1"], p["Win2"])
+
+                self.LastTimeOfCandle = time
+
+                FileWorking.Write(datetime.datetime.now())
+                print(datetime.datetime.now())
+
+    def BuyOrderCondition(self):
+        return self.ichi_2_strategy.BuyStrategy(len(self.ichi_2_strategy.close_data) - 1, self.t, self.a, self.b)
+
+    def SellOrderCondition(self):
+        return self.ichi_2_strategy.SellStrategy(len(self.ichi_2_strategy.close_data) - 1, self.t)
+
+    def RunTradeThread(self):
+        self.InitCandle()
+
+        self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
+                                                    interval=Client.KLINE_INTERVAL_1HOUR)
+        if not self.bsm.is_alive():
+            self.bsm.start()
+
+        try:
+            th = threading.Thread(target=self.RunTrade, args=())
+            th.start()
+        except:
+            print("Error: unable to start thread")
+
+
+    def RunTrade(self):
+        last_trade = self.client.get_my_trades(symbol=self.currency_pair)
+        if len(last_trade) > 0 and last_trade[-1]['isBuyer']:
+            isPosition = True
+        else:
+            isPosition = False
+        while True:
+            try:
+                open_order = self.client.get_open_orders(symbol='XRPBNB')
+                if len(open_order) == 0:
+                    if not isPosition and (float(self.GetPrice("XRPBNB")) <= float(self.sell_price_xrp) * 0.97 or
+                            float(self.GetPrice("XRPBNB")) >= float(self.sell_price_xrp) * 1.04):
+                        self.bnb_balance = self.GetBalance('BNB')
+                        self.buy_price_xrp = self.GetPrice("XRPBNB")
+                        order = self.SetMarketBuyOrder("XRPBNB", int(float(self.bnb_balance['free'])/float(self.buy_price_xrp)))
+                        self.logger.info(order)
+                    if isPosition:
+                        if (float(self.GetPrice("XRPBNB")) >= float(self.buy_price_xrp) * 1.03 or
+                                float(self.GetPrice("XRPBNB")) <= float(self.buy_price_xrp) * 0.96):
+                            self.xrp_balance = self.GetBalance('XRP')
+                            self.sell_price_xrp = self.GetPrice("XRPBNB")
+                            order = self.SetMarketSellOrder("XRPBNB", int(float(self.xrp_balance['free'])))
+                            self.logger.info(order)
+                            isPosition = False
+                else:
+                    if open_order[0]['side'] == "SELL":
+                        self.sell_price_xrp = open_order[0]['price']
+                        isPosition = False
+                    if open_order[0]['side'] == "BUY":
+                        self.buy_price_xrp = open_order[0]['price']
+                        isPosition = True
+            except ConnectionAbortedError as e:
+                WritePrintToFile.Write(e)
+            except ConnectionError as e:
+                WritePrintToFile.Write(e)
+            except ConnectionResetError as e:
+                WritePrintToFile.Write(e)
+            except BinanceAPIException as e:
+                WritePrintToFile.Write(e)
+            except BinanceWithdrawException as e:
+                WritePrintToFile.Write(e)
+            except BinanceRequestException as e:
+                WritePrintToFile.Write(e)
+            except BinanceOrderException as e:
+                WritePrintToFile.Write(e)
+            except Timeout as e:
+                WritePrintToFile.Write(e)
+            except TooManyRedirects as e:
+                WritePrintToFile.Write(e)
+            except RequestException as e:
+                WritePrintToFile.Write(e)
