@@ -97,7 +97,6 @@ class Algo_1(OnlineAlgorithm):
                                                         interval=Client.KLINE_INTERVAL_1HOUR)
         else:
             time = datetime.datetime.utcfromtimestamp(msg["k"]["t"] / 1000)
-            print(time)
             if time > self.LastTimeOfCandle:
                 self.ichi_2_strategy.high_data.pop(0)
                 self.ichi_2_strategy.high_data.reset_index(drop=True, inplace=True)
