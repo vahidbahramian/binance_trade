@@ -19,6 +19,7 @@ import BackTest
 import Strategy
 from threading import Lock
 from binance.websockets import BinanceSocketManager
+from twisted.internet import reactor
 
 def main(client):
     """
@@ -61,6 +62,7 @@ def main(client):
         # btc_trade.SetAlgorithmParam(currency= , window1=36, window2=48, window3=144, t=18, a=0, b=0.04)
 
 if __name__ == "__main__":
+    reactor.stop()
     connectToBinance = Connect()
     client = connectToBinance.ConnectTo
     main(client)
