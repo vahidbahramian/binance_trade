@@ -50,6 +50,7 @@ def main(client):
         bsm = BinanceSocketManager(client)
         bsm.start()
         bsm.close()
+        reactor.stop()
 
         btc_trade = Algo_1(client, bsm , candle, "BTC", "USDT", ignoreLastTrade=False)
         btc_trade.SetAlgorithmParam(window1=36, window2=48, window3=144, t=18, a=0, b=0.04)
@@ -62,7 +63,6 @@ def main(client):
         # btc_trade.SetAlgorithmParam(currency= , window1=36, window2=48, window3=144, t=18, a=0, b=0.04)
 
 if __name__ == "__main__":
-    reactor.stop()
     connectToBinance = Connect()
     client = connectToBinance.ConnectTo
     main(client)
