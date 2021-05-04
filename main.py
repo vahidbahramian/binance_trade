@@ -48,6 +48,7 @@ def main(client):
     else:
         bsm = BinanceSocketManager(client)
         bsm.start()
+        bsm.stop()
 
         btc_trade = Algo_1(client, bsm , candle, "BTC", "USDT", ignoreLastTrade=False)
         btc_trade.SetAlgorithmParam(window1=36, window2=48, window3=144, t=18, a=0, b=0.04)
