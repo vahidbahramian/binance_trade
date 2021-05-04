@@ -155,7 +155,7 @@ class Algo_1(OnlineAlgorithm):
                     if self.SellOrderCondition():
                         self.first_currency_balance = self.GetBalance(self.first_currency)
                         self.sell_price = self.GetPrice(self.currency_pair)
-                        order = self.SetMarketSellOrder(self.currency_pair, round(float(self.first_currency_balance['free']), 6) - 0.000001)
+                        order = self.SetMarketSellOrder(self.currency_pair, float(round(self.first_currency_balance['free'], 6)) - 0.000001)
                         self.logger.info(order)
                         print(order)
                         isPosition = False
