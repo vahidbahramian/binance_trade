@@ -57,6 +57,8 @@ def main(client):
         eth_trade.SetAlgorithmParam(window1=9, window2=24, window3=96, t=26, a=0, b=0.04)
         eth_trade.RunTradeThread()
 
+        # btc_trade.SetAlgorithmParam(currency= , window1=36, window2=48, window3=144, t=18, a=0, b=0.04)
+
 if __name__ == "__main__":
     connectToBinance = Connect()
     client = connectToBinance.ConnectTo
