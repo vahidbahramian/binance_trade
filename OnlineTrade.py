@@ -140,9 +140,13 @@ class Algo_1(OnlineAlgorithm):
             isPosition = True
         else:
             isPosition = False
+        localtime = datetime.datetime.now()
         while True:
             time.sleep(0.5)
             try:
+                if localtime.hour < datetime.datetime.now().hour:
+                    print("Thread is Run!!!")
+                    localtime = datetime.datetime.now()
                 # open_order = self.client.get_open_orders(symbol=self.currency_pair)
                 # if len(open_order) == 0:
                 if not isPosition and self.BuyOrderCondition():
@@ -164,7 +168,7 @@ class Algo_1(OnlineAlgorithm):
                     if self.SellOrderCondition():
                         self.first_currency_balance = self.GetBalance(self.first_currency)
                         self.sell_price = self.GetPrice(self.currency_pair)
-                        order = self.SetMarketSellOrder(self.currency_pair, round(float(self.self.first_currency_balance['free']), 6) - 0.000001)
+                        order = self.SetMarketSellOrder(self.currency_pair, round(float(self.first_currency_balance['free']), 6) - 0.000001)
                         self.logger.info(order)
                         print(order)
                         isPosition = False
