@@ -69,7 +69,7 @@ class Algo_1(OnlineAlgorithm):
         self.InitCandle()
 
         self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
-        print(self.conn_key)                                          interval=Client.KLINE_INTERVAL_1HOUR)
+                                                  interval=Client.KLINE_INTERVAL_1HOUR)
         if not self.bsm.is_alive():
             self.bsm.start()
 
