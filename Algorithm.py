@@ -35,7 +35,7 @@ class OnlineAlgorithm(abc.ABC):
         return symbol_info[-1]['price']
 
     def GetBalance(self, currency):
-        return self.client.get_asset_balance(asset=currency)
+        return float(self.client.get_asset_balance(asset=currency)['free'])
 
     def SetLimitBuyOrder(self, currency_Pair, quantity, price):
         return self.client.order_limit_buy(symbol=currency_Pair, quantity=quantity, price=price)

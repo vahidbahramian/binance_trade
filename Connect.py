@@ -10,11 +10,16 @@ api_secret = "ChEyzzYY7EMtbrmKvZ3Jltfip1loihGoaT2UtGEeLHHI5bMfSNqDHPQuPq7I7Ezi"
 
 
 class Connect:
+
+    def __init__(self, config):
+        self.API_Key = config["API_Key"]
+        self.Secret_Key = config["Secret_Key"]
+
     @property
     def ConnectTo(self):
         try:
             global client
-            client = Client(api_key, api_secret, {"timeout": 500})
+            client = Client(self.API_Key, self.Secret_Key, {"timeout": 500})
         except ConnectionError as e:
             FileWorking.Write(e)
         except ConnectionResetError as e:

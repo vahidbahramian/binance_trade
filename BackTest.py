@@ -14,28 +14,31 @@ from IO import CSVFiles, FileWorking
 class Algorithm_1(OfflineAlgorithm):
 
     def __init__(self, candle):
-        # self.window1 = [9, 18, 24, 36]
-        # self.window2 = [24, 48, 72]
-        # self.window3_ = [48, 96, 144]
-        # self.t = [18, 26, 48]
-        # self.a = [0, 0.01]
-        # self.b = [0.04, 0.05, 0.06]
-        # self.SL_arr = [0.025, 0.05]
+        self.window1 = [9, 18, 24, 36]
+        self.window2 = [24, 48, 72]
+        self.window3_ = [48, 96, 144]
+        self.t = [18, 26, 48]
+        self.a = [0, 0.01]
+        self.b = [0.04, 0.05, 0.06]
+        self.SL_arr = [0.025, 0.05]
         # self.RR_arr = [1, 1.5, 2, 2.5, 3]
 
-        self.window1 = [36]
-        self.window2 = [48]
-        self.window3_ = [144]
-        self.t = [18]
-        self.a = [0]
-        self.b = [0.04]
-        self.SL_arr = [0.025, 0.05]
-        self.RR_arr = [1, 1.5, 2, 2.5, 3]
+        # self.window1 = [36]
+        # self.window2 = [48]
+        # self.window3_ = [144]
+        # self.t = [18]
+        # self.a = [0]
+        # self.b = [0.04]
+        # self.SL_arr = [0.025, 0.05]
+
+        self.fast = [12]
+        self.slow = [78]
+        self.signal = [18]
 
         global klines
         use_offline_data = True
         if use_offline_data:
-            klines = FileWorking.ReadKlines("Data\\BTCUSDT_1HOUR_1.1.2020_1.1.2021.txt")
+            klines = FileWorking.ReadKlines("Data\\BTCUSDT_1HOUR_1.1.2019_1.1.2020.txt")
         else:
             klines = candle.getKlines("BNBUSDT", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2018", "1 Jan, 2020")
             FileWorking.WriteKlines(klines, "Data\\BNBUSDT_1HOUR_1.1.2018_1.1.2020.txt")
@@ -48,7 +51,7 @@ class Algorithm_1(OfflineAlgorithm):
 
         self.ichi_2_strategy = ICHIMOKU_2_Strategy(high, low, self.close_data)
 
-        self.file = CSVFiles("Strategy_2-WithoutSL-2020_2021-BTCUSDT_1.csv")
+        self.file = CSVFiles("Strategy_2-New-2019_2020-BTCUSDT.csv")
 
     def BuyStrategy(self, i, win1, win2, win3, t, a, b, computeIndicator):
         if computeIndicator:
@@ -56,6 +59,7 @@ class Algorithm_1(OfflineAlgorithm):
             self.ichi_2_strategy.ComputeIchimoku_B(win2, win3)
             self.ichi_2_strategy.ComputeIchimoku_Base_Line(win1, win2)
             self.ichi_2_strategy.ComputeIchimoku_Conversion_Line(win1, win2)
+            self.ichi_2_strategy.ComputeMACD(self.fast[0], self.slow[0], self.signal[0])
         return self.ichi_2_strategy.BuyStrategy(i, t, a, b)
 
     def WriteResult(self, header, rows):
@@ -107,10 +111,10 @@ class Algorithm_1(OfflineAlgorithm):
                                         max_price = buy_price
                                         order_time = datetime.utcfromtimestamp(self.klines[i][0] / 1000)
                                         # print("Win1=", win1, " Win2=", win2, "T=", t, " Win3=", win3)
-                                        print("Order ", profit_count + loss_count, " Buy_Price = ", buy_price,
-                                              "Date = ", order_time)
+                                        # print("Order ", profit_count + loss_count, " Buy_Price = ", buy_price,
+                                        #       "Date = ", order_time)
                                         i += 1
-                                        volume = 1000
+                                        volume = balance
                                     if not isNotPos:
                                         if self.ichi_2_strategy.SellStrategy(i, t):# or\
                                         #     ((buy_price - self.close_data[i]) / buy_price) > SL:
@@ -119,9 +123,9 @@ class Algorithm_1(OfflineAlgorithm):
                                                 loss_arr.append(((buy_price - self.close_data[i]) / buy_price) * volume)
                                                 balance -= ((buy_price - self.close_data[i]) / buy_price) * volume
                                                 balance_arr.append(balance)
-                                                print("(Loss) Balance = ", balance, "Date = ",  datetime.utcfromtimestamp(self.klines[i][0] / 1000),
-                                                      "Sell Price = ", self.close_data[i] , "Max Price = ", max_price,
-                                                      "Missing Profit = ",(max_price - self.close_data[i]) / max_price)
+                                                # print("(Loss) Balance = ", balance, "Date = ",  datetime.utcfromtimestamp(self.klines[i][0] / 1000),
+                                                #       "Sell Price = ", self.close_data[i] , "Max Price = ", max_price,
+                                                #       "Missing Profit = ",(max_price - self.close_data[i]) / max_price)
                                                 loss_count += 1
                                                 temp_loss_count += 1
                                                 if max_profit_count < temp_profit_count:
@@ -142,9 +146,9 @@ class Algorithm_1(OfflineAlgorithm):
                                                 profit_arr.append(((self.close_data[i] - buy_price) / buy_price) * volume)
                                                 balance += ((self.close_data[i] - buy_price) / buy_price) * volume
                                                 balance_arr.append(balance)
-                                                print("(Profit) Balance = ", balance, "Date = ",  datetime.utcfromtimestamp(self.klines[i][0] / 1000),
-                                                      "Sell Price = ", self.close_data[i] , "Max Price = ", max_price,
-                                                      "Missing Profit = ",(max_price - self.close_data[i]) / max_price)
+                                                # print("(Profit) Balance = ", balance, "Date = ",  datetime.utcfromtimestamp(self.klines[i][0] / 1000),
+                                                #       "Sell Price = ", self.close_data[i] , "Max Price = ", max_price,
+                                                #       "Missing Profit = ",(max_price - self.close_data[i]) / max_price)
                                                 profit_count += 1
                                                 temp_profit_count += 1
                                                 if max_loss_count < temp_loss_count:
@@ -202,23 +206,23 @@ class Algorithm_2(OfflineAlgorithm):
     klines = []
     ichi_2_strategy = []
     def __init__(self, candle, currency):
-        # self.window1 = [9, 18, 24, 36]
-        # self.window2 = [24, 48, 72]
-        # self.window3 = [48, 96, 144]
-        # self.t = [18, 26, 48]
-        # self.a = [0, 0.01]
-        # self.b = [0.04, 0.05, 0.06]
+        self.window1 = [9, 18, 24, 36]
+        self.window2 = [24, 48, 72]
+        self.window3 = [48, 96, 144]
+        self.t = [18, 26, 48]
+        self.a = [0, 0.01]
+        self.b = [0.04, 0.05, 0.06]
         # self.SL_arr = [0.025, 0.05]
 
-        self.window1 = [18]
-        self.window2 = [24]
-        self.window3 = [96]
-        self.t = [18]
-        self.a = [0]
-        self.b = [0.05]
+        # self.window1 = [18]
+        # self.window2 = [24]
+        # self.window3 = [96]
+        # self.t = [18]
+        # self.a = [0]
+        # self.b = [0.05]
 
-        start_time = "1.1.2020"
-        end_time = "1.1.2021"
+        start_time = "1.1.2019"
+        end_time = "1.1.2020"
 
         self.currency = currency
         use_offline_data = True
@@ -236,7 +240,7 @@ class Algorithm_2(OfflineAlgorithm):
 
             self.ichi_2_strategy.append(ICHIMOKU_2_Strategy(high, low, self.close_data))
 
-        self.file = CSVFiles("Strategy_2-2020_2021-BNBBTC.csv")
+        self.file = CSVFiles("Strategy_2-New-2019_2020-BNBBTC.csv")
         self.result_row = []
 
     def CreateThread(self, main_param, second_param):
@@ -257,7 +261,7 @@ class Algorithm_2(OfflineAlgorithm):
                       'Max Draw Down (%)', 'Max Draw Down (Time)', 'ETH Profit', 'ETH Loss', 'ETH Profit Trade (%)',
                       'ETH Loss Trade (%)', 'ETH Total Trade', 'ETH Missing Profit']
 
-        main_thread_param = {"Win1": 36, "Win2": 48, "Win3": 144, "t": 18, "a": 0, "b": 0.04}
+        main_thread_param = {"Win1": 36, "Win2": 72, "Win3": 96, "t": 26, "a": 0.01, "b": 0.06}
         for win1 in self.window1:
             for win2 in self.window2:
                 for win3 in self.window3:
@@ -327,19 +331,19 @@ class Algorithm_2(OfflineAlgorithm):
                     buy_price[self.currency[1]] = self.ichi_2_strategy[1].close_data[i]
                     isNotPos[self.currency[1]] = False
                     secondery_max_price = self.ichi_2_strategy[-1].close_data[i]
-                    print("Order ", len(profit_count_arr) + len(loss_count_arr),
-                          " Buy_Price_" + self.currency[1] + " = ",
-                          buy_price[self.currency[1]], " Volume = ",
-                          balance_dict["Current"], " Date = ",
-                          datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
+                    # print("Order ", len(profit_count_arr) + len(loss_count_arr),
+                    #       " Buy_Price_" + self.currency[1] + " = ",
+                    #       buy_price[self.currency[1]], " Volume = ",
+                    #       balance_dict["Current"], " Date = ",
+                    #       datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
                 else:
                     buy_price[self.currency[0]] = self.ichi_2_strategy[0].close_data[i]
                     isNotPos[self.currency[0]] = False
-                    print("Order ", len(profit_count_arr) + len(loss_count_arr),
-                          " Buy_Price_" + self.currency[0] + " = ",
-                          buy_price[self.currency[0]], " Volume = ",
-                          balance_dict["Current"], " Date = ",
-                          datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
+                    # print("Order ", len(profit_count_arr) + len(loss_count_arr),
+                    #       " Buy_Price_" + self.currency[0] + " = ",
+                    #       buy_price[self.currency[0]], " Volume = ",
+                    #       balance_dict["Current"], " Date = ",
+                    #       datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
                 i += 1
                 self.volume = balance_dict["Current"]
             if not isNotPos[self.currency[1]]:
@@ -351,9 +355,9 @@ class Algorithm_2(OfflineAlgorithm):
                         loss_arr.append(loss)
                         balance_dict["Current"] -= loss
                         balance_arr.append(balance_dict["Current"])
-                        print("(Loss) Balance = ", balance_dict["Current"], "Sell_Price_" + self.currency[0] + " = ",
-                              self.ichi_2_strategy[0].close_data[i],
-                              "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
+                        # print("(Loss) Balance = ", balance_dict["Current"], "Sell_Price_" + self.currency[1] + " = ",
+                        #       self.ichi_2_strategy[1].close_data[i],
+                        #       "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
                         loss_count += 1
                         profit_count_arr.append(profit_count)
                         profit_count = 0
@@ -373,9 +377,9 @@ class Algorithm_2(OfflineAlgorithm):
                         profit_arr.append(profit)
                         balance_dict["Current"] += profit
                         balance_arr.append(balance_dict["Current"])
-                        print("(Profit) Balance = ", balance_dict["Current"], "Sell_Price_" + self.currency[0] + " = ",
-                              self.ichi_2_strategy[0].close_data[i],
-                              "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
+                        # print("(Profit) Balance = ", balance_dict["Current"], "Sell_Price_" + self.currency[1] + " = ",
+                        #       self.ichi_2_strategy[1].close_data[i],
+                        #       "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
                         profit_count += 1
                         loss_count_arr.append(loss_count)
                         loss_count = 0
@@ -405,12 +409,12 @@ class Algorithm_2(OfflineAlgorithm):
                         secondery_profit.append((self.ichi_2_strategy[1].close_data[i] - buy_price[self.currency[1]]) /
                                                 buy_price[self.currency[1]])
                     secondery_missing_profit.append((secondery_max_price - self.ichi_2_strategy[-1].close_data[i]) / secondery_max_price)
-                    print("Volume = ", balance_dict["Current"],
-                          "Sell_Price_" + self.currency[1] + "= ",
-                          self.ichi_2_strategy[1].close_data[i],
-                          "Buy_Price_" + self.currency[0] + " = ",
-                          buy_price[self.currency[0]],
-                          "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
+                    # print("Volume = ", balance_dict["Current"],
+                    #       "Sell_Price_" + self.currency[1] + "= ",
+                    #       self.ichi_2_strategy[1].close_data[i],
+                    #       "Buy_Price_" + self.currency[0] + " = ",
+                    #       buy_price[self.currency[0]],
+                    #       "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
             elif not isNotPos[self.currency[0]]:
                 if self.ichi_2_strategy[0].SellStrategy(i, param["t"]):
                     if self.ichi_2_strategy[0].close_data[i] - buy_price[self.currency[0]] < 0:
@@ -419,9 +423,9 @@ class Algorithm_2(OfflineAlgorithm):
                         loss_arr.append(loss)
                         balance_dict["Current"] -= loss
                         balance_arr.append(balance_dict["Current"])
-                        print("(Loss) Balance = ", balance_dict["Current"], "Sell_Price_" + self.currency[0] + " = ",
-                              self.ichi_2_strategy[0].close_data[i],
-                              "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
+                        # print("(Loss) Balance = ", balance_dict["Current"], "Sell_Price_" + self.currency[0] + " = ",
+                        #       self.ichi_2_strategy[0].close_data[i],
+                        #       "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
                         loss_count += 1
                         profit_count_arr.append(profit_count)
                         profit_count = 0
@@ -440,9 +444,9 @@ class Algorithm_2(OfflineAlgorithm):
                         profit_arr.append(profit)
                         balance_dict["Current"] += profit
                         balance_arr.append(balance_dict["Current"])
-                        print("(Profit) Balance = ", balance_dict["Current"], "Sell_Price_" + self.currency[0] + " = ",
-                              self.ichi_2_strategy[0].close_data[i],
-                              "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
+                        # print("(Profit) Balance = ", balance_dict["Current"], "Sell_Price_" + self.currency[0] + " = ",
+                        #       self.ichi_2_strategy[0].close_data[i],
+                        #       "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
                         profit_count += 1
                         loss_count_arr.append(loss_count)
                         loss_count = 0
@@ -462,12 +466,12 @@ class Algorithm_2(OfflineAlgorithm):
                     isNotPos[self.currency[0]] = True
                     isNotPos[self.currency[1]] = False
                     secondery_max_price = self.ichi_2_strategy[2].close_data[i]
-                    print("Volume = ", balance_dict["Current"],
-                          "Sell_Price_" + self.currency[0] + "= ",
-                          self.ichi_2_strategy[0].close_data[i],
-                          "Buy_Price_" + self.currency[1] + " = ",
-                          buy_price[self.currency[1]],
-                          "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
+                    # print("Volume = ", balance_dict["Current"],
+                    #       "Sell_Price_" + self.currency[0] + "= ",
+                    #       self.ichi_2_strategy[0].close_data[i],
+                    #       "Buy_Price_" + self.currency[1] + " = ",
+                    #       buy_price[self.currency[1]],
+                    #       "Date = ", datetime.utcfromtimestamp(self.klines[0][i][0] / 1000))
             if secondery_max_price < self.ichi_2_strategy[2].close_data[i]:
                 secondery_max_price = self.ichi_2_strategy[2].close_data[i]
             update_strategy = False
@@ -729,6 +733,7 @@ class Algorithm_3(OfflineAlgorithm):
                         isNotPos[self.currency[0]] = True
             elif not self.CheckAllPos(isNotPos):
                 if self.ichi_2_strategy[self.currency[0]].SellStrategy(i, param["t"]):
+                    balance_dict["Available"] = (self.volume * len(True_Buy_Signal))
                     for j in True_Buy_Signal:
                         if self.ichi_2_strategy[self.correspond_currency[j]].close_data[i] - \
                                 buy_price[self.correspond_currency[j]] < 0:
@@ -736,7 +741,7 @@ class Algorithm_3(OfflineAlgorithm):
                                      self.ichi_2_strategy[self.correspond_currency[j]].close_data[i]) /
                                     buy_price[self.correspond_currency[j]]) * self.volume
                             loss_arr.append(loss)
-                            balance_dict["Current"] -= loss
+                            balance_dict["Available"] -= loss
                             loss_count += 1
                             profit_count_arr.append(profit_count)
                             profit_count = 0
@@ -749,7 +754,7 @@ class Algorithm_3(OfflineAlgorithm):
                                        buy_price[self.correspond_currency[j]]) / buy_price[
                                           self.correspond_currency[j]]) * self.volume
                             profit_arr.append(profit)
-                            balance_dict["Current"] += profit
+                            balance_dict["Available"] += profit
                             profit_count += 1
                             loss_count_arr.append(loss_count)
                             loss_count = 0
@@ -757,6 +762,7 @@ class Algorithm_3(OfflineAlgorithm):
                                   "Sell_Price_" + self.correspond_currency[j] + " = ",
                                   self.ichi_2_strategy[self.correspond_currency[j]].close_data[i], "Date = ",
                                   datetime.utcfromtimestamp(self.klines[self.currency[0]][i][0] / 1000))
+                        balance_dict["Current"] = balance_dict["Available"]
                         balance_arr.append(balance_dict["Current"])
                         isNotPos[self.correspond_currency[j]] = True
                     order_count += 1
@@ -781,9 +787,9 @@ class Algorithm_3(OfflineAlgorithm):
                         else:
                             True_Buy_Signal = self.FindBuySignal(self.Buy_Signal, i)
                             if len(True_Buy_Signal) != 0:
-                                self.volume += balance_dict["Available"] / len(True_Buy_Signal)
-                                balance_dict["Available"] = 0
                                 for j in True_Buy_Signal:
+                                    balance_dict["Available"] += (self.volume / buy_price[self.correspond_currency[j]])\
+                                                                 * self.ichi_2_strategy[self.correspond_currency[j]].close_data[i]
                                     buy_price[self.correspond_currency[j]] = \
                                     self.ichi_2_strategy[self.correspond_currency[j]].close_data[i]
                                     print("Volume = ", self.volume,
@@ -792,15 +798,20 @@ class Algorithm_3(OfflineAlgorithm):
                                           buy_price[self.correspond_currency[j]],
                                           "Date = ", datetime.utcfromtimestamp(self.klines[self.currency[0]][i][0] / 1000))
                                     isNotPos[self.correspond_currency[j]] = False
+                                self.volume = balance_dict["Available"] / len(True_Buy_Signal)
+                                balance_dict["Current"] = balance_dict["Available"]
+                                balance_dict["Available"] = 0
                     elif len(True_Buy_Signal) != len(Buy_Signal_New) and len(Buy_Signal_New) != 0:
                         Buy_Signal_New = self.FindDiffrentBuySignal(True_Buy_Signal, Buy_Signal_New)
                         for j in True_Buy_Signal:
                             balance_dict["Available"] += (self.volume / buy_price[self.correspond_currency[j]]) * \
                                                          self.ichi_2_strategy[self.correspond_currency[j]].close_data[i]
+                            buy_price[self.correspond_currency[j]] = self.ichi_2_strategy[self.correspond_currency[j]].close_data[i]
                         for k in Buy_Signal_New:
                             buy_price[self.correspond_currency[k]] = self.ichi_2_strategy[self.correspond_currency[k]].close_data[i]
                             isNotPos[self.correspond_currency[j]] = False
                         self.volume = balance_dict["Available"] / (len(Buy_Signal_New) + len(True_Buy_Signal))
+                        balance_dict["Current"] = balance_dict["Available"]
                         balance_dict["Available"] = 0
                         print("Volume = ", self.volume,
                               "Sell_Price_" + self.correspond_currency[j] + "= ",
@@ -810,11 +821,6 @@ class Algorithm_3(OfflineAlgorithm):
                               datetime.utcfromtimestamp(self.klines[self.currency[0]][i][0] / 1000))
                         True_Buy_Signal.extend(Buy_Signal_New)
             update_strategy = False
-            # th.join()
-        # plt.imshow(balance)
-
-        # plt.plot(balance_arr)
-        # plt.show()
         trade_count = len(profit_arr) + len(loss_arr)
         profit_count_arr.append(profit_count)
         avg_profit = numpy.average(profit_count_arr)

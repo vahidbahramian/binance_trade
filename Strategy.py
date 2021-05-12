@@ -62,6 +62,7 @@ class ICHIMOKU_2_Strategy(IStrategy):
         self.high_data = high
         self.low_data = low
         self.close_data = close
+        self.sell_with_ichi = True
 
     def ComputeIchimoku_A(self, win1, win2):
         self.ich_a = Indicator.ICHIMOKU_A(self.high_data, self.low_data, win1, win2)
@@ -75,20 +76,41 @@ class ICHIMOKU_2_Strategy(IStrategy):
     def ComputeIchimoku_Conversion_Line(self, win1, win2):
         self.ich_conversion_line = Indicator.ICHIMOKU_Conversion_Line(self.high_data, self.low_data, win1, win2)
 
+    def ComputeMACD(self, fast, slow, signal):
+        self.macd, self.macd_signal, self.macd_hist = Indicator.MACD(self.close_data, fast_period=fast, slow_period=slow,
+                                                                     signal_period=signal)
     def BuyStrategy(self, i, t, a, b):
         if i - t - 1 > 0:
-            if (self.close_data[i] > self.ich_conversion_line[i] and self.close_data[i] > self.ich_base_line[i] and
-                    self.ich_a[i - t - 1] < self.close_data[i] and
-                    self.close_data[i] > self.ich_b[i - t - 1] > self.ich_a[i - t - 1] and
-                    self.ich_a[i] > self.ich_b[i] and self.ich_conversion_line[i] > self.ich_base_line[i] > self.ich_a[i - t - 1]):
-                if i - t > 0:
-                    if a < (self.close_data[i] - self.close_data[i - t]) / self.close_data[i] < b:
+            if (self.close_data[i] >= self.ich_conversion_line[i] and self.close_data[i] >= self.ich_base_line[i] and
+                    self.ich_a[i] >= self.ich_b[i] and self.close_data[i] >= self.ich_b[i - t - 1] and
+                    self.close_data[i] >= self.ich_a[i - t - 1] and
+                    self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t - 1]):
+                if i - t - 1 > 0:
+                    if a <= (self.close_data[i] - self.close_data[i - t]) / self.close_data[i] <= b:
+                        # self.sell_with_ichi = False
                         return True
+            # if not self.sell_with_ichi and self.macd[i] > self.macd_signal[i]:
+                        # return True
         return False
-
+    # def BuyStrategy(self, i, t, a, b):
+    #     if i - t - 1 > 0:
+    #         if (self.close_data[i] >= self.ich_conversion_line[i] and self.close_data[i] >= self.ich_base_line[i] and
+    #                 self.ich_a[i] >= self.ich_b[i] and self.close_data[i] >= self.ich_b[i - t - 1] and
+    #                 self.close_data[i] >= self.ich_a[i - t - 1] and
+    #                 self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t - 1]):
+    #             if i - t - 1 > 0:
+    #                 if a <= (self.close_data[i] - self.close_data[i - t]) / self.close_data[i] <= b:
+    #                     # self.sell_with_ichi = False
+    #                     return True
+    #         # if not self.sell_with_ichi and self.macd[i] > self.macd_signal[i]:
+    #                     # return True
+    #     return False
     def SellStrategy(self, i, t):
-        if i - t > 0:
-            if (self.close_data[i] < self.ich_b[i - t - 1] and
-                    self.close_data[i] < self.ich_a[i - t - 1]):
+        if i - t - 1 > 0:
+            if ((self.close_data[i] < self.ich_b[i - t - 1] and
+                    self.close_data[i] < self.ich_a[i - t - 1])):
+                # self.sell_with_ichi = True
                 return True
+            # if self.macd[i] < self.macd_signal[i]:
+            #     return True
         return False
