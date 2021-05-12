@@ -221,8 +221,8 @@ class Algorithm_2(OfflineAlgorithm):
         # self.a = [0]
         # self.b = [0.05]
 
-        start_time = "1.1.2019"
-        end_time = "1.1.2020"
+        start_time = "1.1.2020"
+        end_time = "1.1.2021"
 
         self.currency = currency
         use_offline_data = True
@@ -240,7 +240,7 @@ class Algorithm_2(OfflineAlgorithm):
 
             self.ichi_2_strategy.append(ICHIMOKU_2_Strategy(high, low, self.close_data))
 
-        self.file = CSVFiles("Strategy_2-New-2019_2020-BNBBTC.csv")
+        self.file = CSVFiles("Strategy_2-New-2020_2021-BNBBTC.csv")
         self.result_row = []
 
     def CreateThread(self, main_param, second_param):

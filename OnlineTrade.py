@@ -325,8 +325,12 @@ class Algo_2(OnlineAlgorithm):
 
     def RunTrade(self):
         isPosition = {}
-        for i in self.currency_pair:
-            isPosition[i] = False
+        for i in self.currency_pair_secondery:
+            last_trade = self.client.get_my_trades(symbol=i)
+            if len(last_trade) > 0 and last_trade[-1]['isBuyer']:
+                isPosition[self.correspond[i]] = True
+            else:
+                isPosition[self.correspond[i]] = False
         currency_balance = {}
         buy_price = {}
         balance = {"Current": 0, "Available": 0}
@@ -338,8 +342,8 @@ class Algo_2(OnlineAlgorithm):
         while True:
             time.sleep(0.5)
             try:
-                if abs(datetime.now() - localtime) > datetime.timedelta(hours=1):
-                    print("Thread is Run!!!")
+                if abs(datetime.now() - localtime) > datetime.timedelta(minutes=15):
+                    print(datetime.now(), "   Thread is Run!!!")
                     localtime = datetime.datetime.now()
                 if self.BuyOrderCondition(self.currency_pair[0]) and not self.CheckAllPos(isPosition[1:]):
                     balance["Current"] = 0
