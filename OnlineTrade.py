@@ -217,12 +217,8 @@ class Algo_2(OnlineAlgorithm):
         pass
 
     def SetAlgorithmParam(self, currency_pair, window1, window2, window3, t, a, b):
-        self.param[currency_pair]["Win1"] = window1
-        self.param[currency_pair]["Win2"] = window2
-        self.param[currency_pair]["Win3"] = window3
-        self.param[currency_pair]["t"] = t
-        self.param[currency_pair]["a"] = a
-        self.param[currency_pair]["b"] = b
+        p = {"Win1": window1, "Win2": window2, "Win3": window3, "t": t, "a": a, "b": b}
+        self.param[currency_pair] = p
 
     def InitCandle(self):
         for i in self.currency_pair:
@@ -234,7 +230,7 @@ class Algo_2(OnlineAlgorithm):
             self.candle.unpackCandle(kline)
             high_series = pd.Series(self.candle.high)
             low_series = pd.Series(self.candle.low)
-            self.ichi_2_strategy[kline] = ICHIMOKU_2_Strategy(high_series, low_series, self.candle.close)
+            self.ichi_2_strategy[currency] = ICHIMOKU_2_Strategy(high_series, low_series, self.candle.close)
 
         for i, p in self.param.items():
             self.ichi_2_strategy[i].ComputeIchimoku_A(p["Win1"], p["Win2"])
@@ -247,8 +243,8 @@ class Algo_2(OnlineAlgorithm):
     def UpdateCandle(self, msg):
         if msg['e'] == 'error':
             print(msg)
-            self.bsm.stop_socket(self.conn_key)
-            self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
+            self.bsm.stop_socket(self.conn_key[msg['s']])
+            self.conn_key[msg['s']] = self.bsm.start_kline_socket(msg['s'], self.UpdateCandle,
                                                         interval=Client.KLINE_INTERVAL_1HOUR)
         else:
             time = datetime.datetime.utcfromtimestamp(msg["k"]["t"] / 1000)
@@ -279,11 +275,13 @@ class Algo_2(OnlineAlgorithm):
 
     def BuyOrderCondition(self, currency_pair):
         return self.ichi_2_strategy[currency_pair].BuyStrategy(len(self.ichi_2_strategy[currency_pair].close_data) - 1,
-                                                               self.t, self.a, self.b)
+                                                               self.param[currency_pair]["t"],
+                                                               self.param[currency_pair]["a"],
+                                                               self.param[currency_pair]["b"])
 
     def SellOrderCondition(self, currency_pair):
         return self.ichi_2_strategy[currency_pair].SellStrategy(len(self.ichi_2_strategy[currency_pair].close_data) - 1,
-                                                                self.t)
+                                                                self.param[currency_pair]["t"])
 
     def FindBuySignal(self, currency_pair):
         Buy_Signal = []
@@ -310,9 +308,10 @@ class Algo_2(OnlineAlgorithm):
 
     def RunTradeThread(self):
         self.InitCandle()
-
-        self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
-                                                    interval=Client.KLINE_INTERVAL_1HOUR)
+        self.conn_key = {}
+        for i, j in self.param.items():
+            self.conn_key[i] = self.bsm.start_kline_socket(i, self.UpdateCandle,
+                                                        interval=Client.KLINE_INTERVAL_1HOUR)
         if not self.bsm.is_alive():
             self.bsm.start()
 
@@ -325,12 +324,18 @@ class Algo_2(OnlineAlgorithm):
 
     def RunTrade(self):
         isPosition = {}
+        last_trade = self.client.get_my_trades(symbol=self.currency_pair[0])
+        if len(last_trade) > 0 and last_trade[-1]['isBuyer']:
+            isPosition[self.currency_pair[0]] = True
+        else:
+            isPosition[self.currency_pair[0]] = False
         for i in self.currency_pair_secondery:
             last_trade = self.client.get_my_trades(symbol=i)
             if len(last_trade) > 0 and last_trade[-1]['isBuyer']:
                 isPosition[self.correspond[i]] = True
             else:
                 isPosition[self.correspond[i]] = False
+
         currency_balance = {}
         buy_price = {}
         balance = {"Current": 0, "Available": 0}
@@ -342,8 +347,8 @@ class Algo_2(OnlineAlgorithm):
         while True:
             time.sleep(0.5)
             try:
-                if abs(datetime.now() - localtime) > datetime.timedelta(minutes=15):
-                    print(datetime.now(), "   Thread is Run!!!")
+                if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=15):
+                    print(datetime.datetime.now(), "   Thread is Run!!!")
                     localtime = datetime.datetime.now()
                 if self.BuyOrderCondition(self.currency_pair[0]) and not self.CheckAllPos(isPosition[1:]):
                     balance["Current"] = 0

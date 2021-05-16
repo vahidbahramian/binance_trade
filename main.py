@@ -40,17 +40,17 @@ def main(client):
         # alg = BackTest.Algorithm_1(candle)
         # alg.RunAlgorithm()
 
-        currency = ["BTCUSDT", "BNBUSDT", "BNBBTC"]
-        alg = BackTest.Algorithm_2(candle, currency)
-        alg.RunAlgorithm()
-
-        # currency = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
-        # currency_pair = ["ETHBTC", "BNBBTC"]
-        # correspond = {}
-        # for i, item in enumerate(currency_pair):
-        #     correspond[item] = currency[i+1]
-        # alg = BackTest.Algorithm_3(candle, currency, currency_pair, correspond)
+        # currency = ["BTCUSDT", "BNBUSDT", "BNBBTC"]
+        # alg = BackTest.Algorithm_2(candle, currency)
         # alg.RunAlgorithm()
+
+        currency = ["BTCUSDT", "ETHUSDT", "BNBUSDT"]
+        currency_pair = ["ETHBTC", "BNBBTC"]
+        correspond = {}
+        for i, item in enumerate(currency_pair):
+            correspond[item] = currency[i+1]
+        alg = BackTest.Algorithm_3(candle, currency, currency_pair, correspond)
+        alg.RunAlgorithm()
     else:
         bsm = BinanceSocketManager(client)
         # bsm.start()
@@ -67,9 +67,9 @@ def main(client):
 
         currency = ["BTC", "ETH", "BNB", "USDT"]
         trade = Algo_2(client, bsm, candle, currency)
-        trade.SetAlgorithmParam(currency="BTCUSDT", window1=36, window2=72, window3=96, t=26, a=0.01, b=0.06)
-        trade.SetAlgorithmParam(currency="ETHBTC", window1=9, window2=24, window3=144, t=26, a=0, b=0.05)
-        trade.SetAlgorithmParam(currency="BNBBTC", window1=24, window2=72, window3=144, t=26, a=0, b=0.04)
+        trade.SetAlgorithmParam("BTCUSDT", window1=36, window2=72, window3=96, t=26, a=0.01, b=0.06)
+        trade.SetAlgorithmParam("ETHBTC", window1=9, window2=24, window3=144, t=26, a=0, b=0.05)
+        trade.SetAlgorithmParam("BNBBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         trade.RunTradeThread()
 
 if __name__ == "__main__":
