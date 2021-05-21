@@ -32,7 +32,7 @@ class OnlineAlgorithm(abc.ABC):
 
     def GetPrice(self, currency_Pair):
         symbol_info = self.client.get_recent_trades(symbol=currency_Pair)
-        return symbol_info[-1]['price']
+        return float(symbol_info[-1]['price'])
 
     def GetBalance(self, currency):
         return float(self.client.get_asset_balance(asset=currency)['free'])

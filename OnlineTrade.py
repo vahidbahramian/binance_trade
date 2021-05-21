@@ -350,7 +350,7 @@ class Algo_2(OnlineAlgorithm):
                 if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=15):
                     print(datetime.datetime.now(), "   Thread is Run!!!")
                     localtime = datetime.datetime.now()
-                if self.BuyOrderCondition(self.currency_pair[0]) and not self.CheckAllPos(isPosition[1:]):
+                if self.BuyOrderCondition(self.currency_pair[0]) and not self.CheckAllPos(isPosition):
                     balance["Current"] = 0
                     balance["Available"] = self.GetBalance(self.currency[-1])
                     # for i in self.currency[:-1]:
@@ -364,6 +364,7 @@ class Algo_2(OnlineAlgorithm):
                                 q = check_quntity_min((balance["Available"] + balance["Current"]) / len(Buy_Signal))
                                 quntity = q / buy_price[self.correspond[i]]
                                 order = self.SetMarketBuyOrder(self.correspond[i], round(quntity, 5))
+                                self.logger.info(order)
                                 print(order)
                                 # currency_balance[self.correspond[self.correspond[i]]]
                                 balance["Available"] -= q
@@ -372,8 +373,9 @@ class Algo_2(OnlineAlgorithm):
                     else:
                         buy_price[self.currency_pair[0]] = self.GetPrice(self.currency_pair[0])
                         if balance["Available"] > 10:
-                            quntity = balance["Available"] / buy_price[i]
+                            quntity = balance["Available"] / buy_price[self.currency_pair[0]]
                             order = self.SetMarketBuyOrder(self.currency_pair[0], round(quntity, 5))
+                            self.logger.info(order)
                             print(order)
                             # currency_balance[self.currency[0]] = quntity
                             balance["Current"] = balance["Available"]
@@ -383,6 +385,7 @@ class Algo_2(OnlineAlgorithm):
                     if self.SellOrderCondition(self.currency_pair[0]):
                         currency_balance[self.currency[0]] = self.GetBalance(self.currency[0])
                         order = self.SetMarketSellOrder(self.currency_pair[0], round(currency_balance[self.currency[0]], 5))
+                        self.logger.info(order)
                         print(order)
                         # balance["Available"] += currency_balance[self.currency[0]] * self.GetPrice(self.currency_pair[0])
                         isPosition[self.currency_pair[0]] = False
@@ -397,6 +400,7 @@ class Algo_2(OnlineAlgorithm):
                                     quntity = (balance["Available"] + balance["Current"]) / len(Buy_Signal)
                                     if quntity > 0.00001:
                                         order = self.SetMarketBuyOrder(i, round(quntity / buy_price[i], 5))
+                                        self.logger.info(order)
                                         print(order)
                                         currency_balance[self.correspond[self.correspond[i]]] = quntity / buy_price[i]
                                     balance["Available"] -= quntity
@@ -410,6 +414,7 @@ class Algo_2(OnlineAlgorithm):
                                     self.GetBalance(self.correspond[self.correspond[c]])
                                 order = self.SetMarketSellOrder(
                                     self.correspond[c], round(currency_balance[self.correspond[self.correspond[c]]], 5))
+                                self.logger.info(order)
                                 print(order)
                                 isPosition[self.correspond[c]] = False
                     else:
@@ -420,6 +425,7 @@ class Algo_2(OnlineAlgorithm):
                                     self.GetBalance(self.correspond[self.correspond[i]])
                                 order = self.SetMarketSellOrder(
                                     i, round(currency_balance[self.correspond[self.correspond[i]]], 5))
+                                self.logger.info(order)
                                 print(order)
                                 isPosition[self.correspond[i]] = False
                             # Buy_Signal_New = self.FindBuySignal(self.currency_pair_secondery)
@@ -437,6 +443,7 @@ class Algo_2(OnlineAlgorithm):
                                         quntity = (balance["Available"] + balance["Current"]) / len(Buy_Signal)
                                         if quntity > 0.00001:
                                             order = self.SetMarketBuyOrder(i, round(quntity / buy_price[i], 5))
+                                            self.logger.info(order)
                                             print(order)
                                             currency_balance[self.correspond[self.correspond[i]]] += quntity / buy_price[
                                                 i]
@@ -457,6 +464,7 @@ class Algo_2(OnlineAlgorithm):
                                 sell_q = (currency_balance[self.correspond[self.correspond[i]]] * self.GetPrice(i))\
                                          - (balance["Available"] / (len(Buy_Signal) + len(Buy_Signal_New)))
                                 order = self.SetMarketSellOrder(i, round(sell_q / buy_price[i], 5))
+                                self.logger.info(order)
                                 print(order)
                                 currency_balance[self.currency_pair[0]] += sell_q
                             balance["Available"] = self.GetPrice(self.currency_pair[0])
@@ -466,6 +474,7 @@ class Algo_2(OnlineAlgorithm):
                                     quntity = (balance["Available"] + balance["Current"]) / len(Buy_Signal_New)
                                     if quntity > 0.00001:
                                         order = self.SetMarketBuyOrder(i, round(quntity / buy_price[i], 5))
+                                        self.logger.info(order)
                                         print(order)
                                     balance["Available"] -= quntity
                                     balance["Current"] += quntity
