@@ -384,7 +384,7 @@ class Algo_2(OnlineAlgorithm):
                 if isPosition[self.currency_pair[0]]:
                     if self.SellOrderCondition(self.currency_pair[0]):
                         currency_balance[self.currency[0]] = self.GetBalance(self.currency[0])
-                        order = self.SetMarketSellOrder(self.currency_pair[0], round(currency_balance[self.currency[0]], 5))
+                        order = self.SetMarketSellOrder(self.currency_pair[0], round(currency_balance[self.currency[0]], 5) - 0.00001)
                         self.logger.info(order)
                         print(order)
                         # balance["Available"] += currency_balance[self.currency[0]] * self.GetPrice(self.currency_pair[0])
@@ -413,7 +413,7 @@ class Algo_2(OnlineAlgorithm):
                                 currency_balance[self.correspond[self.correspond[c]]] =\
                                     self.GetBalance(self.correspond[self.correspond[c]])
                                 order = self.SetMarketSellOrder(
-                                    self.correspond[c], round(currency_balance[self.correspond[self.correspond[c]]], 5))
+                                    self.correspond[c], round(currency_balance[self.correspond[self.correspond[c]]], 5) - 0.00001)
                                 self.logger.info(order)
                                 print(order)
                                 isPosition[self.correspond[c]] = False
@@ -424,7 +424,7 @@ class Algo_2(OnlineAlgorithm):
                                 currency_balance[self.correspond[self.correspond[i]]] = \
                                     self.GetBalance(self.correspond[self.correspond[i]])
                                 order = self.SetMarketSellOrder(
-                                    i, round(currency_balance[self.correspond[self.correspond[i]]], 5))
+                                    i, round(currency_balance[self.correspond[self.correspond[i]]], 5) - 0.00001)
                                 self.logger.info(order)
                                 print(order)
                                 isPosition[self.correspond[i]] = False
@@ -463,7 +463,7 @@ class Algo_2(OnlineAlgorithm):
                                 buy_price[i] = self.GetPrice(i)
                                 sell_q = (currency_balance[self.correspond[self.correspond[i]]] * self.GetPrice(i))\
                                          - (balance["Available"] / (len(Buy_Signal) + len(Buy_Signal_New)))
-                                order = self.SetMarketSellOrder(i, round(sell_q / buy_price[i], 5))
+                                order = self.SetMarketSellOrder(i, round(sell_q / buy_price[i], 5) - 0.00001)
                                 self.logger.info(order)
                                 print(order)
                                 currency_balance[self.currency_pair[0]] += sell_q
