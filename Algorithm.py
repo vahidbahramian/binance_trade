@@ -82,6 +82,6 @@ class OnlineAlgorithm(abc.ABC):
 
     def LogException(self, e):
         exception_type, exception_object, exception_traceback = sys.exc_info()
-        FileWorking.Write(datetime.datetime.now())
+        FileWorking.Write(datetime.now())
         FileWorking.Write("Line number: " + str(exception_traceback.tb_lineno))
         FileWorking.Write(e)
