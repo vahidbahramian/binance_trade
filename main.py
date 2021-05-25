@@ -34,8 +34,8 @@ def main(client):
     candle = Candles(client, mutex)
     # start_time = "1.1.2020"
     # end_time = "1.1.2021"
-    # klines = (candle.getKlines("BNBBTC", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2020", "1 Jan, 2021"))
-    # FileWorking.WriteKlines(klines, "Data\\" + "BNBBTC" + "_1HOUR_" + start_time + "_" + end_time + ".txt")
+    # klines = (candle.getKlines("LTCUSDT", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2020", "1 Jan, 2021"))
+    # FileWorking.WriteKlines(klines, "Data\\" + "LTCUSDT" + "_1HOUR_" + start_time + "_" + end_time + ".txt")
     if back_test:
         # alg = BackTest.Algorithm_1(candle)
         # alg.RunAlgorithm()

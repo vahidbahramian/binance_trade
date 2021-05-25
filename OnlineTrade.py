@@ -13,8 +13,8 @@ import numpy
 
 import time
 import datetime
-from IO import FileWorking
 from Algorithm import OnlineAlgorithm
+from IO import FileWorking
 
 class Algo_1(OnlineAlgorithm):
     def __init__(self, client, bsm, candle, firstCurrency, secondCurrency, ignoreLastTrade):
@@ -481,32 +481,22 @@ class Algo_2(OnlineAlgorithm):
                                     isPosition[self.correspond[i]] = True
                             Buy_Signal.extend(Buy_Signal_New)
             except ConnectionAbortedError as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)
             except ConnectionError as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)
             except ConnectionResetError as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)
             except BinanceAPIException as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)
             except BinanceWithdrawException as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)
             except BinanceRequestException as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)
             except BinanceOrderException as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)
             except Timeout as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)
             except TooManyRedirects as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)
             except RequestException as e:
-                FileWorking.Write(self.currency_pair)
-                FileWorking.Write(e)
+                self.LogException(e)

@@ -1,6 +1,9 @@
 import abc
 from binance.client import Client
 import logging
+import sys
+from datetime import datetime
+from IO import FileWorking
 
 class OfflineAlgorithm(abc.ABC):
     @abc.abstractmethod
@@ -76,3 +79,9 @@ class OnlineAlgorithm(abc.ABC):
 
         # Add the handler to your logging instance
         self.logger.addHandler(fh)
+
+    def LogException(self, e):
+        exception_type, exception_object, exception_traceback = sys.exc_info()
+        FileWorking.Write(datetime.datetime.now())
+        FileWorking.Write("Line number: " + str(exception_traceback.tb_lineno))
+        FileWorking.Write(e)
