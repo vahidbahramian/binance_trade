@@ -80,13 +80,13 @@ class ICHIMOKU_2_Strategy(IStrategy):
         self.macd, self.macd_signal, self.macd_hist = Indicator.MACD(self.close_data, fast_period=fast, slow_period=slow,
                                                                      signal_period=signal)
     def BuyStrategy(self, i, t, a, b):
-        if i - t - 1 > 0:
+        if i - t + 1 > 0:
             if (self.close_data[i] >= self.ich_conversion_line[i] and self.close_data[i] >= self.ich_base_line[i] and
-                    self.ich_a[i] >= self.ich_b[i] and self.close_data[i] >= self.ich_b[i - t - 1] and
+                    self.ich_a[i] >= self.ich_b[i] and self.close_data[i] >= self.ich_b[i - t + 1] and
                     self.close_data[i] >= self.ich_a[i - t - 1] and
-                    self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t - 1]):
-                if i - t - 1 > 0:
-                    if a <= (self.close_data[i] - self.close_data[i - t]) / self.close_data[i] <= b:
+                    self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t + 1]):
+                if i - t + 1 > 0:
+                    if a <= (self.close_data[i] - self.close_data[i - t + 1]) / self.close_data[i] <= b:
                         # self.sell_with_ichi = False
                         return True
             # if not self.sell_with_ichi and self.macd[i] > self.macd_signal[i]:
