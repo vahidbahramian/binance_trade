@@ -373,7 +373,7 @@ class Algo_2(OnlineAlgorithm):
         while True:
             time.sleep(0.5)
             try:
-                if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=15):
+                if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=30):
                     print(datetime.datetime.now(), "   Thread is Run!!!")
                     localtime = datetime.datetime.now()
                 if self.BuyOrderCondition(self.currency_pair[0]) and not self.CheckAllPos(isPosition):
@@ -436,10 +436,9 @@ class Algo_2(OnlineAlgorithm):
                     if self.SellOrderCondition(self.currency_pair[0]):
                         for c, i in isPosition.items():
                             if i:
-                                currency_balance[self.correspond[self.correspond[c]]] =\
-                                    self.GetBalance(self.correspond[self.correspond[c]])
-                                order = self.SetMarketSellOrder(
-                                    self.correspond[c], round(currency_balance[self.correspond[self.correspond[c]]], 5) - 0.00001)
+                                currency_balance[self.correspond[c]] =\
+                                    self.GetBalance(self.correspond[c])
+                                order = self.SetMarketSellOrder(c, round(currency_balance[self.correspond[c]], 5) - 0.00001)
                                 self.logger.info(order)
                                 print(order)
                                 isPosition[self.correspond[c]] = False
