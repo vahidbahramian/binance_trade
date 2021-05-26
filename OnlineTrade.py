@@ -248,6 +248,17 @@ class Algo_2(OnlineAlgorithm):
                                                         interval=Client.KLINE_INTERVAL_1HOUR)
         else:
             time = datetime.datetime.utcfromtimestamp(msg["k"]["t"] / 1000)
+            # time = datetime.datetime.now()
+            # if abs(time - self.LastTimeOfCandle) > datetime.timedelta(minutes=1):
+            #     self.klines[msg['s']] = self.candle.getKlines(msg['s'], Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
+            #     self.candle.unpackCandle(self.klines[msg['s']])
+            #     high_series = pd.Series(self.candle.high)
+            #     low_series = pd.Series(self.candle.low)
+            #     self.ichi_2_strategy[msg['s']] = ICHIMOKU_2_Strategy(high_series, low_series, self.candle.close)
+            #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_A(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
+            #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_B(self.param[msg['s']]["Win2"], self.param[msg['s']]["Win3"])
+            #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_Base_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
+            #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_Conversion_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
             if time > self.LastTimeOfCandle:
                 for i, p in self.param.items():
                     self.ichi_2_strategy[i].high_data.pop(0)
@@ -302,9 +313,9 @@ class Algo_2(OnlineAlgorithm):
 
     def CheckAllPos(self, pos):
         for _,i in pos.items():
-            if not i:
-                return False
-        return True
+            if i:
+                return True
+        return False
 
     def RunTradeThread(self):
         self.InitCandle()
@@ -324,15 +335,30 @@ class Algo_2(OnlineAlgorithm):
 
     def RunTrade(self):
         isPosition = {}
+        self.Buy_Signal = []
         last_trade = self.client.get_my_trades(symbol=self.currency_pair[0])
         if len(last_trade) > 0 and last_trade[-1]['isBuyer']:
             isPosition[self.currency_pair[0]] = True
         else:
             isPosition[self.currency_pair[0]] = False
         for i in self.currency_pair_secondery:
-            last_trade = self.client.get_my_trades(symbol=i)
-            if len(last_trade) > 0 and last_trade[-1]['isBuyer']:
+            last_trade_secondery = self.client.get_my_trades(symbol=i)
+            last_trade = self.client.get_my_trades(symbol=self.correspond[i])
+            if len(last_trade) > 0 and len(last_trade_secondery) > 0:
+                if last_trade[-1]['orderId'] > last_trade_secondery[-1]['orderId'] and last_trade[-1]['isBuyer']:
+                    self.Buy_Signal.append(i)
+                    isPosition[self.correspond[i]] = True
+                elif last_trade[-1]['orderId'] < last_trade_secondery[-1]['orderId'] and last_trade_secondery[-1]['isBuyer']:
+                    isPosition[self.correspond[i]] = True
+                    self.Buy_Signal.append(i)
+                else:
+                    isPosition[self.correspond[i]] = False
+            elif len(last_trade) > 0 and last_trade[-1]['isBuyer']:
                 isPosition[self.correspond[i]] = True
+                self.Buy_Signal.append(i)
+            elif len(last_trade_secondery) > 0 and last_trade_secondery[-1]['isBuyer']:
+                isPosition[self.correspond[i]] = True
+                self.Buy_Signal.append(i)
             else:
                 isPosition[self.correspond[i]] = False
 
@@ -355,13 +381,13 @@ class Algo_2(OnlineAlgorithm):
                     balance["Available"] = self.GetBalance(self.currency[-1])
                     # for i in self.currency[:-1]:
                     #     balance["Available"] += self.GetBalance(i) * self.GetPrice(i+self.currency[-1])
-                    Buy_Signal = self.FindBuySignal(self.currency_pair_secondery)
-                    if len(Buy_Signal) > 0:
-                        for i in Buy_Signal:
+                    self.Buy_Signal = self.FindBuySignal(self.currency_pair_secondery)
+                    if len(self.Buy_Signal) > 0:
+                        for i in self.Buy_Signal:
                             # buy_price[i] = self.GetPrice(i)
                             buy_price[self.correspond[i]] = self.GetPrice(self.correspond[i])
                             if balance["Available"] > 10:
-                                q = check_quntity_min((balance["Available"] + balance["Current"]) / len(Buy_Signal))
+                                q = check_quntity_min((balance["Available"] + balance["Current"]) / len(self.Buy_Signal))
                                 quntity = q / buy_price[self.correspond[i]]
                                 order = self.SetMarketBuyOrder(self.correspond[i], round(quntity, 5))
                                 self.logger.info(order)
@@ -390,14 +416,14 @@ class Algo_2(OnlineAlgorithm):
                         # balance["Available"] += currency_balance[self.currency[0]] * self.GetPrice(self.currency_pair[0])
                         isPosition[self.currency_pair[0]] = False
                     else:
-                        Buy_Signal = self.FindBuySignal(self.currency_pair_secondery)
-                        if len(Buy_Signal) > 0:
+                        self.Buy_Signal = self.FindBuySignal(self.currency_pair_secondery)
+                        if len(self.Buy_Signal) > 0:
                             balance["Current"] = 0
                             balance["Available"] = self.GetBalance(self.currency_pair[0])
-                            for i in Buy_Signal:
+                            for i in self.Buy_Signal:
                                 buy_price[i] = self.GetPrice(i)
                                 if balance["Available"] > 0.00001:
-                                    quntity = (balance["Available"] + balance["Current"]) / len(Buy_Signal)
+                                    quntity = (balance["Available"] + balance["Current"]) / len(self.Buy_Signal)
                                     if quntity > 0.00001:
                                         order = self.SetMarketBuyOrder(i, round(quntity / buy_price[i], 5))
                                         self.logger.info(order)
@@ -406,7 +432,7 @@ class Algo_2(OnlineAlgorithm):
                                     balance["Available"] -= quntity
                                     balance["Current"] += quntity
                                     isPosition[self.correspond[i]] = True
-                elif self.CheckAllPos(isPosition):
+                elif self.CheckAllPos({k: v for k, v in isPosition.items() if k not in {self.currency_pair[0]}}):
                     if self.SellOrderCondition(self.currency_pair[0]):
                         for c, i in isPosition.items():
                             if i:
@@ -418,7 +444,7 @@ class Algo_2(OnlineAlgorithm):
                                 print(order)
                                 isPosition[self.correspond[c]] = False
                     else:
-                        Sell_Signal = self.FindSellSignal(Buy_Signal)
+                        Sell_Signal = self.FindSellSignal(self.Buy_Signal)
                         if len(Sell_Signal) > 0:
                             for i in Sell_Signal:
                                 currency_balance[self.correspond[self.correspond[i]]] = \
@@ -440,7 +466,7 @@ class Algo_2(OnlineAlgorithm):
                                 for i in Buy_Signal_New:
                                     buy_price[i] = self.GetPrice(i)
                                     if balance["Available"] > 0.00001:
-                                        quntity = (balance["Available"] + balance["Current"]) / len(Buy_Signal)
+                                        quntity = (balance["Available"] + balance["Current"]) / len(Buy_Signal_New)
                                         if quntity > 0.00001:
                                             order = self.SetMarketBuyOrder(i, round(quntity / buy_price[i], 5))
                                             self.logger.info(order)
@@ -450,19 +476,19 @@ class Algo_2(OnlineAlgorithm):
                                         balance["Available"] -= quntity
                                         balance["Current"] += quntity
                                         isPosition[self.correspond[i]] = True
-                                Buy_Signal = Buy_Signal_New
+                                self.Buy_Signal = Buy_Signal_New
                         Buy_Signal_New = self.FindBuySignal(self.currency_pair_secondery)
-                        Buy_Signal_New = self.FindDiffrentBuySignal(Buy_Signal, Buy_Signal_New)
+                        Buy_Signal_New = self.FindDiffrentBuySignal(self.Buy_Signal, Buy_Signal_New)
                         if len(Buy_Signal_New) > 0:
                             balance["Available"] = 0
                             balance["Current"] = 0
-                            for i in Buy_Signal:
+                            for i in self.Buy_Signal:
                                 balance["Available"] += self.GetBalance(self.correspond[self.correspond[i]]) / self.GetPrice(i)
                                 # balance["Available"] += currency_balance[self.correspond[self.correspond[i]]] * self.GetPrice(i)
-                            for i in Buy_Signal:
+                            for i in self.Buy_Signal:
                                 buy_price[i] = self.GetPrice(i)
                                 sell_q = (currency_balance[self.correspond[self.correspond[i]]] * self.GetPrice(i))\
-                                         - (balance["Available"] / (len(Buy_Signal) + len(Buy_Signal_New)))
+                                         - (balance["Available"] / (len(self.Buy_Signal) + len(Buy_Signal_New)))
                                 order = self.SetMarketSellOrder(i, round(sell_q / buy_price[i], 5) - 0.00001)
                                 self.logger.info(order)
                                 print(order)
@@ -479,7 +505,7 @@ class Algo_2(OnlineAlgorithm):
                                     balance["Available"] -= quntity
                                     balance["Current"] += quntity
                                     isPosition[self.correspond[i]] = True
-                            Buy_Signal.extend(Buy_Signal_New)
+                            self.Buy_Signal.extend(Buy_Signal_New)
             except ConnectionAbortedError as e:
                 self.LogException(e)
             except ConnectionError as e:
