@@ -5,6 +5,7 @@ import sys
 from datetime import datetime
 from IO import FileWorking
 
+FLoatingPointCurrencyPair = {"BTCUSDT": 6, "ETHUSDT": 5, "ETHBTC": 3, "BNBUSDT": 4, "BNBBTC": 2}
 class OfflineAlgorithm(abc.ABC):
     @abc.abstractmethod
     def __init__(self):
@@ -39,6 +40,10 @@ class OnlineAlgorithm(abc.ABC):
 
     def GetBalance(self, currency):
         return float(self.client.get_asset_balance(asset=currency)['free'])
+
+    def SetQuntity(self, quntity, currency):
+        a = pow(10, -1 * (FLoatingPointCurrencyPair[currency] + 1)) * 5
+        return round(quntity - a, FLoatingPointCurrencyPair[currency])
 
     def SetLimitBuyOrder(self, currency_Pair, quantity, price):
         return self.client.order_limit_buy(symbol=currency_Pair, quantity=quantity, price=price)

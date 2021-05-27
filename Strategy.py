@@ -87,17 +87,11 @@ class ICHIMOKU_2_Strategy(IStrategy):
                     self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t + 1]):
                 if i - t + 1 > 0:
                     if a <= (self.close_data[i] - self.close_data[i - t + 1]) / self.close_data[i] <= b:
-                        # self.sell_with_ichi = False
                         return True
-            # if not self.sell_with_ichi and self.macd[i] > self.macd_signal[i]:
-                        # return True
         return False
     def SellStrategy(self, i, t):
-        if i - t - 1 > 0:
-            if ((self.close_data[i] < self.ich_b[i - t - 1] and
-                    self.close_data[i] < self.ich_a[i - t - 1])):
-                # self.sell_with_ichi = True
+        if i - t + 1 > 0:
+            if ((self.close_data[i] < self.ich_b[i - t + 1] and
+                    self.close_data[i] < self.ich_a[i - t + 1])):
                 return True
-            # if self.macd[i] < self.macd_signal[i]:
-            #     return True
         return False
