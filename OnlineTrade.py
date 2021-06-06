@@ -248,17 +248,6 @@ class Algo_2(OnlineAlgorithm):
                                                         interval=Client.KLINE_INTERVAL_1HOUR)
         else:
             time = datetime.datetime.utcfromtimestamp(msg["k"]["t"] / 1000)
-            # time = datetime.datetime.now()
-            # if abs(time - self.LastTimeOfCandle) > datetime.timedelta(minutes=1):
-            #     self.klines[msg['s']] = self.candle.getKlines(msg['s'], Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
-            #     self.candle.unpackCandle(self.klines[msg['s']])
-            #     high_series = pd.Series(self.candle.high)
-            #     low_series = pd.Series(self.candle.low)
-            #     self.ichi_2_strategy[msg['s']] = ICHIMOKU_2_Strategy(high_series, low_series, self.candle.close)
-            #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_A(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
-            #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_B(self.param[msg['s']]["Win2"], self.param[msg['s']]["Win3"])
-            #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_Base_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
-            #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_Conversion_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
             if time > self.LastTimeOfCandle:
                 self.ichi_2_strategy[msg['s']].high_data.pop(0)
                 self.ichi_2_strategy[msg['s']].high_data.reset_index(drop=True, inplace=True)
@@ -278,10 +267,10 @@ class Algo_2(OnlineAlgorithm):
                 self.ichi_2_strategy[msg['s']].ComputeIchimoku_Base_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
                 self.ichi_2_strategy[msg['s']].ComputeIchimoku_Conversion_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
 
-            self.LastTimeOfCandle = time
+                self.LastTimeOfCandle = time
 
-            FileWorking.Write(datetime.datetime.now())
-            print(datetime.datetime.now())
+                FileWorking.Write(datetime.datetime.now())
+                print(datetime.datetime.now())
 
     def BuyOrderCondition(self, currency_pair):
         # if currency_pair == "BTCUSDT":
