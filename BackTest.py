@@ -915,7 +915,7 @@ class Algorithm_4(Algorithm_3):
             if use_offline_data:
                 self.klines[i] = (FileWorking.ReadKlines("Data\\" + i + "_1HOUR_" + start_time + "_" + end_time + ".txt"))
             else:
-                self.klines[i] = (candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2018", "1 Jan, 2020"))
+                self.klines[i] = (candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2020", "1 Jan, 2021"))
                 FileWorking.WriteKlines(self.klines[i], "Data\\" + i + "_1HOUR_" + start_time + "_" + end_time + ".txt")
             candle.unpackCandle(self.klines[i])
             high = pd.Series(candle.high)
@@ -1002,7 +1002,7 @@ class Algorithm_4(Algorithm_3):
                 matching = [s for s in b if j in s]
                 if len(matching) > 1:
                     BS[j] = 2
-                elif len(matching) == 1:
+                elif len(matching) == 1 and matching[0] != j+self.currency[-1]:
                     BS[j] = 1
                 else:
                     BS[j] = 0
@@ -1022,53 +1022,56 @@ class Algorithm_4(Algorithm_3):
             self.isPos[self.currency[0]] = True
         elif self.currency[0] in pos:#4 6 8
             for i in two_buy_signal:
-                Order["Buy"] = self.FindKeyFromCurrency(self.currency_pair_secondery, i)
+                Order["Buy"] += self.FindKeyFromCurrency(self.currency_pair_secondery, i)
                 self.isPos[i] = True
             if self.currency[0] in one_buy_signal:
                 for i in one_buy_signal:
                     if i != self.currency[0]:
-                        Order["Buy"] = self.FindKeyFromCurrency(self.currency_pair_secondery, i)
+                        Order["Buy"] += self.FindKeyFromCurrency(self.currency_pair_secondery, i)
                         self.isPos[i] = True
             elif self.currency[0] in zero_buy_signal and len(two_buy_signal) == 0:
                 Order["Sell"] = self.FindKeyFromCurrency(self.currency_pair, self.currency[0])
+                self.isPos[self.currency[0]] = False
             if len(Order["Buy"]) > 0:
                 self.isPos[self.currency[0]] = False
+            return Order
         elif len(pos) > 0 and self.currency[0] not in pos:
             if self.currency[0] in one_buy_signal and len(one_buy_signal + two_buy_signal) == 1:#2
                 for i in pos:
-                    Order["Sell"] = self.FindKeyFromCurrency(self.currency_pair_secondery, i)
+                    Order["Sell"] += self.FindKeyFromCurrency(self.currency_pair_secondery, i)
                     self.isPos[i] = False
                 self.isPos[self.currency[0]] = True
-            if self.CheckPosInBuySignal(pos, zero_buy_signal):#5 7
+            elif self.CheckPosInBuySignal(pos, zero_buy_signal) or \
+                    (self.currency[0] in zero_buy_signal and self.CheckPosInBuySignal(pos, one_buy_signal)):#5 7
                 currency = self.currency_pair_secondery if self.currency[0] in one_buy_signal else self.currency_pair
                 for i in pos:
-                    if i in zero_buy_signal:
-                        Order["Sell"] = self.FindKeyFromCurrency(currency, i)
+                    if i in zero_buy_signal or (self.currency[0] in zero_buy_signal and i in one_buy_signal):
+                        Order["Sell"] += self.FindKeyFromCurrency(currency, i)
                         self.isPos[i] = False
                 for i in two_buy_signal:
-                    Order["Buy"] = self.FindKeyFromCurrency(currency, i)
+                    Order["Buy"] += self.FindKeyFromCurrency(currency, i)
                     self.isPos[i] = True
                 if self.currency[0] in one_buy_signal:
                     for i in one_buy_signal:
                         if i != self.currency[0]:
-                            Order["Buy"] = self.FindKeyFromCurrency(currency, i)
+                            Order["Buy"] += self.FindKeyFromCurrency(currency, i)
                             self.isPos[i] = True
         if (len(two_buy_signal) > 0 or len(one_buy_signal) > 1) and \
                 self.CheckNewBuy(pos, one_buy_signal, two_buy_signal):#3
-            currency = self.currency_pair if not self.CheckPosInBuySignal(pos, one_buy_signal + two_buy_signal)\
-                else self.currency_pair_secondery
+            currency = self.currency_pair_secondery if len(pos) > 0 and self.currency[0] in one_buy_signal\
+                else self.currency_pair
             for i in two_buy_signal:
                 if i in pos:
-                    Order["SellNotAll"] = self.FindKeyFromCurrency(currency, i)
+                    Order["SellNotAll"] += self.FindKeyFromCurrency(currency, i)
                 else:
-                    Order["Buy"] = self.FindKeyFromCurrency(currency, i)
+                    Order["Buy"] += self.FindKeyFromCurrency(currency, i)
                     self.isPos[i] = True
             if self.currency[0] in one_buy_signal:
                 for i in one_buy_signal:
                     if i in pos and i != self.currency[0]:
-                        Order["SellNotAll"] = self.FindKeyFromCurrency(currency, i)
+                        Order["SellNotAll"] += self.FindKeyFromCurrency(currency, i)
                     elif i != self.currency[0]:
-                        Order["Buy"] = self.FindKeyFromCurrency(currency, i)
+                        Order["Buy"] += self.FindKeyFromCurrency(currency, i)
                         self.isPos[i] = True
 
         return Order
@@ -1096,25 +1099,95 @@ class Algorithm_4(Algorithm_3):
         return False
 
     def RunAlgorithm(self):
-        update_strategy = True
-        balance_dict = {"Current": 1000, "Max": 1000, "Min": 1000, "Available": 1000}
+        balance = {"Current": 1000, "Max": 1000, "Min": 1000, "Available": 1000}
         self.isPos = {}
+        valume = {}
+        buy_price = {}
         for i in self.currency:
             self.isPos[i] = False
-        balance_arr = []
-        buy_price = {}
-        Max_DD_arr = []
-        profit_arr = []
-        loss_arr = []
-        profit_count = 0
-        profit_count_arr = []
-        loss_count = 0
-        loss_count_arr = []
-        True_Buy_Signal = []
+            valume[i] = 0
+            buy_price[i] = 0
+        profit = []
+        loss = []
         order_count = 0
         for i in range(1, len(self.klines[self.currency_pair[0]]) - 1):
             action = self.CheckAction(i)
+            for j in action["Sell"]:
+                if self.currency[-1] in j:
+                    d = self.ichi_2_strategy[j].close_data[i] - buy_price[j[:3]]
+                    balance["Available"] += valume[j[:3]] * self.ichi_2_strategy[j].close_data[i]
+                else:
+                    d = self.ichi_2_strategy[j[:3] + self.currency[-1]].close_data[i] - buy_price[j[:3]]
+                    balance["Available"] += valume[j[:3]] * self.ichi_2_strategy[j[:3] + self.currency[-1]].close_data[i]
+
+                if d > 0:
+                    profit.append(d * valume[j[:3]])
+                    balance["Current"] += profit[-1]
+                    valume[j[:3]] = 0
+                else:
+                    loss.append(abs(d) * valume[j[:3]])
+                    valume[j[:3]] = 0
+                    balance["Current"] -= loss[-1]
+                if valume[self.currency[0]] == 0 and len(action["Buy"]) == 0:
+                    if j[3:] == self.currency[0]:
+                        buy_price[self.currency[0]] = self.ichi_2_strategy[self.currency_pair[0]].close_data[i]
+                        valume[self.currency[0]] = balance["Available"] / buy_price[self.currency[0]]
+                        balance["Available"] = 0
+
+
+            for j in action["SellNotAll"]:
+                if self.currency[-1] in j:
+                    d = self.ichi_2_strategy[j].close_data[i] - buy_price[j[:3]]
+                    balance["Available"] += (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) *\
+                                            len(action["Buy"]) * self.ichi_2_strategy[j].close_data[i]
+                else:
+                    d = self.ichi_2_strategy[j[:3] + self.currency[-1]].close_data[i] - buy_price[j[:3]]
+                    balance["Available"] += (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) *\
+                                            len(action["Buy"]) * \
+                                            self.ichi_2_strategy[j[:3] + self.currency[-1]].close_data[i]
+                if d > 0:
+                    profit.append(d * (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
+                    valume[j[:3]] -= (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
+                    balance["Current"] += profit[-1]
+                else:
+                    loss.append(abs(d) * (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
+                    valume[j[:3]] -= (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
+                    balance["Current"] -= loss[-1]
+
+            for j in action["Buy"]:
+                if valume[self.currency[0]] > 0 and len(j) > 0:
+                    d = self.ichi_2_strategy[self.currency_pair[0]].close_data[i] - buy_price[self.currency[0]]
+                    balance["Available"] = valume[self.currency[0]] * \
+                                           self.ichi_2_strategy[self.currency_pair[0]].close_data[i]
+                    if d > 0:
+                        profit.append(d * valume[self.currency[0]])
+                        valume[self.currency[0]] = 0
+                        balance["Current"] += profit[-1]
+                    else:
+                        loss.append(abs(d) * valume[self.currency[0]])
+                        valume[self.currency[0]] = 0
+                        balance["Current"] -= loss[-1]
+
+                if self.currency[-1] in j:
+                    buy_price[j[:3]] = ((buy_price[j[:3]] * valume[j[:3]]) + self.ichi_2_strategy[j].close_data[i] *
+                                        ((balance["Available"] / len(action["Buy"])) /
+                                         self.ichi_2_strategy[j].close_data[i]))\
+                                       / (((balance["Available"] / len(action["Buy"])) /
+                                          self.ichi_2_strategy[j].close_data[i]) + valume[j[:3]])
+                    valume[j[:3]] += ((balance["Available"] / len(action["Buy"])) / self.ichi_2_strategy[j].close_data[i])
+                else:
+                    buy_price[j[:3]] = ((buy_price[j[:3]] * valume[j[:3]]) +
+                                        self.ichi_2_strategy[j[:3] + self.currency[-1]].close_data[i] *
+                                        ((balance["Available"] / len(action["Buy"])) /
+                                         self.ichi_2_strategy[j[:3] + self.currency[-1]].close_data[i]))\
+                                       / (((balance["Available"] / len(action["Buy"])) /
+                                           (self.ichi_2_strategy[j[:3] + self.currency[-1]].close_data[i])) + valume[j[:3]])
+                    valume[j[:3]] += ((balance["Available"] / len(action["Buy"])) / self.ichi_2_strategy[j[:3] + self.currency[-1]].close_data[i])
+            if len(action["Buy"]) > 0:
+                balance["Available"] = 0
+
             print(action)
+        pass
         # try:
         #     row = ["Algorithm_2", second_param["Win1"], second_param["Win2"], second_param["Win3"], second_param["t"], second_param["a"],
         #                   second_param["b"], balance_dict["Current"] - 1000, sum(profit_arr), max(profit_arr), sum(loss_arr),

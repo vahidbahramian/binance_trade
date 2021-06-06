@@ -260,29 +260,28 @@ class Algo_2(OnlineAlgorithm):
             #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_Base_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
             #     self.ichi_2_strategy[msg['s']].ComputeIchimoku_Conversion_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
             if time > self.LastTimeOfCandle:
-                for i, p in self.param.items():
-                    self.ichi_2_strategy[i].high_data.pop(0)
-                    self.ichi_2_strategy[i].high_data.reset_index(drop=True, inplace=True)
-                    self.ichi_2_strategy[i].low_data.pop(0)
-                    self.ichi_2_strategy[i].low_data.reset_index(drop=True, inplace=True)
-                    self.ichi_2_strategy[i].close_data = numpy.delete(self.ichi_2_strategy[i].close_data, 0)
+                self.ichi_2_strategy[msg['s']].high_data.pop(0)
+                self.ichi_2_strategy[msg['s']].high_data.reset_index(drop=True, inplace=True)
+                self.ichi_2_strategy[msg['s']].low_data.pop(0)
+                self.ichi_2_strategy[msg['s']].low_data.reset_index(drop=True, inplace=True)
+                self.ichi_2_strategy[msg['s']].close_data = numpy.delete(self.ichi_2_strategy[msg['s']].close_data, 0)
 
 
-                    self.ichi_2_strategy[i].high_data = \
-                        self.ichi_2_strategy[i].high_data.append(pd.Series(float(msg["k"]["h"])), ignore_index=True)
-                    self.ichi_2_strategy[i].low_data = \
-                        self.ichi_2_strategy[i].low_data.append(pd.Series(float(msg["k"]["l"])), ignore_index=True)
-                    self.ichi_2_strategy[i].close_data = numpy.append(self.ichi_2_strategy[i].close_data, float(msg["k"]["c"]))
+                self.ichi_2_strategy[msg['s']].high_data = \
+                    self.ichi_2_strategy[msg['s']].high_data.append(pd.Series(float(msg["k"]["h"])), ignore_index=True)
+                self.ichi_2_strategy[msg['s']].low_data = \
+                    self.ichi_2_strategy[msg['s']].low_data.append(pd.Series(float(msg["k"]["l"])), ignore_index=True)
+                self.ichi_2_strategy[msg['s']].close_data = numpy.append(self.ichi_2_strategy[msg['s']].close_data, float(msg["k"]["c"]))
 
-                    self.ichi_2_strategy[i].ComputeIchimoku_A(p["Win1"], p["Win2"])
-                    self.ichi_2_strategy[i].ComputeIchimoku_B(p["Win2"], p["Win3"])
-                    self.ichi_2_strategy[i].ComputeIchimoku_Base_Line(p["Win1"], p["Win2"])
-                    self.ichi_2_strategy[i].ComputeIchimoku_Conversion_Line(p["Win1"], p["Win2"])
+                self.ichi_2_strategy[msg['s']].ComputeIchimoku_A(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
+                self.ichi_2_strategy[msg['s']].ComputeIchimoku_B(self.param[msg['s']]["Win2"], self.param[msg['s']]["Win3"])
+                self.ichi_2_strategy[msg['s']].ComputeIchimoku_Base_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
+                self.ichi_2_strategy[msg['s']].ComputeIchimoku_Conversion_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
 
-                self.LastTimeOfCandle = time
+            self.LastTimeOfCandle = time
 
-                FileWorking.Write(datetime.datetime.now())
-                print(datetime.datetime.now())
+            FileWorking.Write(datetime.datetime.now())
+            print(datetime.datetime.now())
 
     def BuyOrderCondition(self, currency_pair):
         # if currency_pair == "BTCUSDT":
