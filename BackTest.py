@@ -907,10 +907,10 @@ class Algorithm_4(Algorithm_3):
 
         self.correspond_currency = {}
         for i, item in enumerate(self.currency_pair_secondery):
-            self.correspond_currency[item] = self.currency_pair[i+1]
-            self.correspond_currency[self.currency_pair[i+1]] = self.currency[i+1]
+            self.correspond_currency[self.currency[i+1]] = self.currency_pair[i+1]
+            self.correspond_currency[self.currency_pair[i+1]] = item
 
-        use_offline_data = True
+        use_offline_data = False
         for i in self.currency_pair + self.currency_pair_secondery:
             if use_offline_data:
                 self.klines[i] = (FileWorking.ReadKlines("Data\\" + i + "_1HOUR_" + start_time + "_" + end_time + ".txt"))
@@ -925,7 +925,7 @@ class Algorithm_4(Algorithm_3):
 
             self.ichi_2_strategy[i] = (ICHIMOKU_2_Strategy(high, low, self.close_data))
 
-        self.file = CSVFiles("Algorithm_4-2020_2021-ETHBNBBTC.csv")
+        self.file = CSVFiles("Algorithm_4-2020_2021-ETHBNBLTCXRPBTC.csv")
         self.result_row = []
         self.Buy_Signal = {}
         self.param = {}
@@ -1109,10 +1109,15 @@ class Algorithm_4(Algorithm_3):
             buy_price[i] = 0
         profit = []
         loss = []
-        order_count = 0
+        profit_percents = []
+        loss_percents = []
+        buy_count = 0
+        sell_count = 0
+        Max_DD_arr = []
         for i in range(1, len(self.klines[self.currency_pair[0]]) - 1):
             action = self.CheckAction(i)
             for j in action["Sell"]:
+                sell_count += 1
                 if self.currency[-1] in j:
                     d = self.ichi_2_strategy[j].close_data[i] - buy_price[j[:3]]
                     balance["Available"] += valume[j[:3]] * self.ichi_2_strategy[j].close_data[i]
@@ -1122,20 +1127,25 @@ class Algorithm_4(Algorithm_3):
 
                 if d > 0:
                     profit.append(d * valume[j[:3]])
+                    profit_percents.append(d / buy_price[j[:3]])
                     balance["Current"] += profit[-1]
+                    Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     valume[j[:3]] = 0
                 else:
                     loss.append(abs(d) * valume[j[:3]])
+                    loss_percents.append(abs(d) / buy_price[j[:3]])
                     valume[j[:3]] = 0
                     balance["Current"] -= loss[-1]
+                    Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
+
                 if valume[self.currency[0]] == 0 and len(action["Buy"]) == 0:
                     if j[3:] == self.currency[0]:
                         buy_price[self.currency[0]] = self.ichi_2_strategy[self.currency_pair[0]].close_data[i]
                         valume[self.currency[0]] = balance["Available"] / buy_price[self.currency[0]]
                         balance["Available"] = 0
 
-
             for j in action["SellNotAll"]:
+                sell_count +=1
                 if self.currency[-1] in j:
                     d = self.ichi_2_strategy[j].close_data[i] - buy_price[j[:3]]
                     balance["Available"] += (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) *\
@@ -1147,26 +1157,35 @@ class Algorithm_4(Algorithm_3):
                                             self.ichi_2_strategy[j[:3] + self.currency[-1]].close_data[i]
                 if d > 0:
                     profit.append(d * (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
+                    profit_percents.append(d / buy_price[j[:3]])
                     valume[j[:3]] -= (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
                     balance["Current"] += profit[-1]
+                    Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                 else:
                     loss.append(abs(d) * (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
+                    loss_percents.append(abs(d) / buy_price[j[:3]])
                     valume[j[:3]] -= (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
                     balance["Current"] -= loss[-1]
+                    Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
 
             for j in action["Buy"]:
+                buy_count += 1
                 if valume[self.currency[0]] > 0 and len(j) > 0:
                     d = self.ichi_2_strategy[self.currency_pair[0]].close_data[i] - buy_price[self.currency[0]]
                     balance["Available"] = valume[self.currency[0]] * \
                                            self.ichi_2_strategy[self.currency_pair[0]].close_data[i]
                     if d > 0:
                         profit.append(d * valume[self.currency[0]])
+                        profit_percents.append(d / buy_price[self.currency[0]])
                         valume[self.currency[0]] = 0
                         balance["Current"] += profit[-1]
+                        Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     else:
                         loss.append(abs(d) * valume[self.currency[0]])
+                        loss_percents.append(abs(d) / buy_price[self.currency[0]])
                         valume[self.currency[0]] = 0
                         balance["Current"] -= loss[-1]
+                        Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
 
                 if self.currency[-1] in j:
                     buy_price[j[:3]] = ((buy_price[j[:3]] * valume[j[:3]]) + self.ichi_2_strategy[j].close_data[i] *
@@ -1187,13 +1206,19 @@ class Algorithm_4(Algorithm_3):
                 balance["Available"] = 0
 
             print(action)
+        if len(loss) == 0:
+            profit_factor = sum(profit)
+        else:
+            profit_factor = sum(profit) / sum(loss)
+        for i in valume:
+            pass
         pass
         # try:
         #     row = ["Algorithm_2", second_param["Win1"], second_param["Win2"], second_param["Win3"], second_param["t"], second_param["a"],
-        #                   second_param["b"], balance_dict["Current"] - 1000, sum(profit_arr), max(profit_arr), sum(loss_arr),
-        #                   max(loss_arr), profit_factor, len(profit_arr) / trade_count, len(loss_arr) / trade_count,
-        #                   trade_count, (balance_dict["Current"] - 1000) / trade_count, max(profit_count_arr),
-        #                   avg_profit, max(loss_count_arr), avg_loss, 0, 0]
+        #                   second_param["b"], balance["Current"] - 1000, sum(profit), max(profit_percents), sum(loss),
+        #                   max(loss_percents), profit_factor, len(profit) / sell_count, len(loss) / sell_count,
+        #                   sell_count, (balance["Current"] - 1000) / sell_count, max(profit_count_arr),
+        #                   sum(profit_count_arr) / len(profit_count_arr), max(loss_count_arr) , sum(loss_count_arr) / len(loss_count_arr), max(Max_DD_arr), 0]
         # except ZeroDivisionError:
         #     row = ["Algorithm_2", second_param["Win1"], second_param["Win2"], second_param["Win3"], second_param["t"], second_param["a"],
         #                   second_param["b"], balance_dict["Current"] - 1000, sum(profit_arr), max(profit_arr), sum(loss_arr),
