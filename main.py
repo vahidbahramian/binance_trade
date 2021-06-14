@@ -55,7 +55,32 @@ def main(client):
         # currency = ["BTC", "ETH", "BNB", "LTC", "XRP", "USDT"]
         currency = ["BTC", "USDT"]
         trade = BackTest.Algorithm_4(candle, currency)
-        trade.SetAlgorithmParam("BTCUSDT", window1=36, window2=72, window3=96, t=26, a=0.01, b=0.06)
+        window1 = [9, 18, 24, 36]
+        window2 = [24, 48, 72]
+        window3 = [48, 96, 144]
+        t_ = [18, 26, 48]
+        a_ = [0, 0.01]
+        b_ = [0.04, 0.05, 0.06]
+        SL_arr = [0.025, 0.05]
+
+        # self.window1 = [18]
+        # self.window2 = [24]
+        # self.window3 = [96]
+        # self.t = [18]
+        # self.a = [0]
+        # self.b = [0.05]
+
+        for win1 in window1:
+            for win2 in window2:
+                for win3 in window3:
+                    for t in t_:
+                        print(win1, " ", win2, " ", win3, " ", t, " ")
+                        for a in a_:
+                            for b in b_:
+                                trade.SetAlgorithmParam(currency[0] + currency[1], window1=win1, window2=win2,
+                                                        window3=win3, t=t, a=a, b=b)
+                                trade.Run()
+        # trade.SetAlgorithmParam("BTCUSDT", window1=36, window2=72, window3=96, t=26, a=0.01, b=0.06)
         # trade.SetAlgorithmParam("ETHUSDT", window1=9, window2=24, window3=144, t=26, a=0, b=0.05)
         # trade.SetAlgorithmParam("BNBUSDT", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         # trade.SetAlgorithmParam("LTCUSDT", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
@@ -64,7 +89,7 @@ def main(client):
         # trade.SetAlgorithmParam("BNBBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         # trade.SetAlgorithmParam("LTCBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         # trade.SetAlgorithmParam("XRPBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
-        trade.Run()
+        # trade.Run()
     else:
         bsm = BinanceSocketManager(client)
         # bsm.start()
