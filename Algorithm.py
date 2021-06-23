@@ -34,6 +34,19 @@ class OnlineAlgorithm(abc.ABC):
         self.bsm = bsm
         self.InitLogger()
 
+    def CreateCurrencyPair(self, currency):
+        self.currency = currency
+        self.currency_pair = []
+        for i in self.currency[:-1]:
+            self.currency_pair.append(i+self.currency[-1])
+        self.currency_pair_secondery = []
+        for i in self.currency[1:-1]:
+            self.currency_pair_secondery.append(i+self.currency[0])
+        self.correspond = {}
+        for i, item in enumerate(self.currency_pair_secondery):
+            self.correspond[item] = self.currency_pair[i+1]
+            self.correspond[self.currency_pair[i+1]] = self.currency[i+1]
+
     def GetPrice(self, currency_Pair):
         symbol_info = self.client.get_recent_trades(symbol=currency_Pair)
         return float(symbol_info[-1]['price'])
