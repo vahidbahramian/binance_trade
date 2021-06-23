@@ -880,8 +880,8 @@ class Algorithm_4(Algorithm_3):
 
     def __init__(self, candle, currency):
 
-        start_time = date(2021, 1, 1)
-        end_time = date(2021, 6, 20)
+        start_time = date(2020, 1, 1)
+        end_time = date(2021, 1, 1)
 
         self.currency = currency
         self.currency_pair = []
@@ -915,7 +915,7 @@ class Algorithm_4(Algorithm_3):
             self.ichi_2_strategy[i] = (ICHIMOKU_2_Strategy(high, low, self.close_data))
 
         self.file = CSVFiles("Algorithm_4-" + start_time.strftime("%Y-%m-%d_") + end_time.strftime("%Y-%m-%d_") +
-                             self.currency_pair[0] +".csv")
+                             self.currency_pair[0] +"_Balance.csv")
         self.result_row = []
         self.Buy_Signal = {}
         self.param = {}
@@ -936,7 +936,8 @@ class Algorithm_4(Algorithm_3):
             self.th[i].join()
         self.ComputeBuySignal()
         self.RunAlgorithm()
-        self.WriteResult(fieldnames, self.result_row)
+        self.WriteResult(self.fieldnames, self.result_row)
+        self.result_row.clear()
 
     def CreateThread(self, param):
         self.th = {}
@@ -1081,7 +1082,7 @@ class Algorithm_4(Algorithm_3):
         return False
 
     def RunAlgorithm(self):
-        balance = {"Current": 1000, "Max": 1000, "Min": 1000, "Available": 1000}
+        balance = {"Current": 1000, "Max": 1000, "Min": 1000, "Available": 1000, "All": []}
         self.isPos = {}
         valume = {}
         buy_price = {}
@@ -1112,6 +1113,7 @@ class Algorithm_4(Algorithm_3):
                     profit.append(d * valume[j[:3]])
                     profit_percents.append(d / buy_price[j[:3]])
                     balance["Current"] += profit[-1]
+                    balance["All"].append(balance["Current"])
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     valume[j[:3]] = 0
                     isProfitOrLoss.append(1)
@@ -1120,6 +1122,7 @@ class Algorithm_4(Algorithm_3):
                     loss_percents.append(abs(d) / buy_price[j[:3]])
                     valume[j[:3]] = 0
                     balance["Current"] -= loss[-1]
+                    balance["All"].append(balance["Current"])
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     isProfitOrLoss.append(0)
 
@@ -1215,16 +1218,22 @@ class Algorithm_4(Algorithm_3):
                 if p != 0:
                     profit_count.append(p)
                     p = 0
-        pass
         try:
-            row = ["Algorithm_4", self.param[self.currency_pair_secondery[0]]["Win1"],
-                   self.param[self.currency_pair_secondery[0]]["Win2"],
-                   self.param[self.currency_pair_secondery[0]]["Win3"], self.param[self.currency_pair_secondery[0]]["t"],
-                   self.param[self.currency_pair_secondery[0]]["a"], self.param[self.currency_pair_secondery[0]]["b"],
-                   balance["Current"] - 1000, sum(profit), max(profit_percents), sum(loss), max(loss_percents),
-                   profit_factor, len(profit) / sell_count, len(loss) / sell_count, sell_count,
-                   (balance["Current"] - 1000) / sell_count, max(profit_count), sum(profit_count) / len(profit_count),
-                   max(loss_count), sum(loss_count) / len(loss_count), 0, 0]
+            self.fieldnames = ["Win1", "Win2", "Win3", "t", "a", "b"]
+            self.fieldnames = self.fieldnames + ["Order" + str(k+1) for k in range(0, sell_count)]
+            row = [self.param[self.currency_pair[0]]["Win1"], self.param[self.currency_pair[0]]["Win2"],
+                   self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
+                   self.param[self.currency_pair[0]]["a"], self.param[self.currency_pair[0]]["b"]]\
+                  + [k for k in balance["All"]]
+
+            # row = ["Algorithm_4", self.param[self.currency_pair_secondery[0]]["Win1"],
+            #        self.param[self.currency_pair_secondery[0]]["Win2"],
+            #        self.param[self.currency_pair_secondery[0]]["Win3"], self.param[self.currency_pair_secondery[0]]["t"],
+            #        self.param[self.currency_pair_secondery[0]]["a"], self.param[self.currency_pair_secondery[0]]["b"],
+            #        balance["Current"] - 1000, sum(profit), max(profit_percents), sum(loss), max(loss_percents),
+            #        profit_factor, len(profit) / sell_count, len(loss) / sell_count, sell_count,
+            #        (balance["Current"] - 1000) / sell_count, max(profit_count), sum(profit_count) / len(profit_count),
+            #        max(loss_count), sum(loss_count) / len(loss_count), 0, 0]
         except ZeroDivisionError:
             row = ["Algorithm_2", self.param[self.currency_pair_secondery[0]]["Win1"],
                    self.param[self.currency_pair_secondery[0]]["Win2"],

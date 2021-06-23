@@ -52,11 +52,11 @@ def main(client):
         # alg = BackTest.Algorithm_3(candle, currency, currency_pair, correspond)
         # alg.RunAlgorithm()
 
-        currency = ["BTC", "ETH", "USDT"]
+        currency = ["BTC", "USDT"]
         trade = BackTest.Algorithm_4(candle, currency)
 
-        trade.SetAlgorithmParam(currency[0] + currency[2], window1=36, window2=72, window3=144, t=26, a=0.01, b=0.06)
-        trade.SetAlgorithmParam(currency[1] + currency[2], window1=18, window2=24, window3=48, t=26, a=0, b=0.06)
+        # trade.SetAlgorithmParam(currency[0] + currency[2], window1=36, window2=72, window3=144, t=26, a=0.01, b=0.06)
+        # trade.SetAlgorithmParam(currency[1] + currency[2], window1=18, window2=24, window3=48, t=26, a=0, b=0.06)
         window1 = [9, 18, 24, 36]
         window2 = [24, 48, 72]
         window3 = [48, 96, 144]
@@ -79,7 +79,7 @@ def main(client):
                         print(win1, " ", win2, " ", win3, " ", t, " ")
                         for a in a_:
                             for b in b_:
-                                trade.SetAlgorithmParam(currency[1] + currency[0], window1=win1, window2=win2,
+                                trade.SetAlgorithmParam(currency[0] + currency[1], window1=win1, window2=win2,
                                                         window3=win3, t=t, a=a, b=b)
                                 trade.Run()
 
