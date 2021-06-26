@@ -880,8 +880,8 @@ class Algorithm_4(Algorithm_3):
 
     def __init__(self, candle, currency):
 
-        start_time = date(2020, 1, 1)
-        end_time = date(2021, 1, 1)
+        start_time = date(2019, 1, 1)
+        end_time = date(2020, 1, 1)
 
         self.currency = currency
         self.currency_pair = []
@@ -926,18 +926,22 @@ class Algorithm_4(Algorithm_3):
         self.param[currency_pair] = p
 
     def Run(self):
-        fieldnames = ['Strategy', 'Win1', 'Win2', 'Win3', 'T', 'A', 'B', 'Total Net Profit',
-                      'Gross Profit', 'Max Profit', 'Gross Loss', 'Max Loss', 'Profit Factor',
-                      'Profit Trade (%)', 'Loss Trade (%)', 'Total Trade', 'Expected Payoff', 'Max Consecutive Wins',
-                      'Avg Consecutive Wins', 'Max Consecutive Loss', 'Avg Consecutive Loss',
-                      'Max Draw Down (%)', 'Max Draw Down (Time)']
         self.CreateThread(self.param)
         for i in self.currency_pair + self.currency_pair_secondery:
             self.th[i].join()
         self.ComputeBuySignal()
         self.RunAlgorithm()
-        self.WriteResult(self.fieldnames, self.result_row)
-        self.result_row.clear()
+
+    def LogResult(self):
+        # fieldnames = ['Strategy', 'Win1', 'Win2', 'Win3', 'T', 'A', 'B', 'Total Net Profit',
+        #               'Gross Profit', 'Max Profit', 'Gross Loss', 'Max Loss', 'Profit Factor',
+        #               'Profit Trade (%)', 'Loss Trade (%)', 'Total Trade', 'Expected Payoff', 'Max Consecutive Wins',
+        #               'Avg Consecutive Wins', 'Max Consecutive Loss', 'Avg Consecutive Loss',
+        #               'Max Draw Down (%)', 'Max Draw Down (Time)']
+
+        fieldnames = ["Win1", "Win2", "Win3", "t", "a", "b"]
+        fieldnames = fieldnames + ["Order" + str(k + 1) for k in range(0, 200)]
+        self.WriteResult(fieldnames, self.result_row)
 
     def CreateThread(self, param):
         self.th = {}
@@ -1219,8 +1223,6 @@ class Algorithm_4(Algorithm_3):
                     profit_count.append(p)
                     p = 0
         try:
-            self.fieldnames = ["Win1", "Win2", "Win3", "t", "a", "b"]
-            self.fieldnames = self.fieldnames + ["Order" + str(k+1) for k in range(0, sell_count)]
             row = [self.param[self.currency_pair[0]]["Win1"], self.param[self.currency_pair[0]]["Win2"],
                    self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
                    self.param[self.currency_pair[0]]["a"], self.param[self.currency_pair[0]]["b"]]\

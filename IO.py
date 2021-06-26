@@ -39,7 +39,7 @@ class CSVFiles:
     def WriteRows(self, row_values):
         res_dct = []
         for row in row_values:
-            res_dct.append({self.fieldnames[i]: row[i] for i in range(0, len(self.fieldnames), 1)})
+            res_dct.append({self.fieldnames[i]: row[i] for i in range(0, len(row), 1)})
         try:
             with open(self.filename, 'a', newline='') as csvf:
                 writer = csv.DictWriter(csvf, fieldnames=self.fieldnames)
