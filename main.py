@@ -28,7 +28,7 @@ def main(client):
 
     :type client: type of binance client
     """
-    back_test = True
+    back_test = False
 
     mutex = Lock()
     candle = Candles(client, mutex)

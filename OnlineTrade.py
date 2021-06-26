@@ -271,14 +271,14 @@ class Algo_2(OnlineAlgorithm):
         if currency_pair == "ETHBTC":
             return True
         if currency_pair == "BNBBTC":
-            return False
+            return True
         # return self.ichi_2_strategy[currency_pair].BuyStrategy(len(self.ichi_2_strategy[currency_pair].close_data) - 1,
         #                                                        self.param[currency_pair]["t"],
         #                                                        self.param[currency_pair]["a"],
         #                                                        self.param[currency_pair]["b"])
 
     def SellOrderCondition(self, currency_pair):
-        return  not self.BuyOrderCondition(currency_pair)
+        return not self.BuyOrderCondition(currency_pair)
         # if currency_pair == "BTCUSDT":
         #     return True
         # if currency_pair == "ETHUSDT":
@@ -539,43 +539,43 @@ class Algo_3(Algo_2):
         pos = self.CheckTrueIsPos(self.isPosition)
         if len(pos) == 0 and self.currency[0] in one_buy_signal and len(one_buy_signal + two_buy_signal) == 1:#1
             Order["Buy"] = self.FindKeyFromCurrency(self.currency_pair, self.currency[0])
-            self.isPosition[self.currency[0]] = True
+            # self.isPosition[self.currency[0]] = True
         elif self.currency[0] in pos:#4 6 8
             for i in two_buy_signal:
                 Order["Buy"] += self.FindKeyFromCurrency(self.currency_pair_secondery, i)
-                self.isPosition[i] = True
+                # self.isPosition[i] = True
             if self.currency[0] in one_buy_signal:
                 for i in one_buy_signal:
                     if i != self.currency[0]:
                         Order["Buy"] += self.FindKeyFromCurrency(self.currency_pair_secondery, i)
-                        self.isPosition[i] = True
+                        # self.isPosition[i] = True
             elif self.currency[0] in zero_buy_signal and len(two_buy_signal) == 0:
                 Order["Sell"] = self.FindKeyFromCurrency(self.currency_pair, self.currency[0])
-                self.isPosition[self.currency[0]] = False
-            if len(Order["Buy"]) > 0:
-                self.isPosition[self.currency[0]] = False
+                # self.isPosition[self.currency[0]] = False
+            # if len(Order["Buy"]) > 0:
+                # self.isPosition[self.currency[0]] = False
             return Order
         elif len(pos) > 0 and self.currency[0] not in pos:
             if self.currency[0] in one_buy_signal and len(one_buy_signal + two_buy_signal) == 1:#2
                 for i in pos:
                     Order["Sell"] += self.FindKeyFromCurrency(self.currency_pair_secondery, i)
-                    self.isPosition[i] = False
-                self.isPosition[self.currency[0]] = True
+                    # self.isPosition[i] = False
+                # self.isPosition[self.currency[0]] = True
             elif self.CheckPosInBuySignal(pos, zero_buy_signal) or \
                     (self.currency[0] in zero_buy_signal and self.CheckPosInBuySignal(pos, one_buy_signal)):#5 7
                 currency = self.currency_pair_secondery if self.currency[0] in one_buy_signal else self.currency_pair
                 for i in pos:
                     if i in zero_buy_signal or (self.currency[0] in zero_buy_signal and i in one_buy_signal):
                         Order["Sell"] += self.FindKeyFromCurrency(currency, i)
-                        self.isPosition[i] = False
+                        # self.isPosition[i] = False
                 for i in two_buy_signal:
                     Order["Buy"] += self.FindKeyFromCurrency(currency, i)
-                    self.isPosition[i] = True
+                    # self.isPosition[i] = True
                 if self.currency[0] in one_buy_signal:
                     for i in one_buy_signal:
                         if i != self.currency[0]:
                             Order["Buy"] += self.FindKeyFromCurrency(currency, i)
-                            self.isPosition[i] = True
+                            # self.isPosition[i] = True
         if (len(two_buy_signal) > 0 or len(one_buy_signal) > 1) and \
                 self.CheckNewBuy(pos, one_buy_signal, two_buy_signal):#3
             currency = self.currency_pair_secondery if len(pos) > 0 and self.currency[0] in one_buy_signal\
@@ -585,14 +585,14 @@ class Algo_3(Algo_2):
                     Order["SellNotAll"] += self.FindKeyFromCurrency(currency, i)
                 else:
                     Order["Buy"] += self.FindKeyFromCurrency(currency, i)
-                    self.isPosition[i] = True
+                    # self.isPosition[i] = True
             if self.currency[0] in one_buy_signal:
                 for i in one_buy_signal:
                     if i in pos and i != self.currency[0]:
                         Order["SellNotAll"] += self.FindKeyFromCurrency(currency, i)
                     elif i != self.currency[0]:
                         Order["Buy"] += self.FindKeyFromCurrency(currency, i)
-                        self.isPosition[i] = True
+                        # self.isPosition[i] = True
 
         return Order
 
@@ -658,7 +658,7 @@ class Algo_3(Algo_2):
         except:
             print("Error: unable to start thread")
 
-    def SetInitIsPosition(self, currency_balance):
+    def SetIsPosition(self, currency_balance):
         isPosition = {}
         for i in self.currency[:-1]:
             if currency_balance[i] * self.GetPrice(i + self.currency[-1]) > 10:
@@ -671,18 +671,67 @@ class Algo_3(Algo_2):
         currency_balance = {}
         buy_price = {}
         balance = {"Current": 0, "Available": 0}
-        for i in self.currency:
-            currency_balance[i] = self.GetBalance(i)
-
-        self.isPosition = self.SetInitIsPosition(currency_balance)
         check_quntity_min = lambda x: x if x > 10 else 10
         localtime = datetime.datetime.now()
         while True:
-            # if self.update_candle_event.isSet():
-            buy_signal = self.ComputeBuySignal()
-            action = self.CheckAction(buy_signal)
-            for j in action["Sell"]:
-                order = self.SetMarketSellOrder(j, self.SetQuntity(currency_balance[j], j))
+            try:
+                for i in self.currency:
+                    currency_balance[i] = self.GetBalance(i)
+
+                self.isPosition = self.SetIsPosition(currency_balance)
+                # if self.update_candle_event.isSet():
+                buy_signal = self.ComputeBuySignal()
+                action = self.CheckAction(buy_signal)
+                for j in action["Sell"]:
+                    if self.currency[-1] in j:
+                        c = j.replace(self.currency[-1], '')
+                    else:
+                        c = j.replace(self.currency[0], '')
+                    currency_balance[c] = self.GetBalance(c)
+                    order = self.SetMarketSellOrder(j, self.SetQuntity(self.GetBalance(c), j))
+                    self.logger.info(order)
+                    print(order)
+                for j in action["SellNotAll"]:
+                    if self.currency[-1] in j:
+                        c = j.replace(self.currency[-1], '')
+                    else:
+                        c = j.replace(self.currency[0], '')
+                    currency_balance[c] = self.GetBalance(c)
+                    cb = (currency_balance[c] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
+                    order = self.SetMarketSellOrder(j, self.SetQuntity(cb, j))
+                    self.logger.info(order)
+                    print(order)
+                for j in action["Buy"]:
+                    if self.currency[-1] in j:
+                        c = self.currency[-1]
+                    else:
+                        c = self.currency[0]
+                    currency_balance[c] = self.GetBalance(c)
+                    cb = currency_balance[c] / len(action["Buy"])
+                    order = self.SetMarketBuyOrder(j, self.SetQuntity(cb / self.GetPrice(j), j))
+                    self.logger.info(order)
+                    print(order)
+            except ConnectionAbortedError as e:
+                self.LogException(e)
+            except ConnectionError as e:
+                self.LogException(e)
+            except ConnectionResetError as e:
+                self.LogException(e)
+            except BinanceAPIException as e:
+                self.LogException(e)
+            except BinanceWithdrawException as e:
+                self.LogException(e)
+            except BinanceRequestException as e:
+                self.LogException(e)
+            except BinanceOrderException as e:
+                self.LogException(e)
+            except Timeout as e:
+                self.LogException(e)
+            except TooManyRedirects as e:
+                self.LogException(e)
+            except RequestException as e:
+                self.LogException(e)
+
             #
             # time.sleep(0.5)
             # try:

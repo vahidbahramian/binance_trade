@@ -880,8 +880,8 @@ class Algorithm_4(Algorithm_3):
 
     def __init__(self, candle, currency):
 
-        start_time = date(2019, 1, 1)
-        end_time = date(2020, 1, 1)
+        start_time = date(2021, 1, 1)
+        end_time = date(2021, 6, 20)
 
         self.currency = currency
         self.currency_pair = []
