@@ -205,6 +205,7 @@ class Algo_2(OnlineAlgorithm):
         super().__init__(client, bsm, candle)
         self.CreateCurrencyPair(currency)
         self.update_candle_event = threading.Event()
+        self.update_count = 0
 
     def SetAlgorithmParam(self, currency_pair, window1, window2, window3, t, a, b):
         p = {"Win1": window1, "Win2": window2, "Win3": window3, "t": t, "a": a, "b": b}
@@ -238,6 +239,7 @@ class Algo_2(OnlineAlgorithm):
         else:
             time = datetime.datetime.utcfromtimestamp(msg["k"]["t"] / 1000)
             if time > self.LastTimeOfCandle[msg['s']]:
+                self.update_count += 1
                 self.ichi_2_strategy[msg['s']].high_data.pop(0)
                 self.ichi_2_strategy[msg['s']].high_data.reset_index(drop=True, inplace=True)
                 self.ichi_2_strategy[msg['s']].low_data.pop(0)
@@ -257,7 +259,9 @@ class Algo_2(OnlineAlgorithm):
                 self.ichi_2_strategy[msg['s']].ComputeIchimoku_Conversion_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
 
                 self.LastTimeOfCandle[msg['s']] = time
-                self.update_candle_event.set()
+                if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
+                    self.update_candle_event.set()
+                    self.update_count = 0
 
                 FileWorking.Write(datetime.datetime.now())
                 print(datetime.datetime.now(), msg['s'])
@@ -666,55 +670,52 @@ class Algo_3(Algo_2):
 
     def RunTrade(self):
         currency_balance = {}
-        buy_price = {}
-        balance = {"Current": 0, "Available": 0}
-        check_quntity_min = lambda x: x if x > 10 else 10
         localtime = datetime.datetime.now()
         while True:
             time.sleep(1)
             try:
                 if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=30):
-                    print(datetime.datetime.now(), "   Thread is Run!!!")
+                    print(datetime.datetime.now(), "   Thread is run!!!")
                     localtime = datetime.datetime.now()
+                if self.update_candle_event.isSet():
+                    print(datetime.datetime.now(), "   Event was set!!!")
                     for i in self.currency:
                         currency_balance[i] = self.GetBalance(i)
 
                     self.isPosition = self.SetIsPosition(currency_balance)
-                    if self.update_candle_event.isSet():
-                        print(datetime.datetime.now(), "   Event is Set!!!")
-                        time.sleep(1)
-                        buy_signal = self.ComputeBuySignal()
-                        action = self.CheckAction(buy_signal)
-                        for j in action["Sell"]:
-                            if self.currency[-1] in j:
-                                c = j.replace(self.currency[-1], '')
-                            else:
-                                c = j.replace(self.currency[0], '')
-                            currency_balance[c] = self.GetBalance(c)
-                            order = self.SetMarketSellOrder(j, self.SetQuntity(self.GetBalance(c), j))
-                            self.logger.info(order)
-                            print(order)
-                        for j in action["SellNotAll"]:
-                            if self.currency[-1] in j:
-                                c = j.replace(self.currency[-1], '')
-                            else:
-                                c = j.replace(self.currency[0], '')
-                            currency_balance[c] = self.GetBalance(c)
-                            cb = (currency_balance[c] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
-                            order = self.SetMarketSellOrder(j, self.SetQuntity(cb, j))
-                            self.logger.info(order)
-                            print(order)
-                        for j in action["Buy"]:
-                            if self.currency[-1] in j:
-                                c = self.currency[-1]
-                            else:
-                                c = self.currency[0]
-                            currency_balance[c] = self.GetBalance(c)
-                            cb = currency_balance[c] / len(action["Buy"])
-                            order = self.SetMarketBuyOrder(j, self.SetQuntity(cb / self.GetPrice(j), j))
-                            self.logger.info(order)
-                            print(order)
-                        self.update_candle_event.clear()
+
+                    buy_signal = self.ComputeBuySignal()
+                    action = self.CheckAction(buy_signal)
+                    for j in action["Sell"]:
+                        if self.currency[-1] in j:
+                            c = j.replace(self.currency[-1], '')
+                        else:
+                            c = j.replace(self.currency[0], '')
+                        currency_balance[c] = self.GetBalance(c)
+                        order = self.SetMarketSellOrder(j, self.SetQuntity(self.GetBalance(c), j))
+                        self.logger.info(order)
+                        print(order)
+                    for j in action["SellNotAll"]:
+                        if self.currency[-1] in j:
+                            c = j.replace(self.currency[-1], '')
+                        else:
+                            c = j.replace(self.currency[0], '')
+                        currency_balance[c] = self.GetBalance(c)
+                        cb = (currency_balance[c] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
+                        order = self.SetMarketSellOrder(j, self.SetQuntity(cb, j))
+                        self.logger.info(order)
+                        print(order)
+                    for j in action["Buy"]:
+                        if self.currency[-1] in j:
+                            c = self.currency[-1]
+                        else:
+                            c = self.currency[0]
+                        currency_balance[c] = self.GetBalance(c)
+                        cb = currency_balance[c] / len(action["Buy"])
+                        order = self.SetMarketBuyOrder(j, self.SetQuntity(cb / self.GetPrice(j), j))
+                        self.logger.info(order)
+                        print(order)
+                    self.update_candle_event.clear()
             except ConnectionAbortedError as e:
                 self.LogException(e)
             except ConnectionError as e:
@@ -735,30 +736,3 @@ class Algo_3(Algo_2):
                 self.LogException(e)
             except RequestException as e:
                 self.LogException(e)
-
-            #
-            # time.sleep(0.5)
-            # try:
-            #     if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=30):
-            #         print(datetime.datetime.now(), "   Thread is Run!!!")
-            #         localtime = datetime.datetime.now()
-            # except ConnectionAbortedError as e:
-            #     self.LogException(e)
-            # except ConnectionError as e:
-            #     self.LogException(e)
-            # except ConnectionResetError as e:
-            #     self.LogException(e)
-            # except BinanceAPIException as e:
-            #     self.LogException(e)
-            # except BinanceWithdrawException as e:
-            #     self.LogException(e)
-            # except BinanceRequestException as e:
-            #     self.LogException(e)
-            # except BinanceOrderException as e:
-            #     self.LogException(e)
-            # except Timeout as e:
-            #     self.LogException(e)
-            # except TooManyRedirects as e:
-            #     self.LogException(e)
-            # except RequestException as e:
-            #     self.LogException(e)
