@@ -116,13 +116,17 @@ def main(client):
         # trade.SetAlgorithmParam("BNBBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         # trade.RunTradeThread()
 
-        currency = ["BTC", "ETH", "BNB", "USDT"]
+        currency = ["BTC", "ETH", "BNB", "LTC", "XRP", "USDT"]
         trade = Algo_3(client, bsm, candle, currency)
         trade.SetAlgorithmParam("BTCUSDT", window1=36, window2=72, window3=96, t=26, a=0.01, b=0.06)
         trade.SetAlgorithmParam("ETHUSDT", window1=9, window2=24, window3=144, t=26, a=0, b=0.05)
         trade.SetAlgorithmParam("BNBUSDT", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
+        trade.SetAlgorithmParam("LTCUSDT", window1=9, window2=24, window3=144, t=26, a=0, b=0.05)
+        trade.SetAlgorithmParam("XRPUSDT", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         trade.SetAlgorithmParam("ETHBTC", window1=9, window2=24, window3=144, t=26, a=0, b=0.05)
         trade.SetAlgorithmParam("BNBBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
+        trade.SetAlgorithmParam("LTCBTC", window1=9, window2=24, window3=144, t=26, a=0, b=0.05)
+        trade.SetAlgorithmParam("XRPBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         trade.RunTradeThread()
 
 if __name__ == "__main__":

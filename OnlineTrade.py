@@ -686,6 +686,8 @@ class Algo_3(Algo_2):
 
                     buy_signal = self.ComputeBuySignal()
                     action = self.CheckAction(buy_signal)
+                    if len(action["Sell"]) > 0 or len(action["SellNotAll"]) > 0 or len(action["Buy"]) > 0:
+                        self.logger.info(action)
                     for j in action["Sell"]:
                         if self.currency[-1] in j:
                             c = j.replace(self.currency[-1], '')
