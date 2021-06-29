@@ -22,13 +22,14 @@ import Strategy
 from threading import Lock
 from binance.websockets import BinanceSocketManager
 from twisted.internet import reactor
+from datetime import date
 
 def main(client):
     """
 
     :type client: type of binance client
     """
-    back_test = False
+    back_test = True
 
     mutex = Lock()
     candle = Candles(client, mutex)
@@ -52,18 +53,22 @@ def main(client):
         # alg = BackTest.Algorithm_3(candle, currency, currency_pair, correspond)
         # alg.RunAlgorithm()
 
-        currency = ["ETH", "USDT"]
+        # c = {"BTC": [[date(2020, 1, 1), date(2020, 1, 1)], [2018,2020]]}
+        # for k, v in c.items():
+        #     for i in v:
+        #         currency = [k, "USDT"]
+        currency = ["BTC", "ETH", "USDT"]
         trade = BackTest.Algorithm_4(candle, currency)
 
-        # trade.SetAlgorithmParam(currency[0] + currency[2], window1=36, window2=72, window3=144, t=26, a=0.01, b=0.06)
-        # trade.SetAlgorithmParam(currency[1] + currency[2], window1=18, window2=24, window3=48, t=26, a=0, b=0.06)
+        trade.SetAlgorithmParam(currency[0] + currency[2], window1=36, window2=72, window3=144, t=26, a=0.01, b=0.06)
+        trade.SetAlgorithmParam(currency[1] + currency[2], window1=18, window2=24, window3=48, t=26, a=0, b=0.06)
         window1 = [9, 18, 24, 36]
         window2 = [24, 48, 72]
-        window3 = [48, 96, 144]
+        window3 = [48, 72, 96, 120, 144]#[48, 96, 144]
         t_ = [18, 26, 48]
-        a_ = [0, 0.01]
+        a_ = [0.03, 0.05, 0.07, 2]#[0, 0.01]
         b_ = [0.04, 0.05, 0.06]
-        SL_arr = [0.025, 0.05]
+        # SL_arr = [0.025, 0.05]
 
         # self.window1 = [18]
         # self.window2 = [24]
@@ -78,10 +83,10 @@ def main(client):
                     for t in t_:
                         print(win1, " ", win2, " ", win3, " ", t, " ")
                         for a in a_:
-                            for b in b_:
-                                trade.SetAlgorithmParam(currency[0] + currency[1], window1=win1, window2=win2,
-                                                        window3=win3, t=t, a=a, b=b)
-                                trade.Run()
+                            # for b in b_:
+                            trade.SetAlgorithmParam(currency[1] + currency[0], window1=win1, window2=win2,
+                                                    window3=win3, t=t, a=a, b=0)
+                            trade.Run()
         trade.LogResult()
 
         # currency = ["BTC", "ETH", "BNB", "LTC", "XRP", "USDT"]

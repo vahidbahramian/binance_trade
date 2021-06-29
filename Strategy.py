@@ -81,13 +81,14 @@ class ICHIMOKU_2_Strategy(IStrategy):
                                                                      signal_period=signal)
     def BuyStrategy(self, i, t, a, b):
         if i - t + 1 > 0:
-            if (self.close_data[i] >= self.ich_conversion_line[i] and self.close_data[i] >= self.ich_base_line[i] and
-                    self.ich_a[i] >= self.ich_b[i] and self.close_data[i] >= self.ich_b[i - t + 1] and
-                    self.close_data[i] >= self.ich_a[i - t + 1] and
+            if (self.close_data[i] >= self.ich_base_line[i] and self.ich_a[i] >= self.ich_b[i] and
+                    self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1] and
                     self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t + 1]):
-                if i - t + 1 > 0:
-                    if a <= (self.close_data[i] - self.close_data[i - t + 1]) / self.close_data[i] <= b:
-                        return True
+                # if i - t + 1 > 0:
+                #     if a <= (self.close_data[i] - self.close_data[i - t + 1]) / self.close_data[i] <= b:
+                if a >= (self.close_data[i] - self.ich_a[i - t + 1]) / self.close_data[i] and\
+                        a >= (self.close_data[i] - self.ich_b[i - t + 1]) / self.close_data[i]:
+                    return True
         return False
     def SellStrategy(self, i, t):
         if i - t + 1 > 0:
