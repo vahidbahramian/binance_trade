@@ -678,6 +678,7 @@ class Algo_3(Algo_2):
                     print(datetime.datetime.now(), "   Thread is run!!!")
                     localtime = datetime.datetime.now()
                 if self.update_candle_event.isSet():
+                    self.update_candle_event.clear()
                     print(datetime.datetime.now(), "   Event was set!!!")
                     for i in self.currency:
                         currency_balance[i] = self.GetBalance(i)
@@ -697,6 +698,7 @@ class Algo_3(Algo_2):
                         order = self.SetMarketSellOrder(j, self.SetQuntity(self.GetBalance(c), j))
                         self.logger.info(order)
                         print(order)
+                    time.sleep(3)
                     for j in action["SellNotAll"]:
                         if self.currency[-1] in j:
                             c = j.replace(self.currency[-1], '')
@@ -707,6 +709,7 @@ class Algo_3(Algo_2):
                         order = self.SetMarketSellOrder(j, self.SetQuntity(cb, j))
                         self.logger.info(order)
                         print(order)
+                    time.sleep(3)
                     for j in action["Buy"]:
                         if self.currency[-1] in j:
                             c = self.currency[-1]
@@ -717,7 +720,6 @@ class Algo_3(Algo_2):
                         order = self.SetMarketBuyOrder(j, self.SetQuntity(cb / self.GetPrice(j), j))
                         self.logger.info(order)
                         print(order)
-                    self.update_candle_event.clear()
             except ConnectionAbortedError as e:
                 self.LogException(e)
             except ConnectionError as e:
