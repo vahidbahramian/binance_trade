@@ -15,6 +15,7 @@ import sys
 
 from Connect import Connect
 from Candles import Candles
+from ExchangeFactory import ExchangeFactory
 from IO import FileWorking
 from OnlineTrade import Algo_1, Algo_2, Algo_3
 import BackTest
@@ -161,6 +162,6 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read('Config.ini')
     section = str(sys.argv[1])
-    connectToBinance = Connect(config[section])
-    client = connectToBinance.ConnectTo
+    exchange = ExchangeFactory.Create("KuCoin", config[section])
+    client = exchange.ConnectTo()
     main(client)
