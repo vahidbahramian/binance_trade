@@ -710,14 +710,15 @@ class Algo_3(Algo_2):
                         self.logger.info(order)
                         print(order)
                     time.sleep(3)
-                    for j in action["Buy"]:
+                    for iter, j in enumerate(action["Buy"]):
                         if self.currency[-1] in j:
                             c = self.currency[-1]
                         else:
                             c = self.currency[0]
-                        currency_balance[c] = self.GetBalance(c)
-                        cb = currency_balance[c] / len(action["Buy"])
-                        order = self.SetMarketBuyOrder(j, self.SetQuntity(cb / self.GetPrice(j), j))
+                        if iter == 0:
+                            currency_balance[c] = self.GetBalance(c)
+                        order = self.SetMarketBuyOrder(j, self.SetQuntity((currency_balance[c] / len(action["Buy"])) /
+                                                                          self.GetPrice(j), j))
                         self.logger.info(order)
                         print(order)
             except ConnectionAbortedError as e:
