@@ -1,5 +1,7 @@
 from Indicator import Indicator
 import abc
+import numpy as np
+from math import sqrt, ceil
 
 class IStrategy(abc.ABC):
     @abc.abstractmethod
@@ -62,7 +64,6 @@ class ICHIMOKU_2_Strategy(IStrategy):
         self.high_data = high
         self.low_data = low
         self.close_data = close
-        self.sell_with_ichi = True
 
     def ComputeIchimoku_A(self, win1, win2):
         self.ich_a = Indicator.ICHIMOKU_A(self.high_data, self.low_data, win1, win2)
@@ -79,6 +80,25 @@ class ICHIMOKU_2_Strategy(IStrategy):
     def ComputeMACD(self, fast, slow, signal):
         self.macd, self.macd_signal, self.macd_hist = Indicator.MACD(self.close_data, fast_period=fast, slow_period=slow,
                                                                      signal_period=signal)
+
+    def ComputeCCI(self):
+        self.cci = Indicator.CCI(self.high_data, self.low_data, self.close_data)
+
+    def ComputeWilliamsR(self, r_period):
+        self.WilliamsR_high = Indicator.WilliamsR(self.high_data, self.low_data, self.high_data, r_period)
+        self.WilliamsR_low = Indicator.WilliamsR(self.high_data, self.low_data, self.low_data, r_period)
+
+    def ComputeSTOCASTIC(self, fastk, slowk, slowd):
+        self.stocastic_k, self.stocastic_d = Indicator.STOCASTIC(self.high_data, self.low_data, self.close_data, fastk,
+                                                                 slowk, slowd)
+
+    def ComputeEMA(self, time_period):
+        self.ema = Indicator.EMA(self.close_data, time_period=time_period)
+
+    def ComputeHMA(self, period):
+        self.hma = Indicator.HMA(self.close_data, period=period)
+        self.hma = np.pad(self.hma.output_values, int(period + int(sqrt(period)-1) + ceil(sqrt(period))-1)-1, 'constant')
+
     def BuyStrategy(self, i, t, a, b):
         if i - t + 1 > 0:
             if (self.close_data[i] >= self.ich_base_line[i] and self.ich_a[i] >= self.ich_b[i] and
@@ -96,3 +116,161 @@ class ICHIMOKU_2_Strategy(IStrategy):
                     self.close_data[i] < self.ich_a[i - t + 1])):
                 return True
         return False
+
+class ICHIMOKU_CCI_WilliamsR_Strategy(ICHIMOKU_2_Strategy):
+
+    def __init__(self, high, low, close):
+        super().__init__(high, low, close)
+        self.buy_ichi = False
+        self.buy_cci = False
+        self.buy_WilliamsR = False
+
+    def BuyStrategy(self, i, t, a, b, r_down, cci_down):
+        if i - t + 1 > 0:
+            if (self.close_data[i] >= self.ich_base_line[i] and self.ich_a[i] >= self.ich_b[i] and
+                    self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1] and
+                    self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t + 1]):
+                # if i - t + 1 > 0:
+                #     if a <= (self.close_data[i] - self.close_data[i - t + 1]) / self.close_data[i] <= b:
+                if a >= (self.close_data[i] - self.ich_a[i - t + 1]) / self.close_data[i] and\
+                        a >= (self.close_data[i] - self.ich_b[i - t + 1]) / self.close_data[i]:
+                    self.buy_ichi = True
+                    return True
+        if not self.buy_ichi:
+            if (self.WilliamsR[i - 1] < r_down and self.WilliamsR[i] > r_down) or self.buy_WilliamsR:
+                self.buy_WilliamsR = True
+            if ((self.WilliamsR[i - 1] > r_down and self.WilliamsR[i] < r_down)):
+                self.buy_WilliamsR = False
+            if (self.cci[i - 1] < cci_down and self.cci[i] > cci_down) or self.buy_cci:
+                self.buy_cci = True
+            if (self.cci[i - 1] > cci_down and self.cci[i] < cci_down):
+                self.buy_cci = False
+            if self.buy_WilliamsR and self.buy_cci:
+                return True
+        return False
+
+    def SellStrategy(self, i, t, r_down, r_up, cci_down, cci_up):
+        if i - t + 1 > 0 and self.buy_ichi:
+            if ((self.close_data[i] < self.ich_b[i - t + 1] and
+                    self.close_data[i] < self.ich_a[i - t + 1])):
+                self.buy_ichi = False
+                return True
+        if not self.buy_ichi:
+            if ((self.WilliamsR[i - 1] > r_down and self.WilliamsR[i] < r_down)) or \
+                    ((self.WilliamsR[i - 1] > r_up and self.WilliamsR[i] < r_up)):
+                self.buy_WilliamsR = False
+            if (self.cci[i - 1] > cci_down and self.cci[i] < cci_down) or\
+                    (self.cci[i - 1] > cci_up and self.cci[i] < cci_up):
+                self.buy_cci = False
+            if not self.buy_WilliamsR or not self.buy_cci:
+                return True
+        return False
+
+class ICHIMOKU_STOCASTIC_Strategy(ICHIMOKU_2_Strategy):
+
+    def __init__(self, high, low, close):
+        super().__init__(high, low, close)
+        self.buy_ichi = False
+
+    def BuyStrategy(self, i, t, a, b, r, r_period):
+        if i - t + 1 > 0:
+            if (self.close_data[i] >= self.ich_base_line[i] and self.ich_a[i] >= self.ich_b[i] and
+                    self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1] and
+                    self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t + 1]):
+                if a >= (self.close_data[i] - self.ich_a[i - t + 1]) / self.close_data[i] and\
+                        a >= (self.close_data[i] - self.ich_b[i - t + 1]) / self.close_data[i]:
+                    self.buy_ichi = True
+                    return True
+        # if not self.buy_ichi:
+        #     if (self.stocastic_k[i - 1] < self.stocastic_d[i - 1]) and (self.stocastic_k[i] > self.stocastic_d[i]) and\
+        #             (self.WilliamsR_low[i] < r):
+        #         return True
+        # if not self.buy_ichi:
+        #     if (self.macd_hist[i - 1] < 0) and (self.macd_hist[i] > 0) and (self.WilliamsR_low[i] < r):
+        #         return True
+            # max
+            # for j in range(1, r_period):
+            #     if self.close_data[i - j] < self.close_data[i]:
+            #         return True
+        return False
+
+    def SellStrategy(self, i, t, r, r_down, r_up):
+        if i - t + 1 > 0 and self.buy_ichi:
+            if ((self.close_data[i] < self.ich_b[i - t + 1] and
+                    self.close_data[i] < self.ich_a[i - t + 1])):
+                self.buy_ichi = False
+                return True
+        # if not self.buy_ichi:
+        #     if ((self.WilliamsR_low[i - 1] > r_down and self.WilliamsR_low[i] < r_down)) or \
+        #             ((self.WilliamsR_high[i - 1] > r_up and self.WilliamsR_high[i] < r_up)) or \
+        #             ((self.macd_hist[i - 1] > 0) and (self.macd_hist[i] < 0)):
+        #         return True
+        return False
+
+class ICHIMOKU_Strategy_Test(ICHIMOKU_2_Strategy):
+
+    def __init__(self, high, low, close):
+        super().__init__(high, low, close)
+        self.buy_ichi = False
+        self.buy_ema = True
+
+    def BuyStrategy(self, i, t, a, b, r, r_period):
+        if i - t + 1 > 0:
+            if self.buy_ema and not self.buy_ichi:
+                if (self.close_data[i] >= self.ich_base_line[i] and self.ich_a[i] >= self.ich_b[i] and
+                        self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1] and
+                        self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t + 1]):
+                    if a >= (self.close_data[i] - self.ich_a[i - t + 1]) / self.close_data[i] and\
+                            a >= (self.close_data[i] - self.ich_b[i - t + 1]) / self.close_data[i]:
+                        self.buy_ichi = True
+                        return True
+        if not self.buy_ema and self.buy_ichi:
+            if self.ema[i] < self.close_data[i] and self.macd_hist[i] > 0:
+                return True
+        return False
+
+    def SellStrategy(self, i, t, r, r_down, r_up):
+        if i - t + 1 > 0 and self.buy_ichi:
+            if ((self.close_data[i] < self.ich_b[i - t + 1] and
+                    self.close_data[i] < self.ich_a[i - t + 1])):
+                self.buy_ichi = False
+                self.buy_ema = True
+                return True
+        if self.ema[i] > self.close_data[i] and self.buy_ichi:
+            self.buy_ema = False
+            return True
+        return False
+
+class ICHIMOKU_Strategy_HMA(ICHIMOKU_2_Strategy):
+
+    def __init__(self, high, low, close):
+        super().__init__(high, low, close)
+        self.buy_ichi = False
+        self.buy_hma = True
+
+    def BuyStrategy(self, i, t, a):
+        if i - t + 1 > 0:
+            if not self.buy_ichi:
+                if (self.close_data[i] >= self.ich_base_line[i] and self.ich_a[i] >= self.ich_b[i] and
+                        self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1] and
+                        self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t + 1]):
+                    if a >= (self.close_data[i] - self.ich_a[i - t + 1]) / self.close_data[i] and\
+                            a >= (self.close_data[i] - self.ich_b[i - t + 1]) / self.close_data[i]:
+                        self.buy_ichi = True
+                        return True
+        if self.hma[i] < self.ich_conversion_line[i] < self.close_data[i]:
+            return True
+        return False
+
+    def SellStrategy(self, i, t):
+        if i - t + 1 > 0 and self.buy_ichi:
+            if ((self.close_data[i] < self.ich_b[i - t + 1] and
+                    self.close_data[i] < self.ich_a[i - t + 1])):
+                self.buy_ichi = False
+                self.buy_hma = True
+                return True
+        elif self.hma[i] > self.close_data[i]:
+            self.buy_hma = False
+            return True
+        return False
+

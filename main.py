@@ -30,7 +30,7 @@ def main(client):
 
     :type client: type of binance client
     """
-    back_test = False
+    back_test = True
 
     mutex = Lock()
     candle = Candles(client, mutex)
@@ -89,29 +89,63 @@ def main(client):
         #                             trade.Run()
         #         trade.LogResult()
 
-        currency = ["BTC", "ETH", "USDT"]
-        trade = BackTest.Algorithm_4(candle, currency)
+        currency = ["BTC", "USDT"]
+        # trade = BackTest.Algorithm_4(candle, currency)
+        trade = BackTest.Algorithm_5(candle, currency)
 
-        trade.SetAlgorithmParam(currency[0] + currency[2], window1=36, window2=72, window3=144, t=26, a=0.01, b=0.06)
-        trade.SetAlgorithmParam(currency[1] + currency[2], window1=18, window2=24, window3=48, t=26, a=0, b=0.06)
+        # trade.SetAlgorithmParam(currency[0] + currency[2], window1=36, window2=72, window3=144, t=26, a=0.01, b=0.06)
+        # trade.SetAlgorithmParam(currency[1] + currency[2], window1=18, window2=24, window3=48, t=26, a=0, b=0.06)
         window1 = [9, 18, 24, 36]
         window2 = [24, 48, 72]
         window3 = [48, 72, 96, 120, 144]#[48, 96, 144]
         t_ = [18, 26, 48]
         a_ = [0.03, 0.05, 0.07, 2]#[0, 0.01]
-        b_ = [0.04, 0.05, 0.06]
+        # b_ = [0.04, 0.05, 0.06]
+        # SL_arr = [0.025, 0.05]
 
+        # window1 = [36]
+        # window2 = [72]
+        # window3 = [144]
+        # t_ = [26]
+        # a_ = [0.05]
+        # b_ = [0.05]
+        hma_period = [24, 48, 72, 96]
         for win1 in window1:
             for win2 in window2:
                 for win3 in window3:
                     for t in t_:
                         print(win1, " ", win2, " ", win3, " ", t, " ")
                         for a in a_:
-                            # for b in b_:
-                            trade.SetAlgorithmParam(currency[1] + currency[0], window1=win1, window2=win2,
-                                                    window3=win3, t=t, a=a, b=0)
-                            trade.Run()
+                            for hma in hma_period:
+                                p = {"Win1": win1, "Win2": win2, "Win3": win3, "t": t, "a": a, "HMA_Period": hma}
+                                trade.SetAlgorithmParam(currency[0] + currency[1], p)
+                                trade.Run()
         trade.LogResult()
+
+        # fast_k = [12, 24, 36, 48]
+        # slow_k = [24, 36, 48, 60]
+        # slow_d = [6, 9, 12]
+        # r_ = [-40, -50, -60]
+        # r_down = [-80, -90]
+        # r_up = [-10, -20, -30]
+        # r_period = [12, 24, 36]
+        # ema_period = [24, 46, 48, 60]
+        # for f in fast_k:
+        #     for s in slow_k:
+        #         for si in slow_d:
+        #             print(f, " ", s, " ", si, " ")
+        #             # for r in r_:
+        #             #     for rd in r_down:
+        #             #         for ru in r_up:
+        #             #             for rp in r_period:
+        #             for ema in ema_period:
+        #                 if f < s:
+        #                     p = {"Win1": window1[0], "Win2": window2[0], "Win3": window3[0], "t": t_[0],
+        #                          "a": a_[0], "b": b_[0], "Fast": f, "Slow": s, "Signal": si, "R": 0,
+        #                          "R_Down": 0, "R_Up": 0, "R_Period": 0, "EMA_Period": ema, "HMA_Period": hma}
+        #                     trade.SetAlgorithmParam(currency[0] + currency[1], p)
+        #                     trade.Run()
+        # trade.LogResult()
 
         # currency = ["BTC", "ETH", "BNB", "LTC", "XRP", "USDT"]
         # trade.SetAlgorithmParam("BTCUSDT", window1=36, window2=72, window3=96, t=26, a=0.01, b=0.06)

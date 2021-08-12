@@ -1,5 +1,6 @@
 import talib
-from ta import trend
+from ta import trend, momentum
+from talipp.indicators import HMA
 
 class Indicator:
 
@@ -24,9 +25,14 @@ class Indicator:
         return talib.MFI(high_data, low_data, close_data, volume_data)
 
     @staticmethod
-    def STOCASTIC(high_data, low_data, close_data, fastk, fastd):
+    def STOCASTICFast(high_data, low_data, close_data, fastk, fastd):
         return talib.STOCHF(high_data, low_data, close_data, fastk_period=fastk, fastd_period=fastd,
                                     fastd_matype=0)
+
+    @staticmethod
+    def STOCASTIC(high_data, low_data, close_data, fastk, slowk, slowd):
+        return talib.STOCH(high_data, low_data, close_data, fastk_period=fastk, slowk_period=slowk,
+                                    slowd_period=slowd)
 
     @staticmethod
     def ICHIMOKU_A(high_data, low_data, win1, win2):
@@ -43,3 +49,15 @@ class Indicator:
     @staticmethod
     def ICHIMOKU_Conversion_Line(high_data, low_data, win1, win2):
         return trend.ichimoku_conversion_line(high_data, low_data, win1, win2)
+
+    @staticmethod
+    def WilliamsR(high_data, low_data, close_data, timeperiod = 14):
+        return momentum.williams_r(high_data, low_data, close_data, timeperiod)
+
+    @staticmethod
+    def CCI(high_data, low_data, close_data):
+        return trend.cci(high_data, low_data, close_data)
+
+    @staticmethod
+    def HMA(close_data, period):
+        return HMA(period, close_data)
