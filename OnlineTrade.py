@@ -219,7 +219,7 @@ class Algo_2(OnlineAlgorithm):
             self.ichi_2_strategy[i].ComputeIchimoku_Base_Line(p["Win1"], p["Win2"])
             self.ichi_2_strategy[i].ComputeIchimoku_Conversion_Line(p["Win1"], p["Win2"])
             self.ichi_2_strategy[i].ComputeHMA(p["HMA_Period"])
-            self.ichi_2_strategy[i].ComputeDEMA(p["TEMA_Period"])
+            self.ichi_2_strategy[i].ComputeDEMA(p["DEMA_Period"])
 
             self.LastTimeOfCandle[i] = self.exchange.timeUTC[-1]
 
@@ -255,7 +255,7 @@ class Algo_2(OnlineAlgorithm):
             self.ichi_2_strategy[msg["CurrencyPair"]].ComputeIchimoku_Conversion_Line(
                 self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
             self.ichi_2_strategy[msg["CurrencyPair"]].ComputeHMA(self.param[msg["CurrencyPair"]]["HMA_Period"])
-            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeDEMA(self.param[msg["CurrencyPair"]]["TEMA_Period"])
+            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeDEMA(self.param[msg["CurrencyPair"]]["DEMA_Period"])
 
             self.LastTimeOfCandle[msg["CurrencyPair"]] = time
             if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
