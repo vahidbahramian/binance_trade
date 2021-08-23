@@ -881,8 +881,8 @@ class Algorithm_4(Algorithm_3):
     strategy = {}
     def __init__(self, candle, currency):
 
-        start_time = date(2018, 1, 1)
-        end_time = date(2020, 1, 1)
+        start_time = date(2020, 1, 1)
+        end_time = date(2021, 1, 1)
 
         self.currency = currency
         self.currency_pair = []
@@ -1252,8 +1252,8 @@ class Algorithm_5(Algorithm_4):
     strategy = {}
     def __init__(self, candle, currency):
 
-        start_time = date(2018, 1, 1)
-        end_time = date(2020, 1, 1)
+        start_time = date(2020, 5, 1)
+        end_time = date(2021, 5, 1)
 
         self.currency = currency
         self.currency_pair = []
@@ -1268,7 +1268,7 @@ class Algorithm_5(Algorithm_4):
             self.correspond_currency[self.currency[i+1]] = self.currency_pair[i+1]
             self.correspond_currency[self.currency_pair[i+1]] = item
 
-        use_offline_data = True
+        use_offline_data = False
         for i in self.currency_pair + self.currency_pair_secondery:
             if use_offline_data:
                 self.klines[i] = (FileWorking.ReadKlines("Data\\" + i + "_1HOUR_" + start_time.isoformat() + "_" +
@@ -1316,6 +1316,7 @@ class Algorithm_5(Algorithm_4):
                 #                                          param[currency]["Signal"])
                 # self.strategy[currency].ComputeEMA(param[currency]["EMA_Period"])
                 self.strategy[currency].ComputeHMA(param[currency]["HMA_Period"])
+                self.strategy[currency].ComputeDEMA(param[currency]["TEMA_Period"])
             buy_event = self.strategy[currency].BuyStrategy(j, param[currency]["t"], param[currency]["a"])
             sell_event = self.strategy[currency].SellStrategy(j, param[currency]["t"])
             if buy_event and isNotPos:
@@ -1332,7 +1333,7 @@ class Algorithm_5(Algorithm_4):
             j += 1
 
     def LogResult(self):
-        fieldnames = ['Strategy', 'Win1', 'Win2', 'Win3', 't', 'a', 'HMA_Period', 'Total Net Profit',
+        fieldnames = ['Strategy', 'Win1', 'Win2', 'Win3', 't', 'a', 'HMA_Period', "TEMA_Period", 'Total Net Profit',
                       'Gross Profit', 'Max Profit', 'Avg Profit', 'Gross Loss', 'Max Loss', 'Avg Loss', 'Profit Factor',
                       'Profit Trade (%)', 'Loss Trade (%)', 'Total Trade', 'Expected Payoff', 'Max Consecutive Wins',
                       'Avg Consecutive Wins', 'Max Consecutive Loss', 'Avg Consecutive Loss',
@@ -1490,6 +1491,7 @@ class Algorithm_5(Algorithm_4):
                    self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
                    self.param[self.currency_pair[0]]["a"],
                    self.param[self.currency_pair[0]]["HMA_Period"],
+                   self.param[self.currency_pair[0]]["TEMA_Period"],
                    balance["Current"] - 1000, sum(profit), max(profit_percents),
                    sum(profit_percents) / len(profit_percents), sum(loss), max(loss_percents),
                    sum(loss_percents) / len(loss_percents), profit_factor, len(profit) / len(profit+loss),
@@ -1502,6 +1504,7 @@ class Algorithm_5(Algorithm_4):
                    self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
                    self.param[self.currency_pair[0]]["a"],
                    self.param[self.currency_pair[0]]["HMA_Period"],
+                   self.param[self.currency_pair[0]]["TEMA_Period"],
                    balance["Current"] - 1000, sum(profit), max(profit_percents), 0, sum(loss),
                           max(loss_percents), 0, profit_factor, 0, 0, sell_count, 0, 0, 0,
                           max(loss_count), 0, 0, 0]

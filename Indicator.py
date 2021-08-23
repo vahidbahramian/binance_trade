@@ -61,3 +61,11 @@ class Indicator:
     @staticmethod
     def HMA(close_data, period):
         return HMA(period, close_data)
+
+    @staticmethod
+    def TEMA(close_data, period):
+        return talib.TEMA(close_data, period)
+
+    @staticmethod
+    def DEMA(close_data, period):
+        return talib.DEMA(close_data, period)

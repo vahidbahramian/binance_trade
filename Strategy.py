@@ -99,6 +99,12 @@ class ICHIMOKU_2_Strategy(IStrategy):
         self.hma = Indicator.HMA(self.close_data, period=period)
         self.hma = np.pad(self.hma.output_values, int(period + int(sqrt(period)-1) + ceil(sqrt(period))-1)-1, 'constant')
 
+    def ComputeTEMA(self, period):
+        self.tema = Indicator.TEMA(self.close_data, period=period)
+
+    def ComputeDEMA(self, period):
+        self.dema = Indicator.DEMA(self.close_data, period=period)
+
     def BuyStrategy(self, i, t, a, b):
         if i - t + 1 > 0:
             if (self.close_data[i] >= self.ich_base_line[i] and self.ich_a[i] >= self.ich_b[i] and
@@ -258,7 +264,7 @@ class ICHIMOKU_Strategy_HMA(ICHIMOKU_2_Strategy):
                             a >= (self.close_data[i] - self.ich_b[i - t + 1]) / self.close_data[i]:
                         self.buy_ichi = True
                         return True
-        if self.hma[i] < self.ich_conversion_line[i] < self.close_data[i]:
+        if self.hma[i] < self.dema[i] < self.close_data[i]:
             return True
         return False
 

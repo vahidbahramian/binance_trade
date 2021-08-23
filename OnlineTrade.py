@@ -1,3 +1,4 @@
+import asyncio
 import sys
 import traceback
 from datetime import datetime
@@ -6,7 +7,7 @@ from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceWithdrawException, BinanceRequestException,\
     BinanceOrderException
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects, RequestException
-from Strategy import ICHIMOKU_2_Strategy
+from Strategy import ICHIMOKU_2_Strategy, ICHIMOKU_Strategy_HMA
 from Candles import Candles
 import pandas as pd
 import numpy
@@ -17,8 +18,8 @@ from Algorithm import OnlineAlgorithm
 from IO import FileWorking
 
 class Algo_1(OnlineAlgorithm):
-    def __init__(self, client, bsm, candle, firstCurrency, secondCurrency, ignoreLastTrade):
-        super().__init__(client, bsm, candle)
+    def __init__(self, exchange, firstCurrency, secondCurrency, ignoreLastTrade):
+        super().__init__(exchange)
         self.first_currency = firstCurrency
         self.second_currency = secondCurrency
         self.currency_pair = firstCurrency + secondCurrency
@@ -34,12 +35,13 @@ class Algo_1(OnlineAlgorithm):
         self.b = b
 
     def InitCandle(self):
-        klines = self.candle.getKlines(self.currency_pair, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
+        # klines = self.exchange.GetKlines(self.currency_pair, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
         # klines = candle.getKlines("BTCUSDT", Client.KLINE_INTERVAL_1HOUR, "1 hour ago UTC", "")
-        self.candle.unpackCandle(klines)
-        high_series = pd.Series(self.candle.high)
-        low_series = pd.Series(self.candle.low)
-        self.close_data = self.candle.close
+        # self.candle.unpackCandle(klines)
+        self.GetKlines(self.currency_pair, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
+        high_series = pd.Series(self.exchange.candle.high)
+        low_series = pd.Series(self.exchange.candle.low)
+        self.close_data = self.exchange.candle.close
         self.ichi_2_strategy = ICHIMOKU_2_Strategy(high_series, low_series, self.close_data)
 
         self.ichi_2_strategy.ComputeIchimoku_A(self.win1, self.win2)
@@ -47,7 +49,7 @@ class Algo_1(OnlineAlgorithm):
         self.ichi_2_strategy.ComputeIchimoku_Base_Line(self.win1, self.win2)
         self.ichi_2_strategy.ComputeIchimoku_Conversion_Line(self.win1, self.win2)
 
-        self.LastTimeOfCandle = self.candle.timeUTC[-1]
+        self.LastTimeOfCandle = self.exchange.candle.timeUTC[-1]
 
     # def SetLastSellBuyPrice(self, currency_pair):
     #     my_trade = self.client.get_my_trades(symbol=currency_pair)
@@ -68,11 +70,6 @@ class Algo_1(OnlineAlgorithm):
     def RunTradeThread(self):
         self.InitCandle()
 
-        self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
-                                                  interval=Client.KLINE_INTERVAL_1HOUR)
-        if not self.bsm.is_alive():
-            self.bsm.start()
-
         try:
             th = threading.Thread(target=self.RunTrade, args=())
             th.start()
@@ -89,40 +86,34 @@ class Algo_1(OnlineAlgorithm):
     def SellOrderCondition(self):
         return self.ichi_2_strategy.SellStrategy(len(self.ichi_2_strategy.close_data) - 1, self.t)
 
-    def UpdateCandle(self, msg):#currency_pair, time):
-        if msg['e'] == 'error':
-            print(msg)
-            self.bsm.stop_socket(self.conn_key)
-            self.conn_key = self.bsm.start_kline_socket(self.currency_pair, self.UpdateCandle,
-                                                        interval=Client.KLINE_INTERVAL_1HOUR)
-        else:
-            time = datetime.datetime.utcfromtimestamp(msg["k"]["t"] / 1000)
-            if time > self.LastTimeOfCandle:
-                self.ichi_2_strategy.high_data.pop(0)
-                self.ichi_2_strategy.high_data.reset_index(drop=True, inplace=True)
-                self.ichi_2_strategy.low_data.pop(0)
-                self.ichi_2_strategy.low_data.reset_index(drop=True, inplace=True)
-                self.ichi_2_strategy.close_data = numpy.delete(self.ichi_2_strategy.close_data, 0)
+    def UpdateCandle(self, msg):
+        time = datetime.datetime.utcfromtimestamp(msg["Time"] / 1000)
+        if time > self.LastTimeOfCandle:
+            self.ichi_2_strategy.high_data.pop(0)
+            self.ichi_2_strategy.high_data.reset_index(drop=True, inplace=True)
+            self.ichi_2_strategy.low_data.pop(0)
+            self.ichi_2_strategy.low_data.reset_index(drop=True, inplace=True)
+            self.ichi_2_strategy.close_data = numpy.delete(self.ichi_2_strategy.close_data, 0)
 
 
-                self.ichi_2_strategy.high_data = \
-                    self.ichi_2_strategy.high_data.append(pd.Series(float(msg["k"]["h"])), ignore_index=True)
-                self.ichi_2_strategy.low_data = \
-                    self.ichi_2_strategy.low_data.append(pd.Series(float(msg["k"]["l"])), ignore_index=True)
-                self.ichi_2_strategy.close_data = numpy.append(self.ichi_2_strategy.close_data, float(msg["k"]["c"]))
+            self.ichi_2_strategy.high_data = \
+                self.ichi_2_strategy.high_data.append(pd.Series(float(msg["High"])), ignore_index=True)
+            self.ichi_2_strategy.low_data = \
+                self.ichi_2_strategy.low_data.append(pd.Series(float(msg["Low"])), ignore_index=True)
+            self.ichi_2_strategy.close_data = numpy.append(self.ichi_2_strategy.close_data, float(msg["Close"]))
 
-                self.ichi_2_strategy.ComputeIchimoku_A(self.win1, self.win2)
-                self.ichi_2_strategy.ComputeIchimoku_B(self.win2, self.win3)
-                self.ichi_2_strategy.ComputeIchimoku_Base_Line(self.win1, self.win2)
-                self.ichi_2_strategy.ComputeIchimoku_Conversion_Line(self.win1, self.win2)
+            self.ichi_2_strategy.ComputeIchimoku_A(self.win1, self.win2)
+            self.ichi_2_strategy.ComputeIchimoku_B(self.win2, self.win3)
+            self.ichi_2_strategy.ComputeIchimoku_Base_Line(self.win1, self.win2)
+            self.ichi_2_strategy.ComputeIchimoku_Conversion_Line(self.win1, self.win2)
 
-                self.LastTimeOfCandle = time
+            self.LastTimeOfCandle = time
 
-                FileWorking.Write(datetime.datetime.now())
-                print(datetime.datetime.now())
+            FileWorking.Write(datetime.datetime.now())
+            print(datetime.datetime.now())
 
     def RunTrade(self):
-        last_trade = self.client.get_my_trades(symbol=self.currency_pair)
+        last_trade = self.exchange.GetMyTrade(self.currency_pair)
         if len(last_trade) > 0 and last_trade[-1]['isBuyer']:
             isPosition = True
         else:
@@ -137,7 +128,7 @@ class Algo_1(OnlineAlgorithm):
                 # open_order = self.client.get_open_orders(symbol=self.currency_pair)
                 # if len(open_order) == 0:
                 if not isPosition and self.BuyOrderCondition():
-                    last_trade = self.client.get_my_trades(symbol=self.currency_pair)
+                    last_trade = self.exchange.GetMyTrade(self.currency_pair)
                     if self.ignoreLastTrade:
                         self.usdt_balance = 50
                         self.ignoreLastTrade = False
@@ -198,28 +189,28 @@ class Algo_1(OnlineAlgorithm):
                 FileWorking.Write(e)
 
 class Algo_2(OnlineAlgorithm):
-    klines = {}
     ichi_2_strategy = {}
     param = {}
-    def __init__(self, client, bsm, candle, currency):
-        super().__init__(client, bsm, candle)
+    def __init__(self, exchange, currency):
+        super().__init__(exchange)
         self.CreateCurrencyPair(currency)
         self.update_candle_event = threading.Event()
         self.update_count = 0
 
-    def SetAlgorithmParam(self, currency_pair, window1, window2, window3, t, a, b):
-        p = {"Win1": window1, "Win2": window2, "Win3": window3, "t": t, "a": a, "b": b}
+    def SetAlgorithmParam(self, currency_pair, window1, window2, window3, t, a, hma, dema):
+        p = {"Win1": window1, "Win2": window2, "Win3": window3, "t": t, "a": a, "HMA_Period": hma, "DEMA_Period": dema}
         self.param[currency_pair] = p
 
     def InitCandle(self):
         for i in self.currency_pair + self.currency_pair_secondery:
-            self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
+            # self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
+            self.GetKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
 
-        for currency, kline in self.klines.items():
-            self.candle.unpackCandle(kline)
-            high_series = pd.Series(self.candle.high)
-            low_series = pd.Series(self.candle.low)
-            self.ichi_2_strategy[currency] = ICHIMOKU_2_Strategy(high_series, low_series, self.candle.close)
+        # for currency, kline in self.klines.items():
+        #     self.candle.unpackCandle(kline)
+            high_series = pd.Series(self.exchange.high)
+            low_series = pd.Series(self.exchange.low)
+            self.ichi_2_strategy[i] = ICHIMOKU_Strategy_HMA(high_series, low_series, self.exchange.close)
 
         self.LastTimeOfCandle = {}
         for i, p in self.param.items():
@@ -227,44 +218,52 @@ class Algo_2(OnlineAlgorithm):
             self.ichi_2_strategy[i].ComputeIchimoku_B(p["Win2"], p["Win3"])
             self.ichi_2_strategy[i].ComputeIchimoku_Base_Line(p["Win1"], p["Win2"])
             self.ichi_2_strategy[i].ComputeIchimoku_Conversion_Line(p["Win1"], p["Win2"])
+            self.ichi_2_strategy[i].ComputeHMA(p["HMA_Period"])
+            self.ichi_2_strategy[i].ComputeDEMA(p["TEMA_Period"])
 
-            self.LastTimeOfCandle[i] = self.candle.timeUTC[-1]
+            self.LastTimeOfCandle[i] = self.exchange.timeUTC[-1]
 
     def UpdateCandle(self, msg):
-        if msg['e'] == 'error':
-            print(msg)
-            self.bsm.stop_socket(self.conn_key[msg['s']])
-            self.conn_key[msg['s']] = self.bsm.start_kline_socket(msg['s'], self.UpdateCandle,
-                                                        interval=Client.KLINE_INTERVAL_1HOUR)
-        else:
-            time = datetime.datetime.utcfromtimestamp(msg["k"]["t"] / 1000)
-            if time > self.LastTimeOfCandle[msg['s']]:
-                self.update_count += 1
-                self.ichi_2_strategy[msg['s']].high_data.pop(0)
-                self.ichi_2_strategy[msg['s']].high_data.reset_index(drop=True, inplace=True)
-                self.ichi_2_strategy[msg['s']].low_data.pop(0)
-                self.ichi_2_strategy[msg['s']].low_data.reset_index(drop=True, inplace=True)
-                self.ichi_2_strategy[msg['s']].close_data = numpy.delete(self.ichi_2_strategy[msg['s']].close_data, 0)
+        time = datetime.datetime.utcfromtimestamp(msg["Time"] / 1000)
+        # print(time)
+        # print(self.LastTimeOfCandle[msg["CurrencyPair"]])
+        if time > self.LastTimeOfCandle[msg["CurrencyPair"]]:
+            print(msg["CurrencyPair"])
+            self.update_count += 1
+            self.ichi_2_strategy[msg["CurrencyPair"]].high_data.pop(0)
+            self.ichi_2_strategy[msg["CurrencyPair"]].high_data.reset_index(drop=True, inplace=True)
+            self.ichi_2_strategy[msg["CurrencyPair"]].low_data.pop(0)
+            self.ichi_2_strategy[msg["CurrencyPair"]].low_data.reset_index(drop=True, inplace=True)
+            self.ichi_2_strategy[msg["CurrencyPair"]].close_data = \
+                numpy.delete(self.ichi_2_strategy[msg["CurrencyPair"]].close_data, 0)
 
+            self.ichi_2_strategy[msg["CurrencyPair"]].high_data = \
+                self.ichi_2_strategy[msg["CurrencyPair"]].high_data.append(pd.Series(float(msg["High"])),
+                                                                           ignore_index=True)
+            self.ichi_2_strategy[msg["CurrencyPair"]].low_data = \
+                self.ichi_2_strategy[msg["CurrencyPair"]].low_data.append(pd.Series(float(msg["Low"])),
+                                                                          ignore_index=True)
+            self.ichi_2_strategy[msg["CurrencyPair"]].close_data =\
+                numpy.append(self.ichi_2_strategy[msg["CurrencyPair"]].close_data, float(msg["Close"]))
 
-                self.ichi_2_strategy[msg['s']].high_data = \
-                    self.ichi_2_strategy[msg['s']].high_data.append(pd.Series(float(msg["k"]["h"])), ignore_index=True)
-                self.ichi_2_strategy[msg['s']].low_data = \
-                    self.ichi_2_strategy[msg['s']].low_data.append(pd.Series(float(msg["k"]["l"])), ignore_index=True)
-                self.ichi_2_strategy[msg['s']].close_data = numpy.append(self.ichi_2_strategy[msg['s']].close_data, float(msg["k"]["c"]))
+            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeIchimoku_A(
+                self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
+            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeIchimoku_B(
+                self.param[msg["CurrencyPair"]]["Win2"], self.param[msg["CurrencyPair"]]["Win3"])
+            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeIchimoku_Base_Line(
+                self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
+            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeIchimoku_Conversion_Line(
+                self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
+            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeHMA(self.param[msg["CurrencyPair"]]["HMA_Period"])
+            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeDEMA(self.param[msg["CurrencyPair"]]["TEMA_Period"])
 
-                self.ichi_2_strategy[msg['s']].ComputeIchimoku_A(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
-                self.ichi_2_strategy[msg['s']].ComputeIchimoku_B(self.param[msg['s']]["Win2"], self.param[msg['s']]["Win3"])
-                self.ichi_2_strategy[msg['s']].ComputeIchimoku_Base_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
-                self.ichi_2_strategy[msg['s']].ComputeIchimoku_Conversion_Line(self.param[msg['s']]["Win1"], self.param[msg['s']]["Win2"])
+            self.LastTimeOfCandle[msg["CurrencyPair"]] = time
+            if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
+                self.update_candle_event.set()
+                self.update_count = 0
 
-                self.LastTimeOfCandle[msg['s']] = time
-                if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
-                    self.update_candle_event.set()
-                    self.update_count = 0
-
-                FileWorking.Write(datetime.datetime.now())
-                print(datetime.datetime.now(), msg['s'])
+            FileWorking.Write(datetime.datetime.now())
+            print(datetime.datetime.now(), msg["CurrencyPair"])
 
     def BuyOrderCondition(self, currency_pair):
         # if currency_pair == "BTCUSDT":
@@ -272,28 +271,27 @@ class Algo_2(OnlineAlgorithm):
         # if currency_pair == "ETHUSDT":
         #     return True
         # if currency_pair == "BNBUSDT":
-        #     return False
+        #     return True
         # if currency_pair == "ETHBTC":
-        #     return False
+        #     return True
         # if currency_pair == "BNBBTC":
         #     return True
         return self.ichi_2_strategy[currency_pair].BuyStrategy(len(self.ichi_2_strategy[currency_pair].close_data) - 1,
                                                                self.param[currency_pair]["t"],
-                                                               self.param[currency_pair]["a"],
-                                                               self.param[currency_pair]["b"])
+                                                               self.param[currency_pair]["a"])
 
     def SellOrderCondition(self, currency_pair):
         # return not self.BuyOrderCondition(currency_pair)
-        # # if currency_pair == "BTCUSDT":
-        # #     return True
-        # # if currency_pair == "ETHUSDT":
-        # #     return False
-        # # if currency_pair == "BNBUSDT":
-        # #     return False
-        # # if currency_pair == "ETHBTC":
-        # #     return False
-        # # if currency_pair == "BNBBTC":
-        # #     return False
+        # if currency_pair == "BTCUSDT":
+        #     return False
+        # if currency_pair == "ETHUSDT":
+        #     return False
+        # if currency_pair == "BNBUSDT":
+        #     return False
+        # if currency_pair == "ETHBTC":
+        #     return False
+        # if currency_pair == "BNBBTC":
+        #     return False
 
         return self.ichi_2_strategy[currency_pair].SellStrategy(len(self.ichi_2_strategy[currency_pair].close_data) - 1,
                                                                 self.param[currency_pair]["t"])
@@ -339,12 +337,12 @@ class Algo_2(OnlineAlgorithm):
 
     def RunTradeThread(self):
         self.InitCandle()
-        self.conn_key = {}
+        self.CreateWebSocketManager()
+        # self.conn_key = {}
         for i, j in self.param.items():
-            self.conn_key[i] = self.bsm.start_kline_socket(i, self.UpdateCandle,
-                                                        interval=Client.KLINE_INTERVAL_1HOUR)
-        if not self.bsm.is_alive():
-            self.bsm.start()
+            self.CreateKlineSocket(i, Client.KLINE_INTERVAL_1HOUR)
+        # if not self.bsm.is_alive():
+        #     self.bsm.start()
 
         try:
             th = threading.Thread(target=self.RunTrade, args=())
@@ -528,8 +526,8 @@ class Algo_2(OnlineAlgorithm):
 
 class Algo_3(Algo_2):
 
-    def __init__(self, client, bsm, candle, currency):
-        super().__init__(client, bsm, candle, currency)
+    def __init__(self, exchange, currency):
+        super().__init__(exchange, currency)
 
 
     def CheckAction(self, Buy_Signal):
@@ -613,7 +611,7 @@ class Algo_3(Algo_2):
             matching = [s for s in b if j in s]
             if len(matching) > 1:
                 BS[j] = 2
-            elif len(matching) == 1 and matching[0] != j+self.currency[-1]:
+            elif len(matching) == 1 and matching[0] != j + self.currency[-1]:
                 BS[j] = 1
             else:
                 BS[j] = 0
@@ -646,12 +644,17 @@ class Algo_3(Algo_2):
 
     def RunTradeThread(self):
         self.InitCandle()
-        self.conn_key = {}
+        c = threading.Thread(target=self.CreateWebSocketManager, args=())
+        c.start()
+        # self.CreateWebSocketManager()
+        # self.conn_key = {}
+        time.sleep(5)
         for i in self.currency_pair + self.currency_pair_secondery:
-            self.conn_key[i] = self.bsm.start_kline_socket(i, self.UpdateCandle,
-                                                        interval=Client.KLINE_INTERVAL_1HOUR)
-        if not self.bsm.is_alive():
-            self.bsm.start()
+            self.CreateKlineSocket(i, Client.KLINE_INTERVAL_1HOUR)
+        #     self.conn_key[i] = self.bsm.start_kline_socket(i, self.UpdateCandle,
+        #                                                 interval=Client.KLINE_INTERVAL_1HOUR)
+        # if not self.bsm.is_alive():
+        #     self.bsm.start()
 
         try:
             th = threading.Thread(target=self.RunTrade, args=())

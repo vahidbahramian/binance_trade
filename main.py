@@ -13,7 +13,6 @@ from ta import trend
 import configparser
 import sys
 
-from Connect import Connect
 from Candles import Candles
 from ExchangeFactory import ExchangeFactory
 from IO import FileWorking
@@ -30,15 +29,15 @@ def main(client):
 
     :type client: type of binance client
     """
-    back_test = True
+    back_test = False
 
-    mutex = Lock()
-    candle = Candles(client, mutex)
     # start_time = "1.1.2020"
     # end_time = "1.1.2021"
     # klines = (candle.getKlines("LTCUSDT", Client.KLINE_INTERVAL_1HOUR, "1 Jan, 2020", "1 Jan, 2021"))
     # FileWorking.WriteKlines(klines, "Data\\" + "LTCUSDT" + "_1HOUR_" + start_time + "_" + end_time + ".txt")
     if back_test:
+        mutex = Lock()
+        candle = Candles(client, mutex)
         # alg = BackTest.Algorithm_1(candle)
         # alg.RunAlgorithm()
 
@@ -89,27 +88,28 @@ def main(client):
         #                             trade.Run()
         #         trade.LogResult()
 
-        currency = ["BTC", "USDT"]
+        currency = ["XRP", "USDT"]
         # trade = BackTest.Algorithm_4(candle, currency)
         trade = BackTest.Algorithm_5(candle, currency)
 
         # trade.SetAlgorithmParam(currency[0] + currency[2], window1=36, window2=72, window3=144, t=26, a=0.01, b=0.06)
         # trade.SetAlgorithmParam(currency[1] + currency[2], window1=18, window2=24, window3=48, t=26, a=0, b=0.06)
-        window1 = [9, 18, 24, 36]
-        window2 = [24, 48, 72]
-        window3 = [48, 72, 96, 120, 144]#[48, 96, 144]
-        t_ = [18, 26, 48]
-        a_ = [0.03, 0.05, 0.07, 2]#[0, 0.01]
+        # window1 = [9, 18, 24, 36]
+        # window2 = [24, 48, 72]
+        # window3 = [48, 72, 96, 120, 144]#[48, 96, 144]
+        # t_ = [18, 26, 48]
+        # a_ = [0.03, 0.05, 0.07, 2]#[0, 0.01]
         # b_ = [0.04, 0.05, 0.06]
         # SL_arr = [0.025, 0.05]
 
-        # window1 = [36]
-        # window2 = [72]
-        # window3 = [144]
-        # t_ = [26]
-        # a_ = [0.05]
+        window1 = [36]
+        window2 = [48]
+        window3 = [144]
+        t_ = [26]
+        a_ = [0.05]
         # b_ = [0.05]
-        hma_period = [24, 48, 72, 96]
+        hma_period = [48, 72, 96]
+        tehma_period = [12, 24, 36]
         for win1 in window1:
             for win2 in window2:
                 for win3 in window3:
@@ -117,9 +117,11 @@ def main(client):
                         print(win1, " ", win2, " ", win3, " ", t, " ")
                         for a in a_:
                             for hma in hma_period:
-                                p = {"Win1": win1, "Win2": win2, "Win3": win3, "t": t, "a": a, "HMA_Period": hma}
-                                trade.SetAlgorithmParam(currency[0] + currency[1], p)
-                                trade.Run()
+                                for tema in tehma_period:
+                                    p = {"Win1": win1, "Win2": win2, "Win3": win3, "t": t, "a": a, "HMA_Period": hma,
+                                         "TEMA_Period": tema}
+                                    trade.SetAlgorithmParam(currency[0] + currency[1], p)
+                                    trade.Run()
         trade.LogResult()
 
         # fast_k = [12, 24, 36, 48]
@@ -159,7 +161,6 @@ def main(client):
         # trade.SetAlgorithmParam("XRPBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         # trade.Run()
     else:
-        bsm = BinanceSocketManager(client)
         # bsm.start()
         # bsm.close()
         # reactor.stop()
@@ -179,17 +180,17 @@ def main(client):
         # trade.SetAlgorithmParam("BNBBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         # trade.RunTradeThread()
 
-        currency = ["BTC", "ETH", "BNB", "LTC", "XRP", "USDT"]
-        trade = Algo_3(client, bsm, candle, currency)
-        trade.SetAlgorithmParam("BTCUSDT", window1=36, window2=72, window3=96, t=26, a=0.06, b=0.06)
-        trade.SetAlgorithmParam("ETHUSDT", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
-        trade.SetAlgorithmParam("BNBUSDT", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
-        trade.SetAlgorithmParam("LTCUSDT", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
-        trade.SetAlgorithmParam("XRPUSDT", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
-        trade.SetAlgorithmParam("ETHBTC", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
-        trade.SetAlgorithmParam("BNBBTC", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
-        trade.SetAlgorithmParam("LTCBTC", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
-        trade.SetAlgorithmParam("XRPBTC", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
+        currency = ["BTC", "USDT"]
+        trade = Algo_3(exchange, currency)
+        trade.SetAlgorithmParam("BTCUSDT", window1=36, window2=72, window3=96, t=26, a=0.06, hma=48, dema=24)
+        # trade.SetAlgorithmParam("ETHUSDT", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
+        # trade.SetAlgorithmParam("BNBUSDT", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
+        # trade.SetAlgorithmParam("LTCUSDT", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
+        # trade.SetAlgorithmParam("XRPUSDT", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
+        # trade.SetAlgorithmParam("ETHBTC", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
+        # trade.SetAlgorithmParam("BNBBTC", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
+        # trade.SetAlgorithmParam("LTCBTC", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
+        # trade.SetAlgorithmParam("XRPBTC", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
         trade.RunTradeThread()
 
 if __name__ == "__main__":
@@ -197,5 +198,8 @@ if __name__ == "__main__":
     config.read('Config.ini')
     section = str(sys.argv[1])
     exchange = ExchangeFactory.Create("KuCoin", config[section])
-    client = exchange.ConnectTo()
-    main(client)
+    isConnect = exchange.Connect()
+    if isConnect:
+        main(exchange)
+    else:
+        print("Can not to connect exchange!")

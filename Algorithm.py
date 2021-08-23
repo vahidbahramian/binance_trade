@@ -29,15 +29,15 @@ class OfflineAlgorithm(abc.ABC):
         pass
 
 class OnlineAlgorithm(abc.ABC):
-    def __init__(self, client, bsm, candle):
-        self.client = client
-        self.candle = candle
-        self.bsm = bsm
+    def __init__(self, exchange):
+        self.exchange = exchange
         self.InitLogger()
+        self.exchange.events.on_change += self.UpdateCandle
 
     def CreateCurrencyPair(self, currency):
         self.currency = currency
         self.currency_pair = []
+
         for i in self.currency[:-1]:
             self.currency_pair.append(i+self.currency[-1])
         self.currency_pair_secondery = []
@@ -48,28 +48,41 @@ class OnlineAlgorithm(abc.ABC):
             self.correspond[item] = self.currency_pair[i+1]
             self.correspond[self.currency_pair[i+1]] = self.currency[i+1]
 
+        self.exchange.CreateCorrespondCurrencyPair(currency)
+
+    def CreateWebSocketManager(self):
+        self.exchange.CreateWebSocketManager()
+
+    def CreateKlineSocket(self, currency_pair, interval):
+        self.exchange.CreateKlineSocket(currency_pair, interval)
+
     def GetPrice(self, currency_Pair):
-        symbol_info = self.client.get_recent_trades(symbol=currency_Pair)
-        return float(symbol_info[-1]['price'])
+        return self.exchange.GetPrice(currency_Pair)
 
     def GetBalance(self, currency):
-        return float(self.client.get_asset_balance(asset=currency)['free'])
+        return self.exchange.GetBalance(currency)
+
+    def GetKlines(self, currency, kline_interval, start_date, end_date):
+        return self.exchange.GetKlines(currency, kline_interval, start_date, end_date)
+
+    def GetMyTrade(self, currency_pair):
+        return self.exchange.GetMyTrade(currency_pair)
 
     def SetQuntity(self, quntity, currency):
         a = pow(10, -1 * (FLoatingPointCurrencyPair[currency] + 1)) * 5
         return round(quntity - a, FLoatingPointCurrencyPair[currency])
 
-    def SetLimitBuyOrder(self, currency_Pair, quantity, price):
-        return self.client.order_limit_buy(symbol=currency_Pair, quantity=quantity, price=price)
+    def SetLimitBuyOrder(self, currency_pair, quantity, price):
+        return self.exchange.SetLimitOrder(currency_pair, "Buy", quantity, price)
 
-    def SetLimitSellOrder(self, currency_Pair, quantity, price):
-        return self.client.order_limit_sell(symbol=currency_Pair, quantity=quantity, price=price)
+    def SetLimitSellOrder(self, currency_pair, quantity, price):
+        return self.exchange.SetLimitOrder(currency_pair, "Sell", quantity, price)
 
     def SetMarketBuyOrder(self, currency_Pair, quantity):
-        return self.client.order_market_buy(symbol=currency_Pair, quantity=quantity)
+        return self.exchange.SetMarketOrder(currency_Pair, "Buy", quantity)
 
     def SetMarketSellOrder(self, currency_Pair, quantity):
-        return self.client.order_market_sell(symbol=currency_Pair, quantity=quantity)
+        return self.exchange.SetMarketOrder(currency_Pair, "Sell", quantity)
 
     @abc.abstractmethod
     def BuyOrderCondition(self):
@@ -80,7 +93,7 @@ class OnlineAlgorithm(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def UpdateCandle(self, currency_pair, time):
+    def UpdateCandle(self, msg):
         pass
 
     def InitLogger(self):

@@ -37,7 +37,7 @@ class Candles:
         _low = []
         _volume = []
         for i in range(len(klines)):
-            _timeUTC.append(datetime.utcfromtimestamp(klines[i][0] / 1000))
+            _timeUTC.append(datetime.utcfromtimestamp(int(klines[i][0]) / 1000))
             _close.append(float(klines[i][4]))
             _open.append(float(klines[i][1]))
             _high.append(float(klines[i][2]))
