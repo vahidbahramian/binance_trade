@@ -17,9 +17,7 @@ class Candles:
         :param time_frame: KLINE_INTERVAL from binance.client
         """
         self.klines_ready = True
-        self.mutex.acquire()
-        historical_klines = self.client.get_historical_klines(currency_pair, time_frame, start_date, end_date)
-        self.mutex.release()
+        historical_klines = self.client.GetKlines(currency_pair, time_frame, start_date, end_date)
         return historical_klines
 
     def getCandle(self, currency_pair, time_frame):

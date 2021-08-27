@@ -110,6 +110,7 @@ class Binance(Exchange):
         historical_klines = self.client.get_historical_klines(currency_pair, kline_interval, start_date, end_date)
         self.mutex.release()
         self.UnpackCandle(historical_klines)
+        return historical_klines
 
     def UnpackCandle(self, klines):
         _timeUTC = []
@@ -290,6 +291,9 @@ class KuCoin(Exchange):
         loop.run_until_complete(self.KlineSubscribe(currency_pair, interval))
         # await self.ksm.subscribe('/market/candles:BTC-USDT' + "_" + self.KLINE_INTERVAL_CORRESPOND[interval])
 
+    def ReCreateKlineSocket(self):
+        pass
+
     async def KlineSubscribe(self, currency_pair, interval):
         # pass
         await self.ksm.subscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
@@ -305,3 +309,5 @@ class KuCoin(Exchange):
             close = float(msg['data']['candles'][2])
             result = {"CurrencyPair": currency_pair, "Time": time_1, "High": high, "Low": low, "Close": close}
             self.events.on_change(result)
+        else:
+            print(msg)

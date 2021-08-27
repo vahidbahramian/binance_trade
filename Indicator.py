@@ -1,6 +1,6 @@
 import talib
-from ta import trend, momentum
-from talipp.indicators import HMA
+from ta import trend, momentum, volatility
+from talipp.indicators import HMA, McGinleyDynamic, EMA
 
 class Indicator:
 
@@ -69,3 +69,12 @@ class Indicator:
     @staticmethod
     def DEMA(close_data, period):
         return talib.DEMA(close_data, period)
+
+    @staticmethod
+    def KeltnerChannel(high_data, low_data, close_data, window, window_atr, multi_atr):
+        return volatility.KeltnerChannel(high_data, low_data, close_data, window, window_atr, multi_atr
+                                         , original_version=False)
+
+    @staticmethod
+    def McGinleyDynamic(close_data, period):
+        return McGinleyDynamic(period, close_data)

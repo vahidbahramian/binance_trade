@@ -228,7 +228,6 @@ class Algo_2(OnlineAlgorithm):
         # print(time)
         # print(self.LastTimeOfCandle[msg["CurrencyPair"]])
         if time > self.LastTimeOfCandle[msg["CurrencyPair"]]:
-            print(msg["CurrencyPair"])
             self.update_count += 1
             self.ichi_2_strategy[msg["CurrencyPair"]].high_data.pop(0)
             self.ichi_2_strategy[msg["CurrencyPair"]].high_data.reset_index(drop=True, inplace=True)
@@ -597,25 +596,25 @@ class Algo_3(Algo_2):
 
     def ComputeBuySignal(self):
         b = []
-        BS = {}
+        bs = {}
         for i in self.currency_pair + self.currency_pair_secondery:
             if (self.BuyOrderCondition(i) and not self.isPosition[i[:3]]) or\
                     (self.isPosition[i[:3]] and not self.SellOrderCondition(i)):
                 b.append(i)
 
         if self.currency_pair[0] in b:
-            BS[self.currency[0]] = 1
+            bs[self.currency[0]] = 1
         else:
-            BS[self.currency[0]] = 0
+            bs[self.currency[0]] = 0
         for j in self.currency[1:-1]:
             matching = [s for s in b if j in s]
             if len(matching) > 1:
-                BS[j] = 2
+                bs[j] = 2
             elif len(matching) == 1 and matching[0] != j + self.currency[-1]:
-                BS[j] = 1
+                bs[j] = 1
             else:
-                BS[j] = 0
-        return BS
+                bs[j] = 0
+        return bs
 
     def GetSpecificBuySignal(self, Buy_Signal, state):
         return [c for c, s in Buy_Signal.items() if s == state]
@@ -663,13 +662,13 @@ class Algo_3(Algo_2):
             print("Error: unable to start thread")
 
     def SetIsPosition(self, currency_balance):
-        isPosition = {}
+        is_position = {}
         for i in self.currency[:-1]:
             if currency_balance[i] * self.GetPrice(i + self.currency[-1]) > 10:
-                isPosition[i] = True
+                is_position[i] = True
             else:
-                isPosition[i] = False
-        return isPosition
+                is_position[i] = False
+        return is_position
 
     def RunTrade(self):
         currency_balance = {}
@@ -680,7 +679,7 @@ class Algo_3(Algo_2):
                 if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=30):
                     print(datetime.datetime.now(), "   Thread is run!!!")
                     localtime = datetime.datetime.now()
-                if self.update_candle_event.isSet():
+                if self.update_candle_event.is_set():
                     self.update_candle_event.clear()
                     print(datetime.datetime.now(), "   Event was set!!!")
                     for i in self.currency:
@@ -713,12 +712,12 @@ class Algo_3(Algo_2):
                         self.logger.info(order)
                         print(order)
                     time.sleep(3)
-                    for iter, j in enumerate(action["Buy"]):
+                    for i, j in enumerate(action["Buy"]):
                         if self.currency[-1] in j:
                             c = self.currency[-1]
                         else:
                             c = self.currency[0]
-                        if iter == 0:
+                        if i == 0:
                             currency_balance[c] = self.GetBalance(c)
                         order = self.SetMarketBuyOrder(j, self.SetQuntity((currency_balance[c] / len(action["Buy"])) /
                                                                           self.GetPrice(j), j))

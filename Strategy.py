@@ -1,3 +1,5 @@
+import pandas as pd
+
 from Indicator import Indicator
 import abc
 import numpy as np
@@ -104,6 +106,14 @@ class ICHIMOKU_2_Strategy(IStrategy):
 
     def ComputeDEMA(self, period):
         self.dema = Indicator.DEMA(self.close_data, period=period)
+
+    def ComputeKeltnerChannel(self, window, window_atr, multi_atr):
+        self.keltner = Indicator.KeltnerChannel(self.high_data, self.low_data, pd.Series(self.close_data), window,
+                                                window_atr, multi_atr)
+
+    def ComputeMcGinleyDynamic(self, period):
+        self.mc_ginley = Indicator.McGinleyDynamic(self.close_data, period=period)
+        self.mc_ginley = np.pad(self.mc_ginley.output_values, int(period)-1, 'constant')
 
     def BuyStrategy(self, i, t, a, b):
         if i - t + 1 > 0:
@@ -278,5 +288,57 @@ class ICHIMOKU_Strategy_HMA(ICHIMOKU_2_Strategy):
         elif self.hma[i] > self.close_data[i]:
             self.buy_hma = False
             return True
+        return False
+
+
+class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
+
+    def __init__(self, high, low, close):
+        super().__init__(high, low, close)
+        self.buy_ichi = False
+        self.buy_1 = False
+
+    def BuyStrategy(self, i, t, a):
+        if i - t + 1 > 0:
+            if not self.buy_ichi:
+                if (self.close_data[i] >= self.ich_base_line[i] and self.ich_a[i] >= self.ich_b[i] and
+                        self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1] and
+                        self.ich_conversion_line[i] >= self.ich_base_line[i] >= self.ich_a[i - t + 1]):
+                    # if a >= (self.close_data[i] - self.ich_a[i - t + 1]) / self.close_data[i] and\
+                    #         a >= (self.close_data[i] - self.ich_b[i - t + 1]) / self.close_data[i]:
+                    # if self.keltner.keltner_channel_lband()[i] < self.close_data[i] and \
+                    #         self.keltner.keltner_channel_lband()[i - 1] > self.close_data[i - 1]:
+                        self.buy_ichi = True
+                        return True
+            # if self.hma[i] < self.keltner.keltner_channel_hband()[i] < self.close_data[i] and \
+            #         self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1]:
+                if not self.buy_1:
+                    if (self.mc_ginley[i] < self.keltner.keltner_channel_hband()[i] < self.close_data[i]) and \
+                            (self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1]):
+                        #or self.mc_ginley[i] < self.keltner.keltner_channel_lband()[i]:
+                        self.buy_1 = True
+                        return True
+
+                    if self.keltner.keltner_channel_hband()[i-1] < self.mc_ginley[i-1] and\
+                            self.keltner.keltner_channel_hband()[i] > self.mc_ginley[i] and \
+                            self.close_data[i] > self.keltner.keltner_channel_lband()[i]:
+                        return True
+        return False
+
+    def SellStrategy(self, i, t):
+        if i - t + 1 > 0:
+            if self.buy_ichi:
+                if ((self.close_data[i] < self.ich_b[i - t + 1] and
+                        self.close_data[i] < self.ich_a[i - t + 1])):
+                    self.buy_ichi = False
+                    return True
+            elif self.buy_1:
+                if ((self.close_data[i] < self.ich_b[i - t + 1] and self.close_data[i] < self.ich_a[i - t + 1])) \
+                    or self.mc_ginley[i] > self.close_data[i]:
+                    self.buy_1 = False
+                    return True
+            elif not self.buy_ichi and not self.buy_1:
+                if self.close_data[i] < self.keltner.keltner_channel_lband()[i]:
+                    return True
         return False
 
