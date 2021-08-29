@@ -54,7 +54,10 @@ class OnlineAlgorithm(abc.ABC):
         self.exchange.CreateWebSocketManager()
 
     def CreateKlineSocket(self, currency_pair, interval):
-        self.exchange.CreateKlineSocket(currency_pair, interval)
+        self.exchange.CreateKlineSocket(currency_pair, interval, re_create=False)
+
+    def ReCreateKlineSocket(self, currency_pair, interval):
+        self.exchange.CreateKlineSocket(currency_pair, interval, re_create=True)
 
     def GetPrice(self, currency_Pair):
         return self.exchange.GetPrice(currency_Pair)

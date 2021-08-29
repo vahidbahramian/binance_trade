@@ -677,11 +677,15 @@ class Algo_3(Algo_2):
             time.sleep(1)
             try:
                 if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=30):
-                    print(datetime.datetime.now(), "   Thread is run!!!")
+                    print(datetime.datetime.now(), "    Thread is run!!!")
                     localtime = datetime.datetime.now()
+                    for i in self.currency_pair + self.currency_pair_secondery:
+                        if localtime - self.LastTimeOfCandle[i] > datetime.timedelta(minutes=60):
+                            self.ReCreateKlineSocket(i, Client.KLINE_INTERVAL_1HOUR)
+                            print(datetime.datetime.now(), "    ReCreate Kline Socket!!!")
                 if self.update_candle_event.is_set():
                     self.update_candle_event.clear()
-                    print(datetime.datetime.now(), "   Event was set!!!")
+                    print(datetime.datetime.now(), "    Event was set!!!")
                     for i in self.currency:
                         currency_balance[i] = self.GetBalance(i)
 

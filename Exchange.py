@@ -284,8 +284,12 @@ class KuCoin(Exchange):
         # for private topics such as '/account/balance' pass private=True
         # self.ksm_private = await KucoinSocketManager.create(self.loop, self.client, self.HandleEvent, private=True)
 
-    def CreateKlineSocket(self, currency_pair, interval):
-        # pass
+    def CreateKlineSocket(self, currency_pair, interval, re_create):
+        if re_create:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self.KlineSubscribe(currency_pair, interval))
@@ -297,6 +301,11 @@ class KuCoin(Exchange):
     async def KlineSubscribe(self, currency_pair, interval):
         # pass
         await self.ksm.subscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
+                                 self.KLINE_INTERVAL_CORRESPOND[interval])
+
+    async def KlineUnSubscribe(self, currency_pair, interval):
+        # pass
+        await self.ksm.unsubscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
                                  self.KLINE_INTERVAL_CORRESPOND[interval])
 
     async def HandleEvent(self, msg):
