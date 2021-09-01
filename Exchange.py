@@ -318,5 +318,5 @@ class KuCoin(Exchange):
             close = float(msg['data']['candles'][2])
             result = {"CurrencyPair": currency_pair, "Time": time_1, "High": high, "Low": low, "Close": close}
             self.events.on_change(result)
-        else:
-            print(msg)
+        # else:
+        #     print(msg)

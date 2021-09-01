@@ -7,7 +7,7 @@ from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceWithdrawException, BinanceRequestException,\
     BinanceOrderException
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects, RequestException
-from Strategy import ICHIMOKU_2_Strategy, ICHIMOKU_Strategy_HMA
+from Strategy import ICHIMOKU_2_Strategy, ICHIMOKU_Strategy_HMA, ICHIMOKU_Strategy_HMA_Keltner
 from Candles import Candles
 import pandas as pd
 import numpy
@@ -189,7 +189,7 @@ class Algo_1(OnlineAlgorithm):
                 FileWorking.Write(e)
 
 class Algo_2(OnlineAlgorithm):
-    ichi_2_strategy = {}
+    strategy = {}
     param = {}
     def __init__(self, exchange, currency):
         super().__init__(exchange)
@@ -197,8 +197,7 @@ class Algo_2(OnlineAlgorithm):
         self.update_candle_event = threading.Event()
         self.update_count = 0
 
-    def SetAlgorithmParam(self, currency_pair, window1, window2, window3, t, a, hma, dema):
-        p = {"Win1": window1, "Win2": window2, "Win3": window3, "t": t, "a": a, "HMA_Period": hma, "DEMA_Period": dema}
+    def SetAlgorithmParam(self, currency_pair, p):
         self.param[currency_pair] = p
 
     def InitCandle(self):
@@ -210,16 +209,16 @@ class Algo_2(OnlineAlgorithm):
         #     self.candle.unpackCandle(kline)
             high_series = pd.Series(self.exchange.high)
             low_series = pd.Series(self.exchange.low)
-            self.ichi_2_strategy[i] = ICHIMOKU_Strategy_HMA(high_series, low_series, self.exchange.close)
+            self.strategy[i] = ICHIMOKU_Strategy_HMA_Keltner(high_series, low_series, self.exchange.close)
 
         self.LastTimeOfCandle = {}
         for i, p in self.param.items():
-            self.ichi_2_strategy[i].ComputeIchimoku_A(p["Win1"], p["Win2"])
-            self.ichi_2_strategy[i].ComputeIchimoku_B(p["Win2"], p["Win3"])
-            self.ichi_2_strategy[i].ComputeIchimoku_Base_Line(p["Win1"], p["Win2"])
-            self.ichi_2_strategy[i].ComputeIchimoku_Conversion_Line(p["Win1"], p["Win2"])
-            self.ichi_2_strategy[i].ComputeHMA(p["HMA_Period"])
-            self.ichi_2_strategy[i].ComputeDEMA(p["DEMA_Period"])
+            self.strategy[i].ComputeIchimoku_A(p["Win1"], p["Win2"])
+            self.strategy[i].ComputeIchimoku_B(p["Win2"], p["Win3"])
+            self.strategy[i].ComputeIchimoku_Base_Line(p["Win1"], p["Win2"])
+            self.strategy[i].ComputeIchimoku_Conversion_Line(p["Win1"], p["Win2"])
+            self.strategy[i].ComputeKeltnerChannel(p[i]["keltner_Window"], 12, p[i]["Multi_ATR"])
+            self.strategy[i].ComputeMcGinleyDynamic(p[i]["McGinley_Period"])
 
             self.LastTimeOfCandle[i] = self.exchange.timeUTC[-1]
 
@@ -229,32 +228,33 @@ class Algo_2(OnlineAlgorithm):
         # print(self.LastTimeOfCandle[msg["CurrencyPair"]])
         if time > self.LastTimeOfCandle[msg["CurrencyPair"]]:
             self.update_count += 1
-            self.ichi_2_strategy[msg["CurrencyPair"]].high_data.pop(0)
-            self.ichi_2_strategy[msg["CurrencyPair"]].high_data.reset_index(drop=True, inplace=True)
-            self.ichi_2_strategy[msg["CurrencyPair"]].low_data.pop(0)
-            self.ichi_2_strategy[msg["CurrencyPair"]].low_data.reset_index(drop=True, inplace=True)
-            self.ichi_2_strategy[msg["CurrencyPair"]].close_data = \
-                numpy.delete(self.ichi_2_strategy[msg["CurrencyPair"]].close_data, 0)
+            self.strategy[msg["CurrencyPair"]].high_data.pop(0)
+            self.strategy[msg["CurrencyPair"]].high_data.reset_index(drop=True, inplace=True)
+            self.strategy[msg["CurrencyPair"]].low_data.pop(0)
+            self.strategy[msg["CurrencyPair"]].low_data.reset_index(drop=True, inplace=True)
+            self.strategy[msg["CurrencyPair"]].close_data = \
+                numpy.delete(self.strategy[msg["CurrencyPair"]].close_data, 0)
 
-            self.ichi_2_strategy[msg["CurrencyPair"]].high_data = \
-                self.ichi_2_strategy[msg["CurrencyPair"]].high_data.append(pd.Series(float(msg["High"])),
+            self.strategy[msg["CurrencyPair"]].high_data = \
+                self.strategy[msg["CurrencyPair"]].high_data.append(pd.Series(float(msg["High"])),
                                                                            ignore_index=True)
-            self.ichi_2_strategy[msg["CurrencyPair"]].low_data = \
-                self.ichi_2_strategy[msg["CurrencyPair"]].low_data.append(pd.Series(float(msg["Low"])),
+            self.strategy[msg["CurrencyPair"]].low_data = \
+                self.strategy[msg["CurrencyPair"]].low_data.append(pd.Series(float(msg["Low"])),
                                                                           ignore_index=True)
-            self.ichi_2_strategy[msg["CurrencyPair"]].close_data =\
-                numpy.append(self.ichi_2_strategy[msg["CurrencyPair"]].close_data, float(msg["Close"]))
+            self.strategy[msg["CurrencyPair"]].close_data =\
+                numpy.append(self.strategy[msg["CurrencyPair"]].close_data, float(msg["Close"]))
 
-            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeIchimoku_A(
+            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_A(
                 self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
-            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeIchimoku_B(
+            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_B(
                 self.param[msg["CurrencyPair"]]["Win2"], self.param[msg["CurrencyPair"]]["Win3"])
-            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeIchimoku_Base_Line(
+            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_Base_Line(
                 self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
-            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeIchimoku_Conversion_Line(
+            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_Conversion_Line(
                 self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
-            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeHMA(self.param[msg["CurrencyPair"]]["HMA_Period"])
-            self.ichi_2_strategy[msg["CurrencyPair"]].ComputeDEMA(self.param[msg["CurrencyPair"]]["DEMA_Period"])
+            self.strategy[msg["CurrencyPair"]].ComputeKeltnerChannel(self.param[msg["CurrencyPair"]]["keltner_Window"],
+                                                                     12, self.param[msg["CurrencyPair"]]["Multi_ATR"])
+            self.strategy[msg["CurrencyPair"]].ComputeMcGinleyDynamic(self.param[msg["CurrencyPair"]]["McGinley_Period"])
 
             self.LastTimeOfCandle[msg["CurrencyPair"]] = time
             if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
@@ -275,7 +275,7 @@ class Algo_2(OnlineAlgorithm):
         #     return True
         # if currency_pair == "BNBBTC":
         #     return True
-        return self.ichi_2_strategy[currency_pair].BuyStrategy(len(self.ichi_2_strategy[currency_pair].close_data) - 1,
+        return self.strategy[currency_pair].BuyStrategy(len(self.strategy[currency_pair].close_data) - 1,
                                                                self.param[currency_pair]["t"],
                                                                self.param[currency_pair]["a"])
 
@@ -292,7 +292,7 @@ class Algo_2(OnlineAlgorithm):
         # if currency_pair == "BNBBTC":
         #     return False
 
-        return self.ichi_2_strategy[currency_pair].SellStrategy(len(self.ichi_2_strategy[currency_pair].close_data) - 1,
+        return self.strategy[currency_pair].SellStrategy(len(self.strategy[currency_pair].close_data) - 1,
                                                                 self.param[currency_pair]["t"])
 
     def FindBuySignal(self, currency_pair):
@@ -683,6 +683,7 @@ class Algo_3(Algo_2):
                         if localtime - self.LastTimeOfCandle[i] > datetime.timedelta(minutes=60):
                             self.ReCreateKlineSocket(i, Client.KLINE_INTERVAL_1HOUR)
                             print(datetime.datetime.now(), "    ReCreate Kline Socket!!!")
+                            self.logger.info("ReCreate Kline Socket!!!")
                 if self.update_candle_event.is_set():
                     self.update_candle_event.clear()
                     print(datetime.datetime.now(), "    Event was set!!!")

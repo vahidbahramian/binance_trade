@@ -319,10 +319,9 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                         self.buy_1 = True
                         return True
 
-                    if self.keltner.keltner_channel_hband()[i-1] < self.mc_ginley[i-1] and\
-                            self.keltner.keltner_channel_hband()[i] > self.mc_ginley[i] and \
-                            self.close_data[i] > self.keltner.keltner_channel_lband()[i]:
-                        return True
+                    # if self.keltner.keltner_channel_lband()[i - 1] > self.tema[i - 1] and \
+                    #         self.keltner.keltner_channel_lband()[i] < self.tema[i] < self.close_data[i]:
+                    #     return True
         return False
 
     def SellStrategy(self, i, t):
@@ -333,12 +332,12 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                     self.buy_ichi = False
                     return True
             elif self.buy_1:
-                if ((self.close_data[i] < self.ich_b[i - t + 1] and self.close_data[i] < self.ich_a[i - t + 1])) \
+                if (self.close_data[i] < self.ich_b[i - t + 1] and self.close_data[i] < self.ich_a[i - t + 1]) \
                     or self.mc_ginley[i] > self.close_data[i]:
                     self.buy_1 = False
                     return True
-            elif not self.buy_ichi and not self.buy_1:
-                if self.close_data[i] < self.keltner.keltner_channel_lband()[i]:
-                    return True
+            # elif not self.buy_ichi and not self.buy_1:
+            #     if self.close_data[i] < self.tema[i]:
+            #         return True
         return False
 
