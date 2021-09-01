@@ -217,8 +217,8 @@ class Algo_2(OnlineAlgorithm):
             self.strategy[i].ComputeIchimoku_B(p["Win2"], p["Win3"])
             self.strategy[i].ComputeIchimoku_Base_Line(p["Win1"], p["Win2"])
             self.strategy[i].ComputeIchimoku_Conversion_Line(p["Win1"], p["Win2"])
-            self.strategy[i].ComputeKeltnerChannel(p[i]["keltner_Window"], 12, p[i]["Multi_ATR"])
-            self.strategy[i].ComputeMcGinleyDynamic(p[i]["McGinley_Period"])
+            self.strategy[i].ComputeKeltnerChannel(p["keltner_Window"], 12, p["Multi_ATR"])
+            self.strategy[i].ComputeMcGinleyDynamic(p["McGinley_Period"])
 
             self.LastTimeOfCandle[i] = self.exchange.timeUTC[-1]
 
