@@ -67,6 +67,7 @@ class Binance(Exchange):
         self.API_Key = config["API_Key"]
         self.Secret_Key = config["Secret_Key"]
         self.mutex = Lock()
+        self.close_websocket = True
 
     def CreateCorrespondCurrencyPair(self, currency):
         pass
@@ -181,6 +182,7 @@ class KuCoin(Exchange):
         self.API_Passphrase = config["API_Passpharse"]
         self.Correspond = {}
         self.mutex = Lock()
+        self.close_websocket = True
 
     def CreateCorrespondCurrencyPair(self, currency):
         for i in currency[:-1]:
@@ -277,9 +279,10 @@ class KuCoin(Exchange):
         self.ksm = await KucoinSocketManager.create(self.loop, self.client, self.HandleEvent)
         # await self.ksm.subscribe('/market/candles:' + str(self.Correspond['BTCUSDT']) + "_" +
         #                          self.KLINE_INTERVAL_CORRESPOND['1m'])
-        while True:
+        while self.close_websocket:
             # print("sleeping to keep loop open")
             await asyncio.sleep(20, loop=self.loop)
+        self.ksm._conn.cancel()
         # await self.ksm.subscribe('/market/ticker:ETH-USDT')
         # for private topics such as '/account/balance' pass private=True
         # self.ksm_private = await KucoinSocketManager.create(self.loop, self.client, self.HandleEvent, private=True)
