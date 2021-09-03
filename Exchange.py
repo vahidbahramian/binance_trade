@@ -273,8 +273,10 @@ class KuCoin(Exchange):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
         self.loop = asyncio.get_event_loop()
-        self.loop.add_signal_handler(signal.SIGINT, self.ask_exit)
-        self.loop.run_until_complete(self.CreateWebSocket())
+        try:
+            self.loop.run_until_complete(self.CreateWebSocket())
+        except asyncio.CancelledError as e:
+            pass
 
     async def CreateWebSocket(self):
         # global loop
@@ -285,6 +287,8 @@ class KuCoin(Exchange):
             # print("sleeping to keep loop open")
             await asyncio.sleep(20, loop=self.loop)
         asyncio.get_event_loop().stop()
+        for task in asyncio.Task.all_tasks():
+            task.cancel()
         # await self.ksm.subscribe('/market/ticker:ETH-USDT')
         # for private topics such as '/account/balance' pass private=True
         # self.ksm_private = await KucoinSocketManager.create(self.loop, self.client, self.HandleEvent, private=True)
@@ -299,12 +303,6 @@ class KuCoin(Exchange):
         asyncio.set_event_loop(loop)
         loop.run_until_complete(self.KlineSubscribe(currency_pair, interval))
         # await self.ksm.subscribe('/market/candles:BTC-USDT' + "_" + self.KLINE_INTERVAL_CORRESPOND[interval])
-
-    def ask_exit(self):
-        print('Stopping')
-        for task in asyncio.Task.all_tasks():
-            task.cancel()
-        self.loop.add_signal_handler(signal.SIGINT)
 
     async def KlineSubscribe(self, currency_pair, interval):
         # pass
