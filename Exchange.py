@@ -1,18 +1,14 @@
 import abc
-import signal
-import time
 from threading import Lock
 
 import numpy
 from binance.client import Client
-from binance.exceptions import BinanceAPIException, BinanceWithdrawException, BinanceRequestException, \
-    BinanceOrderException
+from binance.exceptions import BinanceAPIException, BinanceRequestException, BinanceOrderException
 from binance.websockets import BinanceSocketManager
 from kucoin.asyncio import KucoinSocketManager
-from requests.exceptions import ConnectionError, Timeout, TooManyRedirects, RequestException
+from requests.exceptions import ConnectionError, Timeout, RequestException
 import datetime
 
-from Candles import Candles
 from IO import FileWorking
 
 import kucoin.client
@@ -270,6 +266,7 @@ class KuCoin(Exchange):
                                             size=str(quantity))
 
     def CreateWebSocketManager(self):
+        self.close_websocket = True
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
         self.loop = asyncio.get_event_loop()
