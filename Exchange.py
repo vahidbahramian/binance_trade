@@ -1,4 +1,5 @@
 import abc
+import signal
 import time
 from threading import Lock
 
@@ -272,6 +273,7 @@ class KuCoin(Exchange):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
         self.loop = asyncio.get_event_loop()
+        self.loop.add_signal_handler(signal.SIGINT, self.ask_exit)
         self.loop.run_until_complete(self.CreateWebSocket())
 
     async def CreateWebSocket(self):
@@ -282,7 +284,7 @@ class KuCoin(Exchange):
         while self.close_websocket:
             # print("sleeping to keep loop open")
             await asyncio.sleep(20, loop=self.loop)
-        self.ksm._conn.cancel()
+        asyncio.get_event_loop().stop()
         # await self.ksm.subscribe('/market/ticker:ETH-USDT')
         # for private topics such as '/account/balance' pass private=True
         # self.ksm_private = await KucoinSocketManager.create(self.loop, self.client, self.HandleEvent, private=True)
@@ -298,8 +300,11 @@ class KuCoin(Exchange):
         loop.run_until_complete(self.KlineSubscribe(currency_pair, interval))
         # await self.ksm.subscribe('/market/candles:BTC-USDT' + "_" + self.KLINE_INTERVAL_CORRESPOND[interval])
 
-    def ReCreateKlineSocket(self):
-        pass
+    def ask_exit(self):
+        print('Stopping')
+        for task in asyncio.Task.all_tasks():
+            task.cancel()
+        self.loop.add_signal_handler(signal.SIGINT)
 
     async def KlineSubscribe(self, currency_pair, interval):
         # pass
