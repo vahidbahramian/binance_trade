@@ -221,6 +221,7 @@ class Algo_2(OnlineAlgorithm):
             self.strategy[i].ComputeMcGinleyDynamic(p["McGinley_Period"])
 
             self.LastTimeOfCandle[i] = self.exchange.timeUTC[-1]
+        self.update_candle_event.set()
 
     def UpdateCandle(self, msg):
         time = datetime.datetime.utcfromtimestamp(msg["Time"] / 1000)
