@@ -263,7 +263,7 @@ class Algo_2(OnlineAlgorithm):
                 self.update_count = 0
 
             FileWorking.Write(datetime.datetime.now())
-            print(datetime.datetime.now(), msg["CurrencyPair"])
+            print(datetime.datetime.now(), msg["CurrencyPair"], msg["Close"])
 
     def BuyOrderCondition(self, currency_pair):
         # if currency_pair == "BTCUSDT":
