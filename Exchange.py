@@ -211,9 +211,7 @@ class KuCoin(Exchange):
     def GetKlines(self, currency_pair, kline_interval, start_date, end_date):
         self.mutex.acquire()
         klines = self.client.get_kline_data(self.Correspond[currency_pair],
-                                            self.KLINE_INTERVAL_CORRESPOND[kline_interval],
-                                            int(datetime.datetime.now().timestamp()) - 864000,
-                                            int(datetime.datetime.now().timestamp()))
+                                            self.KLINE_INTERVAL_CORRESPOND[kline_interval], start_date, end_date)
         self.mutex.release()
         self.UnpackCandle(klines)
 

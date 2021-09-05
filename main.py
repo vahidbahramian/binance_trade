@@ -186,17 +186,17 @@ def main(client):
         # trade.SetAlgorithmParam("BNBBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         # trade.RunTradeThread()
 
-        currency = ["BTC", "ETH", "BNB", "USDT"]
+        currency = ["BTC", "USDT"]
         trade = Algo_3(exchange, currency)
-        p = {"Win1": 9, "Win2": 24, "Win3": 120, "t": 18, "a": 0, "McGinley_Period": 24, "keltner_Window": 30,
-             "Multi_ATR": 1.5}
+        p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0, "McGinley_Period": 24, "keltner_Window": 24,
+             "Multi_ATR": 2}
         trade.SetAlgorithmParam("BTCUSDT", p)
-        trade.SetAlgorithmParam("ETHUSDT", p)
-        trade.SetAlgorithmParam("BNBUSDT", p)
+        # trade.SetAlgorithmParam("ETHUSDT", p)
+        # trade.SetAlgorithmParam("BNBUSDT", p)
         # trade.SetAlgorithmParam("LTCUSDT", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
         # trade.SetAlgorithmParam("XRPUSDT", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
-        trade.SetAlgorithmParam("ETHBTC", p)
-        trade.SetAlgorithmParam("BNBBTC", p)
+        # trade.SetAlgorithmParam("ETHBTC", p)
+        # trade.SetAlgorithmParam("BNBBTC", p)
         # trade.SetAlgorithmParam("LTCBTC", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
         # trade.SetAlgorithmParam("XRPBTC", window1=18, window2=72, window3=96, t=26, a=0.06, b=0.04)
         trade.RunTradeThread()

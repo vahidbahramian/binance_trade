@@ -203,13 +203,15 @@ class Algo_2(OnlineAlgorithm):
     def InitCandle(self):
         for i in self.currency_pair + self.currency_pair_secondery:
             # self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
-            self.GetKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
+            self.GetKlines(i, Client.KLINE_INTERVAL_1HOUR, int(datetime.datetime.now().timestamp()) - 864000,
+                           int(datetime.datetime.now().timestamp()))
 
         # for currency, kline in self.klines.items():
         #     self.candle.unpackCandle(kline)
-            high_series = pd.Series(self.exchange.high)
-            low_series = pd.Series(self.exchange.low)
-            self.strategy[i] = ICHIMOKU_Strategy_HMA_Keltner(high_series, low_series, self.exchange.close)
+            high_series = pd.Series(numpy.delete(self.exchange.high, -1))
+            low_series = pd.Series(numpy.delete(self.exchange.low, -1))
+            self.strategy[i] = ICHIMOKU_Strategy_HMA_Keltner(high_series, low_series,
+                                                             numpy.delete(self.exchange.close, -1))
 
         self.LastTimeOfCandle = {}
         for i, p in self.param.items():
@@ -225,45 +227,44 @@ class Algo_2(OnlineAlgorithm):
 
     def UpdateCandle(self, msg):
         time = datetime.datetime.utcfromtimestamp(msg["Time"] / 1000)
-        # print(time)
+        # print(time, msg["CurrencyPair"], msg["Close"], msg["High"], msg["Low"])
         # print(self.LastTimeOfCandle[msg["CurrencyPair"]])
         if time > self.LastTimeOfCandle[msg["CurrencyPair"]]:
-            self.update_count += 1
-            self.strategy[msg["CurrencyPair"]].high_data.pop(0)
-            self.strategy[msg["CurrencyPair"]].high_data.reset_index(drop=True, inplace=True)
-            self.strategy[msg["CurrencyPair"]].low_data.pop(0)
-            self.strategy[msg["CurrencyPair"]].low_data.reset_index(drop=True, inplace=True)
-            self.strategy[msg["CurrencyPair"]].close_data = \
-                numpy.delete(self.strategy[msg["CurrencyPair"]].close_data, 0)
+            for i in self.currency_pair + self.currency_pair_secondery:
+                # self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
+                self.GetKlines(i, Client.KLINE_INTERVAL_1HOUR,
+                               int(time.timestamp()) + time.astimezone().utcoffset().seconds - 60,
+                               int(time.timestamp()) + time.astimezone().utcoffset().seconds)
 
-            self.strategy[msg["CurrencyPair"]].high_data = \
-                self.strategy[msg["CurrencyPair"]].high_data.append(pd.Series(float(msg["High"])),
-                                                                           ignore_index=True)
-            self.strategy[msg["CurrencyPair"]].low_data = \
-                self.strategy[msg["CurrencyPair"]].low_data.append(pd.Series(float(msg["Low"])),
-                                                                          ignore_index=True)
-            self.strategy[msg["CurrencyPair"]].close_data =\
-                numpy.append(self.strategy[msg["CurrencyPair"]].close_data, float(msg["Close"]))
+                self.strategy[i].high_data.pop(0)
+                self.strategy[i].high_data.reset_index(drop=True, inplace=True)
+                self.strategy[i].low_data.pop(0)
+                self.strategy[i].low_data.reset_index(drop=True, inplace=True)
+                self.strategy[i].close_data = numpy.delete(self.strategy[i].close_data, 0)
 
-            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_A(
-                self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
-            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_B(
-                self.param[msg["CurrencyPair"]]["Win2"], self.param[msg["CurrencyPair"]]["Win3"])
-            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_Base_Line(
-                self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
-            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_Conversion_Line(
-                self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
-            self.strategy[msg["CurrencyPair"]].ComputeKeltnerChannel(self.param[msg["CurrencyPair"]]["keltner_Window"],
-                                                                     12, self.param[msg["CurrencyPair"]]["Multi_ATR"])
-            self.strategy[msg["CurrencyPair"]].ComputeMcGinleyDynamic(self.param[msg["CurrencyPair"]]["McGinley_Period"])
+                self.strategy[i].high_data = self.strategy[i].high_data.append(pd.Series(self.exchange.high),
+                                                                               ignore_index=True)
+                self.strategy[i].low_data = self.strategy[i].low_data.append(pd.Series(self.exchange.low),
+                                                                             ignore_index=True)
+                self.strategy[i].close_data = numpy.append(self.strategy[i].close_data, self.exchange.close)
 
-            self.LastTimeOfCandle[msg["CurrencyPair"]] = time
-            if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
-                self.update_candle_event.set()
-                self.update_count = 0
+                self.strategy[i].ComputeIchimoku_A(self.param[i]["Win1"], self.param[i]["Win2"])
+                self.strategy[i].ComputeIchimoku_B(self.param[i]["Win2"], self.param[i]["Win3"])
+                self.strategy[i].ComputeIchimoku_Base_Line(self.param[i]["Win1"], self.param[i]["Win2"])
+                self.strategy[i].ComputeIchimoku_Conversion_Line(self.param[i]["Win1"], self.param[i]["Win2"])
+                self.strategy[i].ComputeKeltnerChannel(self.param[i]["keltner_Window"], 12, self.param[i]["Multi_ATR"])
+                self.strategy[i].ComputeMcGinleyDynamic(self.param[i]["McGinley_Period"])
 
-            FileWorking.Write(datetime.datetime.now())
-            print(datetime.datetime.now(), msg["CurrencyPair"], msg["Close"])
+                self.LastTimeOfCandle[i] = time
+                print(datetime.datetime.now(), i, self.exchange.close, self.exchange.high, self.exchange.low)
+            self.update_candle_event.set()
+
+        # if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
+        #     self.update_candle_event.set()
+        #     self.update_count = 0
+        #
+        # FileWorking.Write(datetime.datetime.now())
+        # print(datetime.datetime.now(), msg["CurrencyPair"], msg["Close"])
 
     def BuyOrderCondition(self, currency_pair):
         # if currency_pair == "BTCUSDT":
