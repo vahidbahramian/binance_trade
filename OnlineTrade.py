@@ -233,7 +233,7 @@ class Algo_2(OnlineAlgorithm):
             for i in self.currency_pair + self.currency_pair_secondery:
                 # self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
                 self.GetKlines(i, Client.KLINE_INTERVAL_1HOUR,
-                               int(time.timestamp()) + time.astimezone().utcoffset().seconds - 60,
+                               int(time.timestamp()) + time.astimezone().utcoffset().seconds - 3600,
                                int(time.timestamp()) + time.astimezone().utcoffset().seconds)
 
                 self.strategy[i].high_data.pop(0)
