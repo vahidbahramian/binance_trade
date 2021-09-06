@@ -8,7 +8,7 @@ import BackTest
 from threading import Lock
 import ast
 
-def main(client, param):
+def main(client, currency, param):
     """
 
     :type client: type of binance client
@@ -170,11 +170,11 @@ def main(client, param):
         # trade.SetAlgorithmParam("BNBBTC", window1=18, window2=72, window3=96, t=26, a=0, b=0.04)
         # trade.RunTradeThread()
 
-        currency = ["BTC", "USDT"]
+        # currency = ["BTC", "USDT"]
         trade = Algo_3(exchange, currency)
         # p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0, "McGinley_Period": 24, "keltner_Window": 24,
         #      "Multi_ATR": 2}
-        trade.SetAlgorithmParam("BTCUSDT", param)
+        trade.SetAlgorithmParam(currency[0] + currency[1], param)
         # trade.SetAlgorithmParam("ETHUSDT", p)
         # trade.SetAlgorithmParam("BNBUSDT", p)
         # trade.SetAlgorithmParam("LTCUSDT", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
@@ -189,10 +189,11 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read('Config.ini')
     section = str(sys.argv[1])
+    currency = ast.literal_eval(config[section]["Currency"])
     param = ast.literal_eval(config[section]["Param"])
     exchange = ExchangeFactory.Create("KuCoin", config[section])
     isConnect = exchange.Connect()
     if isConnect:
-        main(exchange, param)
+        main(exchange, currency, param)
     else:
         print("Can not to connect exchange!")
