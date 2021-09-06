@@ -1,30 +1,14 @@
-import pandas as pd
-from binance.client import Client
-from binance.exceptions import BinanceAPIException, BinanceWithdrawException
-from binance.enums import *
-import talib
-import numpy
-from datetime import datetime
-from enum import Enum
-import csv
-import matplotlib.pyplot as plt
-
-from ta import trend
 import configparser
 import sys
 
 from Candles import Candles
 from ExchangeFactory import ExchangeFactory
-from IO import FileWorking
 from OnlineTrade import Algo_1, Algo_2, Algo_3
 import BackTest
-import Strategy
 from threading import Lock
-from binance.websockets import BinanceSocketManager
-from twisted.internet import reactor
-from datetime import date
+import ast
 
-def main(client):
+def main(client, param):
     """
 
     :type client: type of binance client
@@ -88,28 +72,28 @@ def main(client):
         #                             trade.Run()
         #         trade.LogResult()
 
-        currency = ["BTC", "USDT"]
+        currency = ["ALGO", "USDT"]
         # trade = BackTest.Algorithm_4(candle, currency)
         trade = BackTest.Algorithm_5(candle, currency)
 
         # trade.SetAlgorithmParam(currency[0] + currency[2], window1=36, window2=72, window3=144, t=26, a=0.01, b=0.06)
         # trade.SetAlgorithmParam(currency[1] + currency[2], window1=18, window2=24, window3=48, t=26, a=0, b=0.06)
-        # window1 = [9, 18, 24, 36]
-        # window2 = [24, 48, 72]
-        # window3 = [48, 72, 96, 120, 144]#[48, 96, 144]
-        # t_ = [18, 26, 48]
+        window1 = [9, 18, 24, 36]
+        window2 = [24, 48, 72]
+        window3 = [48, 72, 96, 120, 144]#[48, 96, 144]
+        t_ = [18, 26, 48]
         # a_ = [0.03, 0.05, 0.07, 2]#[0, 0.01]
         # b_ = [0.04, 0.05, 0.06]
         # SL_arr = [0.025, 0.05]
 
-        window1 = [36]
-        window2 = [48]
-        window3 = [144]
-        t_ = [18]
+        # window1 = [36]
+        # window2 = [48]
+        # window3 = [144]
+        # t_ = [18]
         # a_ = [0.05]
         # b_ = [0.05]
-        McGinley_period = [24]
-        keltner = [18, 24, 30, 36]
+        McGinley_period = [12, 18, 24, 30]
+        keltner = [12, 18, 24]
         multi_atr = [1, 1.5, 2]
         # tema_period = [24, 36, 48]
         for win1 in window1:
@@ -188,9 +172,9 @@ def main(client):
 
         currency = ["BTC", "USDT"]
         trade = Algo_3(exchange, currency)
-        p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0, "McGinley_Period": 24, "keltner_Window": 24,
-             "Multi_ATR": 2}
-        trade.SetAlgorithmParam("BTCUSDT", p)
+        # p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0, "McGinley_Period": 24, "keltner_Window": 24,
+        #      "Multi_ATR": 2}
+        trade.SetAlgorithmParam("BTCUSDT", param)
         # trade.SetAlgorithmParam("ETHUSDT", p)
         # trade.SetAlgorithmParam("BNBUSDT", p)
         # trade.SetAlgorithmParam("LTCUSDT", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
@@ -205,9 +189,10 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read('Config.ini')
     section = str(sys.argv[1])
+    param = ast.literal_eval(config[section]["Param"])
     exchange = ExchangeFactory.Create("KuCoin", config[section])
     isConnect = exchange.Connect()
     if isConnect:
-        main(exchange)
+        main(exchange, param)
     else:
         print("Can not to connect exchange!")

@@ -319,8 +319,7 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                         self.buy_1 = True
                         return True
 
-                    # if self.keltner.keltner_channel_lband()[i - 1] > self.tema[i - 1] and \
-                    #         self.keltner.keltner_channel_lband()[i] < self.tema[i] < self.close_data[i]:
+                    # if self.close_data[i] > self.ich_conversion_line[i] >= self.ich_base_line[i]:
                     #     return True
         return False
 
@@ -337,7 +336,7 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                     self.buy_1 = False
                     return True
             # elif not self.buy_ichi and not self.buy_1:
-            #     if self.close_data[i] < self.tema[i]:
-            #         return True
+            #     if self.close_data[i] < self.ich_conversion_line[i] and self.close_data[i] < self.ich_base_line[i]:
+            #       return True
         return False
 
