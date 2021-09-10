@@ -36,7 +36,7 @@ class IStrategy(abc.ABC):
         section = str(sys.argv[1])
         strategy_param = ast.literal_eval(config[section]["Strategy"])
         strategy_param[param] = value
-        config.set(section, "Strategy", json.dumps(strategy_param))
+        config.set(section, "Strategy", str(strategy_param))
         with open('Config.ini', 'w') as configfile:
             config.write(configfile)
 
