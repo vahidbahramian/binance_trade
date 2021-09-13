@@ -8,7 +8,7 @@ import pandas as pd
 from binance.client import Client
 from Algorithm import OfflineAlgorithm
 from Strategy import ICHIMOKU_2_Strategy, ICHIMOKU_CCI_WilliamsR_Strategy, ICHIMOKU_STOCASTIC_Strategy, \
-    ICHIMOKU_Strategy_Test, ICHIMOKU_Strategy_HMA
+    ICHIMOKU_Strategy_Test, ICHIMOKU_Strategy_HMA, ICHIMOKU_Strategy_HMA_Keltner
 from IO import CSVFiles, FileWorking
 
 
@@ -1250,10 +1250,10 @@ class Algorithm_4(Algorithm_3):
 
 class Algorithm_5(Algorithm_4):
     strategy = {}
-    def __init__(self, candle, currency):
+    def __init__(self, candle, currency, start, stop):
 
-        start_time = date(2020, 5, 1)
-        end_time = date(2021, 5, 1)
+        start_time = start
+        end_time = stop
 
         self.currency = currency
         self.currency_pair = []
@@ -1287,7 +1287,8 @@ class Algorithm_5(Algorithm_4):
             # self.strategy[i] = (ICHIMOKU_2_Strategy(high, low, self.close_data))
             # self.strategy[i] = (ICHIMOKU_STOCASTIC_Strategy(high, low, self.close_data))
             # self.strategy[i] = (ICHIMOKU_Strategy_Test(high, low, self.close_data))
-            self.strategy[i] = (ICHIMOKU_Strategy_HMA(high, low, self.close_data))
+            # self.strategy[i] = (ICHIMOKU_Strategy_HMA(high, low, self.close_data))
+            self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, self.close_data))
         self.file = CSVFiles("Algorithm_6-" + start_time.strftime("%Y-%m-%d_") + end_time.strftime("%Y-%m-%d_") +
                              self.currency_pair[0] + ".csv")
         self.result_row = []
@@ -1315,8 +1316,10 @@ class Algorithm_5(Algorithm_4):
                 # self.strategy[currency].ComputeMACD(param[currency]["Fast"], param[currency]["Slow"],
                 #                                          param[currency]["Signal"])
                 # self.strategy[currency].ComputeEMA(param[currency]["EMA_Period"])
-                self.strategy[currency].ComputeHMA(param[currency]["HMA_Period"])
-                self.strategy[currency].ComputeDEMA(param[currency]["TEMA_Period"])
+                # self.strategy[currency].ComputeHMA(param[currency]["HMA_Period"])
+                # self.strategy[currency].ComputeTEMA(param[currency]["TEMA_Period"])
+                self.strategy[currency].ComputeKeltnerChannel(param[currency]["keltner_Window"], 12, param[currency]["Multi_ATR"])
+                self.strategy[currency].ComputeMcGinleyDynamic(param[currency]["McGinley_Period"])
             buy_event = self.strategy[currency].BuyStrategy(j, param[currency]["t"], param[currency]["a"])
             sell_event = self.strategy[currency].SellStrategy(j, param[currency]["t"])
             if buy_event and isNotPos:
@@ -1333,7 +1336,8 @@ class Algorithm_5(Algorithm_4):
             j += 1
 
     def LogResult(self):
-        fieldnames = ['Strategy', 'Win1', 'Win2', 'Win3', 't', 'a', 'HMA_Period', "TEMA_Period", 'Total Net Profit',
+        fieldnames = ['Strategy', 'Win1', 'Win2', 'Win3', 't', 'a', 'McGinley_Period', "keltner_Window", 'Multi_ATR',
+                      'Total Net Profit',
                       'Gross Profit', 'Max Profit', 'Avg Profit', 'Gross Loss', 'Max Loss', 'Avg Loss', 'Profit Factor',
                       'Profit Trade (%)', 'Loss Trade (%)', 'Total Trade', 'Expected Payoff', 'Max Consecutive Wins',
                       'Avg Consecutive Wins', 'Max Consecutive Loss', 'Avg Consecutive Loss',
@@ -1365,24 +1369,26 @@ class Algorithm_5(Algorithm_4):
             for j in action["Sell"]:
                 sell_count += 1
                 if self.currency[-1] in j:
-                    d = self.strategy[j].close_data[i] - buy_price[j[:3]]
-                    balance["Available"] += valume[j[:3]] * self.strategy[j].close_data[i]
+                    jj = j.replace(self.currency[-1], '')
+                    d = self.strategy[j].close_data[i] - buy_price[jj]
+                    balance["Available"] += valume[jj] * self.strategy[j].close_data[i]
                 else:
-                    d = self.strategy[j[:3] + self.currency[-1]].close_data[i] - buy_price[j[:3]]
-                    balance["Available"] += valume[j[:3]] * self.strategy[j[:3] + self.currency[-1]].close_data[i]
+                    jj = j.replace(self.currency[0], '')
+                    d = self.strategy[jj + self.currency[-1]].close_data[i] - buy_price[jj]
+                    balance["Available"] += valume[jj] * self.strategy[jj + self.currency[-1]].close_data[i]
 
                 if d > 0:
-                    profit.append(d * valume[j[:3]])
-                    profit_percents.append(d / buy_price[j[:3]])
+                    profit.append(d * valume[jj])
+                    profit_percents.append(d / buy_price[jj])
                     balance["Current"] += profit[-1]
                     balance["All"].append(balance["Current"])
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
-                    valume[j[:3]] = 0
+                    valume[jj] = 0
                     isProfitOrLoss.append(1)
                 else:
-                    loss.append(abs(d) * valume[j[:3]])
-                    loss_percents.append(abs(d) / buy_price[j[:3]])
-                    valume[j[:3]] = 0
+                    loss.append(abs(d) * valume[jj])
+                    loss_percents.append(abs(d) / buy_price[jj])
+                    valume[jj] = 0
                     balance["Current"] -= loss[-1]
                     balance["All"].append(balance["Current"])
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
@@ -1397,25 +1403,26 @@ class Algorithm_5(Algorithm_4):
             for j in action["SellNotAll"]:
                 sell_count +=1
                 if self.currency[-1] in j:
-                    d = self.strategy[j].close_data[i] - buy_price[j[:3]]
-                    balance["Available"] += (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) *\
+                    jj = j.replace(self.currency[-1], '')
+                    d = self.strategy[j].close_data[i] - buy_price[jj]
+                    balance["Available"] += (valume[jj] / len(action["SellNotAll"] + action["Buy"])) *\
                                             len(action["Buy"]) * self.strategy[j].close_data[i]
                 else:
-                    d = self.strategy[j[:3] + self.currency[-1]].close_data[i] - buy_price[j[:3]]
-                    balance["Available"] += (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) *\
-                                            len(action["Buy"]) * \
-                                            self.strategy[j[:3] + self.currency[-1]].close_data[i]
+                    jj = j.replace(self.currency[0], '')
+                    d = self.strategy[jj + self.currency[-1]].close_data[i] - buy_price[jj]
+                    balance["Available"] += (valume[jj] / len(action["SellNotAll"] + action["Buy"])) *\
+                                            len(action["Buy"]) * self.strategy[jj + self.currency[-1]].close_data[i]
                 if d > 0:
-                    profit.append(d * (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
-                    profit_percents.append(d / buy_price[j[:3]])
-                    valume[j[:3]] -= (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
+                    profit.append(d * (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
+                    profit_percents.append(d / buy_price[jj])
+                    valume[jj] -= (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
                     balance["Current"] += profit[-1]
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     isProfitOrLoss.append(1)
                 else:
-                    loss.append(abs(d) * (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
-                    loss_percents.append(abs(d) / buy_price[j[:3]])
-                    valume[j[:3]] -= (valume[j[:3]] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
+                    loss.append(abs(d) * (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
+                    loss_percents.append(abs(d) / buy_price[jj])
+                    valume[jj] -= (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
                     balance["Current"] -= loss[-1]
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     isProfitOrLoss.append(0)
@@ -1442,20 +1449,22 @@ class Algorithm_5(Algorithm_4):
                         isProfitOrLoss.append(0)
 
                 if self.currency[-1] in j:
-                    buy_price[j[:3]] = ((buy_price[j[:3]] * valume[j[:3]]) + self.strategy[j].close_data[i] *
+                    jj = j.replace(self.currency[-1], '')
+                    buy_price[jj] = ((buy_price[jj] * valume[jj]) + self.strategy[j].close_data[i] *
                                         ((balance["Available"] / len(action["Buy"])) /
                                          self.strategy[j].close_data[i]))\
                                        / (((balance["Available"] / len(action["Buy"])) /
-                                          self.strategy[j].close_data[i]) + valume[j[:3]])
-                    valume[j[:3]] += ((balance["Available"] / len(action["Buy"])) / self.strategy[j].close_data[i])
+                                          self.strategy[j].close_data[i]) + valume[jj])
+                    valume[jj] += ((balance["Available"] / len(action["Buy"])) / self.strategy[j].close_data[i])
                 else:
-                    buy_price[j[:3]] = ((buy_price[j[:3]] * valume[j[:3]]) +
-                                        self.strategy[j[:3] + self.currency[-1]].close_data[i] *
+                    jj = j.replace(self.currency[0], '')
+                    buy_price[jj] = ((buy_price[jj] * valume[jj]) +
+                                        self.strategy[jj + self.currency[-1]].close_data[i] *
                                         ((balance["Available"] / len(action["Buy"])) /
-                                         self.strategy[j[:3] + self.currency[-1]].close_data[i]))\
+                                         self.strategy[jj + self.currency[-1]].close_data[i]))\
                                        / (((balance["Available"] / len(action["Buy"])) /
-                                           (self.strategy[j[:3] + self.currency[-1]].close_data[i])) + valume[j[:3]])
-                    valume[j[:3]] += ((balance["Available"] / len(action["Buy"])) / self.strategy[j[:3] + self.currency[-1]].close_data[i])
+                                           (self.strategy[jj + self.currency[-1]].close_data[i])) + valume[jj])
+                    valume[jj] += ((balance["Available"] / len(action["Buy"])) / self.strategy[jj + self.currency[-1]].close_data[i])
             if len(action["Buy"]) > 0:
                 balance["Available"] = 0
 
@@ -1490,8 +1499,9 @@ class Algorithm_5(Algorithm_4):
                    self.param[self.currency_pair[0]]["Win2"],
                    self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
                    self.param[self.currency_pair[0]]["a"],
-                   self.param[self.currency_pair[0]]["HMA_Period"],
-                   self.param[self.currency_pair[0]]["TEMA_Period"],
+                   self.param[self.currency_pair[0]]["McGinley_Period"],
+                   self.param[self.currency_pair[0]]["keltner_Window"],
+                   self.param[self.currency_pair[0]]["Multi_ATR"],
                    balance["Current"] - 1000, sum(profit), max(profit_percents),
                    sum(profit_percents) / len(profit_percents), sum(loss), max(loss_percents),
                    sum(loss_percents) / len(loss_percents), profit_factor, len(profit) / len(profit+loss),
@@ -1503,8 +1513,9 @@ class Algorithm_5(Algorithm_4):
                    self.param[self.currency_pair[0]]["Win2"],
                    self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
                    self.param[self.currency_pair[0]]["a"],
-                   self.param[self.currency_pair[0]]["HMA_Period"],
-                   self.param[self.currency_pair[0]]["TEMA_Period"],
+                   self.param[self.currency_pair[0]]["McGinley_Period"],
+                   self.param[self.currency_pair[0]]["keltner_Window"],
+                   self.param[self.currency_pair[0]]["Multi_ATR"],
                    balance["Current"] - 1000, sum(profit), max(profit_percents), 0, sum(loss),
                           max(loss_percents), 0, profit_factor, 0, 0, sell_count, 0, 0, 0,
                           max(loss_count), 0, 0, 0]
