@@ -50,9 +50,9 @@ def main(client, currency, param):
                       [date(2019, 6, 1), date(2021, 6, 1)]],
              "MATIC": [[date(2019, 4, 1), date(2020, 4, 1)], [date(2020, 4, 1), date(2021, 4, 1)],
                        [date(2019, 4, 1), date(2021, 4, 1)]]}
-        for k, v in c.items():
+        for c, v in c.items():
             for i in v:
-                currency = [k, "USDT"]
+                currency = [c, "USDT"]
                 start = i[0]
                 stop = i[1]
                 trade = BackTest.Algorithm_5(candle, currency, start, stop)
@@ -69,7 +69,7 @@ def main(client, currency, param):
                             for win3 in window3:
                                 if win2 < win3:
                                     for t in t_:
-                                        print(k, " ", win1, " ", win2, " ", win3, " ", t, " ")
+                                        print(c, " ", win1, " ", win2, " ", win3, " ", t, " ")
                                         for mc_ginley in McGinley_period:
                                             for k in keltner:
                                                 for atr in multi_atr:
