@@ -38,21 +38,25 @@ def main(client, currency, param):
         # alg = BackTest.Algorithm_3(candle, currency, currency_pair, correspond)
         # alg.RunAlgorithm()
 
+        # c = {"XRP": [[date(2018, 5, 1), date(2019, 5, 1)], [date(2019, 5, 1), date(2020, 5, 1)],
+        #              [date(2018, 5, 1), date(2020, 5, 1)], [date(2020, 5, 1), date(2021, 5, 1)]],
+        #      "LTC": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
+        #              [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]],
+        #      "TRX": [[date(2018, 6, 1), date(2019, 6, 1)], [date(2019, 6, 1), date(2020, 6, 1)],
+        #              [date(2018, 6, 1), date(2020, 6, 1)], [date(2020, 6, 1), date(2021, 6, 1)]],
+        #      "ADA": [[date(2018, 4, 1), date(2019, 4, 1)], [date(2019, 4, 1), date(2020, 4, 1)],
+        #              [date(2018, 4, 1), date(2020, 4, 1)], [date(2020, 4, 1), date(2021, 4, 1)]],
+        #      "ALGO": [[date(2019, 6, 1), date(2020, 6, 1)], [date(2020, 6, 1), date(2021, 6, 1)],
+        #               [date(2019, 6, 1), date(2021, 6, 1)]],
+        #      "MATIC": [[date(2019, 4, 1), date(2020, 4, 1)], [date(2020, 4, 1), date(2021, 4, 1)],
+        #                [date(2019, 4, 1), date(2021, 4, 1)]]}
         c = {"XRP": [[date(2018, 5, 1), date(2019, 5, 1)], [date(2019, 5, 1), date(2020, 5, 1)],
                      [date(2018, 5, 1), date(2020, 5, 1)], [date(2020, 5, 1), date(2021, 5, 1)]],
-             "LTC": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
-                     [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]],
-             "TRX": [[date(2018, 6, 1), date(2019, 6, 1)], [date(2019, 6, 1), date(2020, 6, 1)],
-                     [date(2018, 6, 1), date(2020, 6, 1)], [date(2020, 6, 1), date(2021, 6, 1)]],
-             "ADA": [[date(2018, 4, 1), date(2019, 4, 1)], [date(2019, 4, 1), date(2020, 4, 1)],
-                     [date(2018, 4, 1), date(2020, 4, 1)], [date(2020, 4, 1), date(2021, 4, 1)]],
-             "ALGO": [[date(2019, 6, 1), date(2020, 6, 1)], [date(2020, 6, 1), date(2021, 6, 1)],
-                      [date(2019, 6, 1), date(2021, 6, 1)]],
-             "MATIC": [[date(2019, 4, 1), date(2020, 4, 1)], [date(2020, 4, 1), date(2021, 4, 1)],
-                       [date(2019, 4, 1), date(2021, 4, 1)]]}
+             "ETH": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
+                     [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]]}
         for c, v in c.items():
             for i in v:
-                currency = [c, "USDT"]
+                currency = [c, "BTC"]
                 start = i[0]
                 stop = i[1]
                 trade = BackTest.Algorithm_5(candle, currency, start, stop)
