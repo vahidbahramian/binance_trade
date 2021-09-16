@@ -290,14 +290,16 @@ class KuCoin(Exchange):
 
     def CreateKlineSocket(self, currency_pair, interval, re_create):
         if re_create:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
+            # loop = asyncio.new_event_loop()
+            # asyncio.set_event_loop(loop)
+            self.loop.run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(self.KlineSubscribe(currency_pair, interval))
-        # await self.ksm.subscribe('/market/candles:BTC-USDT' + "_" + self.KLINE_INTERVAL_CORRESPOND[interval])
+        # loop = asyncio.new_event_loop(Cre)
+        # asyncio.set_event_loop(loop)
+        # try:
+            self.loop.run_until_complete(self.KlineSubscribe(currency_pair, interval))
+        # except asyncio.CancelledError as e:
+        #     pass
 
     async def KlineSubscribe(self, currency_pair, interval):
         # pass
