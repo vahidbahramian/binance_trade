@@ -14,7 +14,7 @@ def main(client, currency, param):
 
     :type client: type of binance client
     """
-    back_test = True
+    back_test = False
 
     # start_time = "1.1.2020"
     # end_time = "1.1.2021"
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     section = str(sys.argv[1])
     currency = ast.literal_eval(config[section]["Currency"])
     param = ast.literal_eval(config[section]["Param"])
-    exchange = ExchangeFactory.Create("Binance", config[section])
+    exchange = ExchangeFactory.Create("KuCoin", config[section])
     isConnect = exchange.Connect()
     if isConnect:
         main(exchange, currency, param)
