@@ -265,6 +265,8 @@ class KuCoin(Exchange):
 
     def CreateWebSocketManager(self):
         self.close_websocket = True
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
         self.loop = asyncio.get_event_loop()
         try:
             self.loop.run_until_complete(self.CreateWebSocket())
