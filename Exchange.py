@@ -264,6 +264,7 @@ class KuCoin(Exchange):
 
     def CreateWebSocketManager(self):
         self.close_websocket = True
+        self.close_klinesocket = {}
         self.loop_klinesocket = {}
         self.loop_web_socket = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop_web_socket)
@@ -293,18 +294,23 @@ class KuCoin(Exchange):
             self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
             asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
             self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
-            # self.loop_klinesocket[currency_pair].run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
-            self.loop_klinesocket[currency_pair].create_task(self.KlineUnSubscribe(currency_pair, interval))
+            self.loop_klinesocket[currency_pair].run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
 
         self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
         self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
-        # self.loop_klinesocket[currency_pair].run_until_complete(self.KlineSubscribe(currency_pair, interval))
-        self.loop_klinesocket[currency_pair].create_task(self.KlineSubscribe(currency_pair, interval))
+        self.loop_klinesocket[currency_pair].run_until_complete(self.KlineSubscribe(currency_pair, interval))
+
+        self.loop_klinesocket[currency_pair].stop()
+        for task in asyncio.Task.all_tasks():
+            task.cancel()
 
     async def KlineSubscribe(self, currency_pair, interval):
         await self.ksm.subscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
                                  self.KLINE_INTERVAL_CORRESPOND[interval])
+        self.close_klinesocket[currency_pair] = True
+        while self.close_klinesocket[currency_pair]:
+            await asyncio.sleep(5, loop=self.loop_klinesocket[currency_pair])
 
     async def KlineUnSubscribe(self, currency_pair, interval):
         await self.ksm.unsubscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
