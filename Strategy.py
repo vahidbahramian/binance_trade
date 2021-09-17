@@ -316,9 +316,11 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
 
     def __init__(self, high, low, close):
         super().__init__(high, low, close)
-        strategy_param = self.ReadConfigFile()
-        self.buy_ichi = strategy_param["Buy_1"]
-        self.buy_1 = strategy_param["Buy_2"]
+        # strategy_param = self.ReadConfigFile()
+        # self.buy_ichi = strategy_param["Buy_1"]
+        # self.buy_1 = strategy_param["Buy_2"]
+        self.buy_ichi = False
+        self.buy_1 = False
 
     def BuyStrategy(self, i, t, a):
         if i - t + 1 > 0:
@@ -331,7 +333,7 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                     # if self.keltner.keltner_channel_lband()[i] < self.close_data[i] and \
                     #         self.keltner.keltner_channel_lband()[i - 1] > self.close_data[i - 1]:
                     self.buy_ichi = True
-                    self.WriteConfigFile("Buy_1", True)
+                    # self.WriteConfigFile("Buy_1", True)
                     return True
             # if self.hma[i] < self.keltner.keltner_channel_hband()[i] < self.close_data[i] and \
             #         self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1]:
@@ -340,7 +342,7 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                             (self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1]):
                         #or self.mc_ginley[i] < self.keltner.keltner_channel_lband()[i]:
                         self.buy_1 = True
-                        self.WriteConfigFile("Buy_2", True)
+                        # self.WriteConfigFile("Buy_2", True)
                         return True
 
                     # if self.close_data[i] > self.ich_conversion_line[i] >= self.ich_base_line[i]:
@@ -353,13 +355,13 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                 if ((self.close_data[i] < self.ich_b[i - t + 1] and
                         self.close_data[i] < self.ich_a[i - t + 1])):
                     self.buy_ichi = False
-                    self.WriteConfigFile("Buy_1", False)
+                    # self.WriteConfigFile("Buy_1", False)
                     return True
             elif self.buy_1:
                 if (self.close_data[i] < self.ich_b[i - t + 1] and self.close_data[i] < self.ich_a[i - t + 1]) \
                     or self.mc_ginley[i] > self.close_data[i]:
                     self.buy_1 = False
-                    self.WriteConfigFile("Buy_2", False)
+                    # self.WriteConfigFile("Buy_2", False)
                     return True
             # elif not self.buy_ichi and not self.buy_1:
             #     if self.close_data[i] < self.ich_conversion_line[i] and self.close_data[i] < self.ich_base_line[i]:
