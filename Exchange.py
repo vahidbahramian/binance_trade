@@ -179,7 +179,6 @@ class KuCoin(Exchange):
         self.API_Passphrase = config["API_Passpharse"]
         self.Correspond = {}
         self.mutex = Lock()
-        self.close_websocket = True
 
     def CreateCorrespondCurrencyPair(self, currency):
         for i in currency[:-1]:
@@ -265,44 +264,49 @@ class KuCoin(Exchange):
 
     def CreateWebSocketManager(self):
         self.close_websocket = True
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-        self.loop = asyncio.get_event_loop()
+        self.loop_klinesocket = {}
+        self.loop_web_socket = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop_web_socket)
+        self.loop_web_socket = asyncio.get_event_loop()
         try:
-            self.loop.run_until_complete(self.CreateWebSocket())
+            self.loop_web_socket.run_until_complete(self.CreateWebSocket())
         except asyncio.CancelledError as e:
             pass
+        self.loop_web_socket.stop()
+        for task in asyncio.Task.all_tasks():
+            task.cancel()
 
     async def CreateWebSocket(self):
         # global loop
-        self.ksm = await KucoinSocketManager.create(self.loop, self.client, self.HandleEvent)
+        self.ksm = await KucoinSocketManager.create(self.loop_web_socket, self.client, self.HandleEvent)
         # await self.ksm.subscribe('/market/candles:' + str(self.Correspond['BTCUSDT']) + "_" +
         #                          self.KLINE_INTERVAL_CORRESPOND['1m'])
         while self.close_websocket:
-            # print("sleeping to keep loop open")
-            await asyncio.sleep(20, loop=self.loop)
-        asyncio.get_event_loop().stop()
-        for task in asyncio.Task.all_tasks():
-            task.cancel()
+            await asyncio.sleep(5, loop=self.loop_web_socket)
+        # asyncio.get_event_loop().stop()
         # await self.ksm.subscribe('/market/ticker:ETH-USDT')
         # for private topics such as '/account/balance' pass private=True
         # self.ksm_private = await KucoinSocketManager.create(self.loop, self.client, self.HandleEvent, private=True)
 
     def CreateKlineSocket(self, currency_pair, interval, re_create):
         if re_create:
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
+            self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
+            self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
+            # self.loop_klinesocket[currency_pair].run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
+            self.loop_klinesocket[currency_pair].create_task(self.KlineUnSubscribe(currency_pair, interval))
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.KlineSubscribe(currency_pair, interval))
+        self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
+        self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
+        # self.loop_klinesocket[currency_pair].run_until_complete(self.KlineSubscribe(currency_pair, interval))
+        self.loop_klinesocket[currency_pair].create_task(self.KlineSubscribe(currency_pair, interval))
 
     async def KlineSubscribe(self, currency_pair, interval):
-        # pass
         await self.ksm.subscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
                                  self.KLINE_INTERVAL_CORRESPOND[interval])
 
     async def KlineUnSubscribe(self, currency_pair, interval):
-        # pass
         await self.ksm.unsubscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
                                  self.KLINE_INTERVAL_CORRESPOND[interval])
 

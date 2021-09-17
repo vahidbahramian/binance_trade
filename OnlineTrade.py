@@ -211,7 +211,7 @@ class Algo_2(OnlineAlgorithm):
             high_series = pd.Series(numpy.delete(self.exchange.high, -1))
             low_series = pd.Series(numpy.delete(self.exchange.low, -1))
             self.strategy[i] = ICHIMOKU_Strategy_HMA_Keltner(high_series, low_series,
-                                                             numpy.delete(self.exchange.close, -1))
+                                                             numpy.delete(self.exchange.close, -1), i)
 
         self.LastTimeOfCandle = {}
         for i, p in self.param.items():
@@ -686,7 +686,7 @@ class Algo_3(Algo_2):
                         if localtime - self.LastTimeOfCandle[i] > datetime.timedelta(minutes=60):
                             if i == self.currency_pair[0]:
                                 self.exchange.close_websocket = False
-                                time.sleep(25)
+                                time.sleep(10)
                                 c = threading.Thread(target=self.CreateWebSocketManager, args=())
                                 c.start()
                                 time.sleep(2)

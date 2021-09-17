@@ -14,7 +14,7 @@ def main(client, currency, param):
 
     :type client: type of binance client
     """
-    back_test = True
+    back_test = False
 
     # start_time = "1.1.2020"
     # end_time = "1.1.2021"
@@ -182,7 +182,8 @@ def main(client, currency, param):
         trade = Algo_3(exchange, currency)
         # p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0, "McGinley_Period": 24, "keltner_Window": 24,
         #      "Multi_ATR": 2}
-        trade.SetAlgorithmParam(currency[0] + currency[1], param)
+        for i, j in param.items():
+            trade.SetAlgorithmParam(i, j)
         # trade.SetAlgorithmParam("ETHUSDT", p)
         # trade.SetAlgorithmParam("BNBUSDT", p)
         # trade.SetAlgorithmParam("LTCUSDT", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)
