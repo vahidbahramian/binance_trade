@@ -14,7 +14,7 @@ def main(client, currency, param):
 
     :type client: type of binance client
     """
-    back_test = False
+    back_test = True
 
     # start_time = "1.1.2020"
     # end_time = "1.1.2021"
@@ -51,22 +51,26 @@ def main(client, currency, param):
         #      "MATIC": [[date(2019, 4, 1), date(2020, 4, 1)], [date(2020, 4, 1), date(2021, 4, 1)],
         #                [date(2019, 4, 1), date(2021, 4, 1)]]}
 
-        c = {"LTC": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
+        c = {"ETH": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
                      [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]],
-             "TRX": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
-                     [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]],
-             "ADA": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
-                     [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]],
-             "ALGO": [[date(2019, 1, 1), date(2020, 1, 1)], [date(2019, 1, 1), date(2021, 1, 1)],
-                      [date(2020, 1, 1), date(2021, 1, 1)]],
-             "MATIC": [[date(2019, 4, 1), date(2020, 4, 1)], [date(2020, 4, 1), date(2021, 4, 1)],
-                       [date(2020, 9, 1), date(2021, 9, 1)]]}
+             "XRP": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
+                     [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]]}
         for c, v in c.items():
             for i in v:
-                currency = [c, "BTC"]
+                currency = ["BTC", c, "USDT"]
                 start = i[0]
                 stop = i[1]
                 trade = BackTest.Algorithm_5(candle, currency, start, stop)
+                p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0,
+                     "McGinley_Period": 24, "keltner_Window": 24, "Multi_ATR": 2}
+                trade.SetAlgorithmParam(currency[0] + currency[2], p)
+                if c == "ETH":
+                    p = {"Win1": 18, "Win2": 24, "Win3": 120, "t": 18, "a": 0,
+                         "McGinley_Period": 12, "keltner_Window": 18, "Multi_ATR": 1}
+                elif c == "XRP":
+                    p = {"Win1": 9, "Win2": 24, "Win3": 48, "t": 26, "a": 0,
+                         "McGinley_Period": 12, "keltner_Window": 18, "Multi_ATR": 1.5}
+                trade.SetAlgorithmParam(currency[1] + currency[2], p)
                 window1 = [9, 18, 24, 36]
                 window2 = [24, 48, 72]
                 window3 = [48, 72, 96, 120, 144]
@@ -86,38 +90,42 @@ def main(client, currency, param):
                                                 for atr in multi_atr:
                                                     p = {"Win1": win1, "Win2": win2, "Win3": win3, "t": t, "a": 0,
                                                          "McGinley_Period": mc_ginley, "keltner_Window": k, "Multi_ATR": atr}
-                                                    trade.SetAlgorithmParam(currency[0] + currency[1], p)
+                                                    trade.SetAlgorithmParam(currency[1] + currency[0], p)
                                                     trade.Run()
                 trade.LogResult()
 
-        # currency = ["XRP", "USDT"]
+        # currency = ["BTC", "ETH", "USDT"]
         # # trade = BackTest.Algorithm_4(candle, currency)
         # start = date(2020, 1, 1)
         # stop = date(2021, 1, 1)
         # trade = BackTest.Algorithm_5(candle, currency, start, stop)
         #
-        # # trade.SetAlgorithmParam(currency[0] + currency[2], window1=36, window2=72, window3=144, t=26, a=0.01, b=0.06)
-        # # trade.SetAlgorithmParam(currency[1] + currency[2], window1=18, window2=24, window3=48, t=26, a=0, b=0.06)
-        # # window1 = [9, 18, 24, 36]
-        # # window2 = [24, 48, 72]
-        # # window3 = [48, 72, 96, 120, 144]#[48, 96, 144]
-        # # t_ = [18, 26, 48]
+        # p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0,
+        #      "McGinley_Period": 24, "keltner_Window": 24, "Multi_ATR": 2}
+        # trade.SetAlgorithmParam(currency[0] + currency[2], p)
+        # p = {"Win1": 18, "Win2": 24, "Win3": 120, "t": 18, "a": 0,
+        #      "McGinley_Period": 12, "keltner_Window": 18, "Multi_ATR": 1}
+        # trade.SetAlgorithmParam(currency[1] + currency[2], p)
+        # window1 = [9, 18, 24, 36]
+        # window2 = [24, 48, 72]
+        # window3 = [48, 72, 96, 120, 144]#[48, 96, 144]
+        # t_ = [18, 26, 48]
         # # a_ = [0.03, 0.05, 0.07, 2]#[0, 0.01]
         # # b_ = [0.04, 0.05, 0.06]
         # # SL_arr = [0.025, 0.05]
         #
-        # window1 = [9]
-        # window2 = [24]
-        # window3 = [48]
-        # t_ = [26]
+        # # window1 = [9]
+        # # window2 = [24]
+        # # window3 = [48]
+        # # t_ = [26]
         # # a_ = [0.05]
         # # b_ = [0.05]
-        # # McGinley_period = [12, 18, 24, 30]
-        # # keltner = [12, 18, 24]
-        # # multi_atr = [1, 1.5, 2]
-        # McGinley_period = [12]
-        # keltner = [18]
-        # multi_atr = [1.5]
+        # McGinley_period = [12, 18, 24, 30]
+        # keltner = [12, 18, 24]
+        # multi_atr = [1, 1.5, 2]
+        # # McGinley_period = [12]
+        # # keltner = [18]
+        # # multi_atr = [1.5]
         # # tema_period = [24, 36, 48]
         # for win1 in window1:
         #     for win2 in window2:
@@ -133,17 +141,17 @@ def main(client, currency, param):
         #                                     # for tema in tema_period:
         #                                     p = {"Win1": win1, "Win2": win2, "Win3": win3, "t": t, "a": 0,
         #                                          "McGinley_Period": mc_ginley, "keltner_Window": k, "Multi_ATR": atr}
-        #                                     trade.SetAlgorithmParam(currency[0] + currency[1], p)
+        #                                     trade.SetAlgorithmParam(currency[1] + currency[0], p)
         #                                     trade.Run()
         # trade.LogResult()
 
-        # currency = ["BTC", "ETH", "XRP", "USDT"]
-        # start = date(2020, 1, 1)
-        # stop = date(2021, 1, 1)
+        # currency = ["BTC", "ETH", "XRP", "TRX", "ADA", "LTC", "USDT"]
+        # start = date(2019, 1, 1)
+        # stop = date(2020, 1, 1)
         # trade = BackTest.Algorithm_5(candle, currency, start, stop)
         # p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0,
         #      "McGinley_Period": 24, "keltner_Window": 24, "Multi_ATR": 2}
-        # trade.SetAlgorithmParam(currency[0] + currency[3], p)
+        # trade.SetAlgorithmParam(currency[0] + currency[6], p)
         # p = {"Win1": 24, "Win2": 48, "Win3": 120, "t": 26, "a": 0,
         #      "McGinley_Period": 12, "keltner_Window": 12, "Multi_ATR": 2}
         # trade.SetAlgorithmParam(currency[1] + currency[0], p)
@@ -152,10 +160,29 @@ def main(client, currency, param):
         # trade.SetAlgorithmParam(currency[2] + currency[0], p)
         # p = {"Win1": 18, "Win2": 24, "Win3": 120, "t": 18, "a": 0,
         #      "McGinley_Period": 12, "keltner_Window": 18, "Multi_ATR": 1}
-        # trade.SetAlgorithmParam(currency[1] + currency[3], p)
+        # trade.SetAlgorithmParam(currency[1] + currency[6], p)
         # p = {"Win1": 9, "Win2": 24, "Win3": 48, "t": 26, "a": 0,
         #      "McGinley_Period": 12, "keltner_Window": 18, "Multi_ATR": 1.5}
-        # trade.SetAlgorithmParam(currency[2] + currency[3], p)
+        # trade.SetAlgorithmParam(currency[2] + currency[6], p)
+        #
+        # p = {"Win1": 18, "Win2": 24, "Win3": 72, "t": 26, "a": 0,
+        #      "McGinley_Period": 24, "keltner_Window": 24, "Multi_ATR": 1}
+        # trade.SetAlgorithmParam(currency[3] + currency[6], p)
+        # p = {"Win1": 18, "Win2": 24, "Win3": 72, "t": 26, "a": 0,
+        #      "McGinley_Period": 12, "keltner_Window": 24, "Multi_ATR": 2}
+        # trade.SetAlgorithmParam(currency[4] + currency[6], p)
+        # p = {"Win1": 9, "Win2": 48, "Win3": 72, "t": 18, "a": 0,
+        #      "McGinley_Period": 12, "keltner_Window": 18, "Multi_ATR": 2}
+        # trade.SetAlgorithmParam(currency[5] + currency[6], p)
+        # p = {"Win1": 9, "Win2": 72, "Win3": 144, "t": 18, "a": 0,
+        #      "McGinley_Period": 18, "keltner_Window": 12, "Multi_ATR": 1}
+        # trade.SetAlgorithmParam(currency[3] + currency[0], p)
+        # p = {"Win1": 9, "Win2": 48, "Win3": 96, "t": 26, "a": 0,
+        #      "McGinley_Period": 12, "keltner_Window": 24, "Multi_ATR": 1.5}
+        # trade.SetAlgorithmParam(currency[4] + currency[0], p)
+        # p = {"Win1": 9, "Win2": 48, "Win3": 72, "t": 18, "a": 0,
+        #      "McGinley_Period": 12, "keltner_Window": 24, "Multi_ATR": 2}
+        # trade.SetAlgorithmParam(currency[5] + currency[0], p)
         # trade.Run()
         # trade.LogResult()
     else:

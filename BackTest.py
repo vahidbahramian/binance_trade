@@ -1288,9 +1288,9 @@ class Algorithm_5(Algorithm_4):
             # self.strategy[i] = (ICHIMOKU_STOCASTIC_Strategy(high, low, self.close_data))
             # self.strategy[i] = (ICHIMOKU_Strategy_Test(high, low, self.close_data))
             # self.strategy[i] = (ICHIMOKU_Strategy_HMA(high, low, self.close_data))
-            self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, self.close_data))
+            self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, self.close_data, i))
         self.file = CSVFiles("Result/Algorithm_6-" + start_time.strftime("%Y-%m-%d_") + end_time.strftime("%Y-%m-%d_") +
-                             self.currency_pair[0] + ".csv")
+                             self.currency_pair_secondery[0] + ".csv")
         self.result_row = []
         self.Buy_Signal = {}
         self.param = {}
@@ -1379,7 +1379,7 @@ class Algorithm_5(Algorithm_4):
 
                 if d > 0:
                     profit.append(d * valume[jj])
-                    profit_percents.append(d / buy_price[jj])
+                    profit_percents.append(profit[-1] / balance["Current"])
                     balance["Current"] += profit[-1]
                     balance["All"].append(balance["Current"])
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
@@ -1387,7 +1387,7 @@ class Algorithm_5(Algorithm_4):
                     isProfitOrLoss.append(1)
                 else:
                     loss.append(abs(d) * valume[jj])
-                    loss_percents.append(abs(d) / buy_price[jj])
+                    loss_percents.append(loss[-1] / balance["Current"])
                     valume[jj] = 0
                     balance["Current"] -= loss[-1]
                     balance["All"].append(balance["Current"])
@@ -1414,14 +1414,14 @@ class Algorithm_5(Algorithm_4):
                                             len(action["Buy"]) * self.strategy[jj + self.currency[-1]].close_data[i]
                 if d > 0:
                     profit.append(d * (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
-                    profit_percents.append(d / buy_price[jj])
+                    profit_percents.append(profit[-1] / balance["Current"])
                     valume[jj] -= (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
                     balance["Current"] += profit[-1]
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     isProfitOrLoss.append(1)
                 else:
                     loss.append(abs(d) * (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
-                    loss_percents.append(abs(d) / buy_price[jj])
+                    loss_percents.append(loss[-1] / balance["Current"])
                     valume[jj] -= (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
                     balance["Current"] -= loss[-1]
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
@@ -1435,14 +1435,14 @@ class Algorithm_5(Algorithm_4):
                                            self.strategy[self.currency_pair[0]].close_data[i]
                     if d > 0:
                         profit.append(d * valume[self.currency[0]])
-                        profit_percents.append(d / buy_price[self.currency[0]])
+                        profit_percents.append(profit[-1] / balance["Current"])
                         valume[self.currency[0]] = 0
                         balance["Current"] += profit[-1]
                         # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                         isProfitOrLoss.append(1)
                     else:
                         loss.append(abs(d) * valume[self.currency[0]])
-                        loss_percents.append(abs(d) / buy_price[self.currency[0]])
+                        loss_percents.append(loss[-1] / balance["Current"])
                         valume[self.currency[0]] = 0
                         balance["Current"] -= loss[-1]
                         # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
@@ -1495,13 +1495,13 @@ class Algorithm_5(Algorithm_4):
             #        self.param[self.currency_pair[0]]["a"], self.param[self.currency_pair[0]]["b"]]\
             #       + [k for k in balance["All"]]
 
-            row = ["Algorithm_5", self.param[self.currency_pair[0]]["Win1"],
-                   self.param[self.currency_pair[0]]["Win2"],
-                   self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
-                   self.param[self.currency_pair[0]]["a"],
-                   self.param[self.currency_pair[0]]["McGinley_Period"],
-                   self.param[self.currency_pair[0]]["keltner_Window"],
-                   self.param[self.currency_pair[0]]["Multi_ATR"],
+            row = ["Algorithm_5", self.param[self.currency_pair_secondery[0]]["Win1"],
+                   self.param[self.currency_pair_secondery[0]]["Win2"],
+                   self.param[self.currency_pair_secondery[0]]["Win3"], self.param[self.currency_pair_secondery[0]]["t"],
+                   self.param[self.currency_pair_secondery[0]]["a"],
+                   self.param[self.currency_pair_secondery[0]]["McGinley_Period"],
+                   self.param[self.currency_pair_secondery[0]]["keltner_Window"],
+                   self.param[self.currency_pair_secondery[0]]["Multi_ATR"],
                    balance["Current"] - 1000, sum(profit), max(profit_percents),
                    sum(profit_percents) / len(profit_percents), sum(loss), max(loss_percents),
                    sum(loss_percents) / len(loss_percents), profit_factor, len(profit) / len(profit+loss),
@@ -1509,13 +1509,13 @@ class Algorithm_5(Algorithm_4):
                    max(profit_count), sum(profit_count) / len(profit_count), max(loss_count),
                    sum(loss_count) / len(loss_count), 0, 0]
         except ZeroDivisionError:
-            row = ["Algorithm_5", self.param[self.currency_pair[0]]["Win1"],
-                   self.param[self.currency_pair[0]]["Win2"],
-                   self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
-                   self.param[self.currency_pair[0]]["a"],
-                   self.param[self.currency_pair[0]]["McGinley_Period"],
-                   self.param[self.currency_pair[0]]["keltner_Window"],
-                   self.param[self.currency_pair[0]]["Multi_ATR"],
+            row = ["Algorithm_5", self.param[self.currency_pair_secondery[0]]["Win1"],
+                   self.param[self.currency_pair_secondery[0]]["Win2"],
+                   self.param[self.currency_pair_secondery[0]]["Win3"], self.param[self.currency_pair_secondery[0]]["t"],
+                   self.param[self.currency_pair_secondery[0]]["a"],
+                   self.param[self.currency_pair_secondery[0]]["McGinley_Period"],
+                   self.param[self.currency_pair_secondery[0]]["keltner_Window"],
+                   self.param[self.currency_pair_secondery[0]]["Multi_ATR"],
                    balance["Current"] - 1000, sum(profit), max(profit_percents), 0, sum(loss),
                           max(loss_percents), 0, profit_factor, 0, 0, sell_count, 0, 0, 0,
                           max(loss_count), 0, 0, 0]

@@ -600,8 +600,12 @@ class Algo_3(Algo_2):
         b = []
         bs = {}
         for i in self.currency_pair + self.currency_pair_secondery:
-            if (self.BuyOrderCondition(i) and not self.isPosition[i[:3]]) or\
-                    (self.isPosition[i[:3]] and not self.SellOrderCondition(i)):
+            if self.currency[-1] in i:
+                c = i.replace(self.currency[-1], '')
+            else:
+                c = i.replace(self.currency[0], '')
+            if (self.BuyOrderCondition(i) and not self.isPosition[c]) or\
+                    (self.isPosition[c] and not self.SellOrderCondition(i)):
                 b.append(i)
 
         if self.currency_pair[0] in b:
