@@ -51,10 +51,10 @@ def main(client, currency, param):
         #      "MATIC": [[date(2019, 4, 1), date(2020, 4, 1)], [date(2020, 4, 1), date(2021, 4, 1)],
         #                [date(2019, 4, 1), date(2021, 4, 1)]]}
 
-        c = {"ETH": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
-                     [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]],
-             "XRP": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
-                     [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]]}
+        c = {#"ETH": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
+                     # [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)]],
+             "XRP": [[date(2018, 5, 1), date(2019, 5, 1)], [date(2019, 5, 1), date(2020, 5, 1)],
+                     [date(2018, 5, 1), date(2020, 5, 1)], [date(2020, 5, 1), date(2021, 5, 1)]]}
         for c, v in c.items():
             for i in v:
                 currency = ["BTC", c, "USDT"]
