@@ -1290,7 +1290,7 @@ class Algorithm_5(Algorithm_4):
             # self.strategy[i] = (ICHIMOKU_Strategy_HMA(high, low, self.close_data))
             self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, self.close_data, i))
         self.file = CSVFiles("Result/Algorithm_6-" + start_time.strftime("%Y-%m-%d_") + end_time.strftime("%Y-%m-%d_") +
-                             self.currency_pair_secondery[0] + ".csv")
+                             self.currency_pair[0] + ".csv")
         self.result_row = []
         self.Buy_Signal = {}
         self.param = {}
