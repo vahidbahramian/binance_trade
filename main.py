@@ -14,7 +14,7 @@ def main(client, currency, param):
 
     :type client: type of binance client
     """
-    back_test = True
+    back_test = False
 
     # start_time = "1.1.2020"
     # end_time = "1.1.2021"
