@@ -1495,13 +1495,13 @@ class Algorithm_5(Algorithm_4):
             #        self.param[self.currency_pair[0]]["a"], self.param[self.currency_pair[0]]["b"]]\
             #       + [k for k in balance["All"]]
 
-            row = ["Algorithm_5", self.param[self.currency_pair_secondery[0]]["Win1"],
-                   self.param[self.currency_pair_secondery[0]]["Win2"],
-                   self.param[self.currency_pair_secondery[0]]["Win3"], self.param[self.currency_pair_secondery[0]]["t"],
-                   self.param[self.currency_pair_secondery[0]]["a"],
-                   self.param[self.currency_pair_secondery[0]]["McGinley_Period"],
-                   self.param[self.currency_pair_secondery[0]]["keltner_Window"],
-                   self.param[self.currency_pair_secondery[0]]["Multi_ATR"],
+            row = ["Algorithm_5", self.param[self.currency_pair[0]]["Win1"],
+                   self.param[self.currency_pair[0]]["Win2"],
+                   self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
+                   self.param[self.currency_pair[0]]["a"],
+                   self.param[self.currency_pair[0]]["McGinley_Period"],
+                   self.param[self.currency_pair[0]]["keltner_Window"],
+                   self.param[self.currency_pair[0]]["Multi_ATR"],
                    balance["Current"] - 1000, sum(profit), max(profit_percents),
                    sum(profit_percents) / len(profit_percents), sum(loss), max(loss_percents),
                    sum(loss_percents) / len(loss_percents), profit_factor, len(profit) / len(profit+loss),
