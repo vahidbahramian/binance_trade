@@ -1,4 +1,5 @@
 import abc
+import time
 from threading import Lock
 
 import numpy
@@ -296,25 +297,28 @@ class KuCoin(Exchange):
             self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
             self.loop_klinesocket[currency_pair].run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
 
-        self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
-        self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
-        self.loop_klinesocket[currency_pair].run_until_complete(self.KlineSubscribe(currency_pair, interval))
+        else:
+            self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
+            self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
+            self.loop_klinesocket[currency_pair].run_until_complete(self.KlineSubscribe(currency_pair, interval))
 
-        self.loop_klinesocket[currency_pair].stop()
-        for task in asyncio.Task.all_tasks():
-            task.cancel()
+            self.loop_klinesocket[currency_pair].stop()
+            for task in asyncio.Task.all_tasks():
+                task.cancel()
 
     async def KlineSubscribe(self, currency_pair, interval):
         await self.ksm.subscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
                                  self.KLINE_INTERVAL_CORRESPOND[interval])
         self.close_klinesocket[currency_pair] = True
         while self.close_klinesocket[currency_pair]:
-            await asyncio.sleep(5, loop=self.loop_klinesocket[currency_pair])
+            await asyncio.sleep(5)
 
     async def KlineUnSubscribe(self, currency_pair, interval):
+        self.close_klinesocket[currency_pair] = False
         await self.ksm.unsubscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
                                  self.KLINE_INTERVAL_CORRESPOND[interval])
+
 
     async def HandleEvent(self, msg):
         if msg['subject'] == 'trade.candles.update':

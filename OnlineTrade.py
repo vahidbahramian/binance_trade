@@ -691,15 +691,18 @@ class Algo_3(Algo_2):
                     localtime = datetime.datetime.now()
                     for i in self.currency_pair + self.currency_pair_secondery:
                         if localtime - self.LastTimeOfCandle[i] > datetime.timedelta(minutes=60):
-                            if i == self.currency_pair[0]:
-                                self.exchange.close_websocket = False
-                                time.sleep(7)
-                                c = threading.Thread(target=self.CreateWebSocketManager, args=())
-                                c.start()
-                                time.sleep(2)
-                            self.exchange.close_klinesocket[i] = False
-                            time.sleep(7)
-                            self.CreateKlineSocket(i, Client.KLINE_INTERVAL_1HOUR)
+                            # if i == self.currency_pair[0]:
+                            #     self.exchange.close_websocket = False
+                            #     time.sleep(7)
+                            #     c = threading.Thread(target=self.CreateWebSocketManager, args=())
+                            #     c.start()
+                            #     time.sleep(2)
+                            self.StopKlineSocket(i, Client.KLINE_INTERVAL_1HOUR)
+                            # k = threading.Thread(target=self.StopKlineSocket, args=(i, Client.KLINE_INTERVAL_1HOUR))
+                            # k.start()
+                            time.sleep(5)
+                            k = threading.Thread(target=self.CreateKlineSocket, args=(i, Client.KLINE_INTERVAL_1HOUR))
+                            k.start()
                             time.sleep(1)
                             print(datetime.datetime.now(), "    ReCreate Kline Socket!!!")
                             self.logger.info("ReCreate Kline Socket!!!")
