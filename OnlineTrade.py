@@ -687,25 +687,24 @@ class Algo_3(Algo_2):
             time.sleep(1)
             try:
                 if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=15):
-                    print(datetime.datetime.now(), "    Thread is run!!!")
+                    # print(datetime.datetime.now(), "    Thread is run!!!")
                     localtime = datetime.datetime.now()
                     for i in self.currency_pair + self.currency_pair_secondery:
                         if localtime - self.LastTimeOfCandle[i] > datetime.timedelta(minutes=60):
-                            # if i == self.currency_pair[0]:
-                            #     self.exchange.close_websocket = False
-                            #     time.sleep(7)
-                            #     c = threading.Thread(target=self.CreateWebSocketManager, args=())
-                            #     c.start()
-                            #     time.sleep(2)
-                            self.StopKlineSocket(i, Client.KLINE_INTERVAL_1HOUR)
-                            # k = threading.Thread(target=self.StopKlineSocket, args=(i, Client.KLINE_INTERVAL_1HOUR))
-                            # k.start()
+                            self.StopAllKlineSocket()
                             time.sleep(5)
-                            k = threading.Thread(target=self.CreateKlineSocket, args=(i, Client.KLINE_INTERVAL_1HOUR))
-                            k.start()
-                            time.sleep(1)
+                            self.exchange.close_websocket = False
+                            time.sleep(5)
+                            c = threading.Thread(target=self.CreateWebSocketManager, args=())
+                            c.start()
+                            time.sleep(2)
+                            for i in self.currency_pair + self.currency_pair_secondery:
+                                k = threading.Thread(target=self.CreateKlineSocket, args=(i, Client.KLINE_INTERVAL_1HOUR))
+                                k.start()
+                                time.sleep(1)
                             print(datetime.datetime.now(), "    ReCreate Kline Socket!!!")
                             self.logger.info("ReCreate Kline Socket!!!")
+                            break
                 if self.update_candle_event.is_set():
                     self.update_candle_event.clear()
                     print(datetime.datetime.now(), "    Event was set!!!")
@@ -715,7 +714,9 @@ class Algo_3(Algo_2):
                     self.isPosition = self.SetIsPosition(currency_balance)
 
                     buy_signal = self.ComputeBuySignal()
+                    print(buy_signal)
                     action = self.CheckAction(buy_signal)
+                    print(action)
                     if len(action["Sell"]) > 0 or len(action["SellNotAll"]) > 0 or len(action["Buy"]) > 0:
                         self.logger.info(action)
                     for j in action["Sell"]:

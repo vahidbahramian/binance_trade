@@ -56,8 +56,8 @@ class OnlineAlgorithm(abc.ABC):
     def CreateKlineSocket(self, currency_pair, interval):
         self.exchange.CreateKlineSocket(currency_pair, interval, re_create=False)
 
-    def StopKlineSocket(self, currency_pair, interval):
-        self.exchange.CreateKlineSocket(currency_pair, interval, re_create=True)
+    def StopAllKlineSocket(self):
+        self.exchange.StopAllKlineSocket()
 
     def GetPrice(self, currency_Pair):
         return self.exchange.GetPrice(currency_Pair)

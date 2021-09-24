@@ -306,6 +306,8 @@ class KuCoin(Exchange):
             self.loop_klinesocket[currency_pair].stop()
             for task in asyncio.Task.all_tasks():
                 task.cancel()
+    def StopAllKlineSocket(self):
+        self.close_klinesocket = dict.fromkeys(self.close_klinesocket, False)
 
     async def KlineSubscribe(self, currency_pair, interval):
         await self.ksm.subscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
@@ -315,7 +317,6 @@ class KuCoin(Exchange):
             await asyncio.sleep(5)
 
     async def KlineUnSubscribe(self, currency_pair, interval):
-        self.close_klinesocket[currency_pair] = False
         await self.ksm.unsubscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +
                                  self.KLINE_INTERVAL_CORRESPOND[interval])
 
