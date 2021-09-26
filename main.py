@@ -63,15 +63,15 @@ def main(client, currency, param):
              # "LTC": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
              #         [date(2018, 1, 1), date(2020, 1, 1)], [date(2020, 1, 1), date(2021, 1, 1)],
              #         [date(2021, 1, 1), date(2021, 9, 1)]],
-            # "XRP": [[date(2018, 6, 1), date(2019, 6, 1)], [date(2019, 6, 1), date(2020, 6, 1)],
-            #         [date(2018, 6, 1), date(2020, 6, 1)], [date(2020, 6, 1), date(2021, 6, 1)],
-            #         [date(2021, 1, 1), date(2021, 9, 1)]],
-             "TRX": [[date(2018, 7, 1), date(2019, 7, 1)], [date(2019, 7, 1), date(2020, 7, 1)],
-                     [date(2018, 7, 1), date(2020, 7, 1)], [date(2020, 7, 1), date(2021, 7, 1)],
-                     [date(2021, 1, 1), date(2021, 9, 1)]],
-             "ADA": [[date(2018, 5, 1), date(2019, 5, 1)], [date(2019, 5, 1), date(2020, 5, 1)],
-                     [date(2018, 5, 1), date(2020, 5, 1)], [date(2020, 5, 1), date(2021, 5, 1)],
-                     [date(2021, 1, 1), date(2021, 9, 1)]]}
+            "XRP": [[date(2018, 6, 1), date(2019, 6, 1)], [date(2019, 6, 1), date(2020, 6, 1)],
+                    [date(2018, 6, 1), date(2020, 6, 1)], [date(2020, 6, 1), date(2021, 6, 1)],
+                    [date(2021, 1, 1), date(2021, 9, 1)]]}
+             # "TRX": [[date(2018, 7, 1), date(2019, 7, 1)], [date(2019, 7, 1), date(2020, 7, 1)],
+             #         [date(2018, 7, 1), date(2020, 7, 1)], [date(2020, 7, 1), date(2021, 7, 1)],
+             #         [date(2021, 1, 1), date(2021, 9, 1)]],
+             # "ADA": [[date(2018, 5, 1), date(2019, 5, 1)], [date(2019, 5, 1), date(2020, 5, 1)],
+             #         [date(2018, 5, 1), date(2020, 5, 1)], [date(2020, 5, 1), date(2021, 5, 1)],
+             #         [date(2021, 1, 1), date(2021, 9, 1)]]}
         for c, v in c.items():
             for i in v:
                 currency = ["BTC", c, "USDT"]
@@ -83,6 +83,9 @@ def main(client, currency, param):
                 trade.SetAlgorithmParam(currency[0] + currency[2], p)
                 if c == "ETH":
                     p = {"Win1": 18, "Win2": 48, "Win3": 72, "t": 26, "a": 0,
+                         "McGinley_Period": 12, "keltner_Window": 18, "Multi_ATR": 1.5}
+                elif c == "XRP":
+                    p = {"Win1": 9, "Win2": 24, "Win3": 48, "t": 26, "a": 0,
                          "McGinley_Period": 12, "keltner_Window": 18, "Multi_ATR": 1.5}
                 elif c == "LTC":
                     p = {"Win1": 24, "Win2": 48, "Win3": 72, "t": 18, "a": 0,
