@@ -342,10 +342,10 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                         if sys.argv[2] == "o" or sys.argv[2] == "O":
                             self.WriteConfigFile(self.currency_pair, "Buy_2", True)
                         return True
-                else:
-                    return True
-            else:
-                return True
+            #     else:
+            #         return True
+            # else:
+            #     return True
         return False
 
     def SellStrategy(self, i, t):
