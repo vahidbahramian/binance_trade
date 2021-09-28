@@ -949,6 +949,7 @@ class Algorithm_4(Algorithm_3):
             for i in self.currency_pair + self.currency_pair_secondery:
                 self.th[i] = threading.Thread(target=self.BuySignalThread, args=(param, i,))
                 self.th[i].start()
+                # time.sleep(10)
         except:
             print("Error: unable to start thread")
 
@@ -1305,6 +1306,7 @@ class Algorithm_5(Algorithm_4):
         isNotPos = True
         j = 1
         while j < len(self.klines[currency]) - 1:
+            # print(currency, j)
             if update_strategy:
                 self.strategy[currency].ComputeIchimoku_A(param[currency]["Win1"], param[currency]["Win2"])
                 self.strategy[currency].ComputeIchimoku_B(param[currency]["Win2"], param[currency]["Win3"])
@@ -1428,6 +1430,7 @@ class Algorithm_5(Algorithm_4):
                     isProfitOrLoss.append(0)
 
             for j in action["Buy"]:
+                # print(i)
                 buy_count += 1
                 if valume[self.currency[0]] > 0 and len(j) > 0:
                     d = self.strategy[self.currency_pair[0]].close_data[i] - buy_price[self.currency[0]]
