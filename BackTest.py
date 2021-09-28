@@ -1269,7 +1269,7 @@ class Algorithm_5(Algorithm_4):
             self.correspond_currency[self.currency[i+1]] = self.currency_pair[i+1]
             self.correspond_currency[self.currency_pair[i+1]] = item
 
-        use_offline_data = False
+        use_offline_data = True
         for i in self.currency_pair + self.currency_pair_secondery:
             if use_offline_data:
                 self.klines[i] = (FileWorking.ReadKlines("Data\\" + i + "_1HOUR_" + start_time.isoformat() + "_" +
