@@ -1224,11 +1224,6 @@ class Algorithm_4(Algorithm_3):
                     profit_count.append(p)
                     p = 0
         try:
-            # row = [self.param[self.currency_pair[0]]["Win1"], self.param[self.currency_pair[0]]["Win2"],
-            #        self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
-            #        self.param[self.currency_pair[0]]["a"], self.param[self.currency_pair[0]]["b"]]\
-            #       + [k for k in balance["All"]]
-
             row = ["Algorithm_4", self.param[self.currency_pair[0]]["Win1"],
                    self.param[self.currency_pair[0]]["Win2"],
                    self.param[self.currency_pair[0]]["Win3"], self.param[self.currency_pair[0]]["t"],
@@ -1285,10 +1280,6 @@ class Algorithm_5(Algorithm_4):
 
             self.close_data = candle.close
 
-            # self.strategy[i] = (ICHIMOKU_2_Strategy(high, low, self.close_data))
-            # self.strategy[i] = (ICHIMOKU_STOCASTIC_Strategy(high, low, self.close_data))
-            # self.strategy[i] = (ICHIMOKU_Strategy_Test(high, low, self.close_data))
-            # self.strategy[i] = (ICHIMOKU_Strategy_HMA(high, low, self.close_data))
             self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, self.close_data, i))
         self.file = CSVFiles("Result/Algorithm_6-" + start_time.strftime("%Y-%m-%d_") + end_time.strftime("%Y-%m-%d_") +
                              self.currency_pair_secondery[0] + ".csv")
@@ -1306,7 +1297,6 @@ class Algorithm_5(Algorithm_4):
         isNotPos = True
         j = 1
         while j < len(self.klines[currency]) - 1:
-            # print(currency, j)
             if update_strategy:
                 self.strategy[currency].ComputeIchimoku_A(param[currency]["Win1"], param[currency]["Win2"])
                 self.strategy[currency].ComputeIchimoku_B(param[currency]["Win2"], param[currency]["Win3"])
@@ -1430,7 +1420,6 @@ class Algorithm_5(Algorithm_4):
                     isProfitOrLoss.append(0)
 
             for j in action["Buy"]:
-                # print(i)
                 buy_count += 1
                 if valume[self.currency[0]] > 0 and len(j) > 0:
                     d = self.strategy[self.currency_pair[0]].close_data[i] - buy_price[self.currency[0]]
