@@ -584,8 +584,9 @@ class Algo_3(Algo_2):
                 if i in pos:
                     Order["SellNotAll"] += self.FindKeyFromCurrency(currency, i)
                 else:
-                    Order["Buy"] += self.FindKeyFromCurrency(currency, i)
-                    # self.isPosition[i] = True
+                    if not set(self.FindKeyFromCurrency(currency, i)).issubset(Order["Buy"]):
+                        Order["Buy"] += self.FindKeyFromCurrency(currency, i)
+                        # self.isPosition[i] = True
             if self.currency[0] in one_buy_signal:
                 for i in one_buy_signal:
                     if i in pos and i != self.currency[0]:

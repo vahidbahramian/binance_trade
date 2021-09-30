@@ -357,6 +357,7 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                     self.buy_1 = False
                     if sys.argv[2] == "o" or sys.argv[2] == "O":
                         self.WriteConfigFile(self.currency_pair, "Buy_1", False)
+                        self.WriteConfigFile(self.currency_pair, "Buy_2", False)
                     return True
             elif self.buy_1:
                 if (self.close_data[i] < self.ich_b[i - t + 1] and self.close_data[i] < self.ich_a[i - t + 1]) \
@@ -365,6 +366,7 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                     self.buy_ichi = False
                     if sys.argv[2] == "o" or sys.argv[2] == "O":
                         self.WriteConfigFile(self.currency_pair, "Buy_2", False)
+                        self.WriteConfigFile(self.currency_pair, "Buy_1", False)
                     return True
         return False
 
