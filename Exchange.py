@@ -290,22 +290,24 @@ class KuCoin(Exchange):
         # for private topics such as '/account/balance' pass private=True
         # self.ksm_private = await KucoinSocketManager.create(self.loop, self.client, self.HandleEvent, private=True)
 
-    def CreateKlineSocket(self, currency_pair, interval, re_create):
-        if re_create:
-            self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
-            asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
-            self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
-            self.loop_klinesocket[currency_pair].run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
+    def CreateKlineSocket(self, currency_pair, interval):
 
-        else:
-            self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
-            asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
-            self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
-            self.loop_klinesocket[currency_pair].run_until_complete(self.KlineSubscribe(currency_pair, interval))
+        self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
+        self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
+        self.loop_klinesocket[currency_pair].run_until_complete(self.KlineSubscribe(currency_pair, interval))
 
-            self.loop_klinesocket[currency_pair].stop()
-            for task in asyncio.Task.all_tasks():
-                task.cancel()
+        self.loop_klinesocket[currency_pair].stop()
+        for task in asyncio.Task.all_tasks():
+            task.cancel()
+
+        self.UnSubscribeKlineSocket(currency_pair, interval)
+    def UnSubscribeKlineSocket(self, currency_pair, interval):
+        self.loop_klinesocket[currency_pair] = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop_klinesocket[currency_pair])
+        self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
+        self.loop_klinesocket[currency_pair].run_until_complete(self.KlineUnSubscribe(currency_pair, interval))
+
     def StopAllKlineSocket(self):
         self.close_klinesocket = dict.fromkeys(self.close_klinesocket, False)
 

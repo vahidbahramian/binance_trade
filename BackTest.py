@@ -949,7 +949,7 @@ class Algorithm_4(Algorithm_3):
             for i in self.currency_pair + self.currency_pair_secondery:
                 self.th[i] = threading.Thread(target=self.BuySignalThread, args=(param, i,))
                 self.th[i].start()
-                # time.sleep(10)
+                time.sleep(10)
         except:
             print("Error: unable to start thread")
 
@@ -1264,7 +1264,7 @@ class Algorithm_5(Algorithm_4):
             self.correspond_currency[self.currency[i+1]] = self.currency_pair[i+1]
             self.correspond_currency[self.currency_pair[i+1]] = item
 
-        use_offline_data = True
+        use_offline_data = False
         for i in self.currency_pair + self.currency_pair_secondery:
             if use_offline_data:
                 self.klines[i] = (FileWorking.ReadKlines("Data\\" + i + "_1HOUR_" + start_time.isoformat() + "_" +
@@ -1363,28 +1363,27 @@ class Algorithm_5(Algorithm_4):
                 if self.currency[-1] in j:
                     jj = j.replace(self.currency[-1], '')
                     d = self.strategy[j].close_data[i] - buy_price[jj]
-                    balance["Available"] += valume[jj] * self.strategy[j].close_data[i]
+                    amount = self.strategy[j].close_data[i] * valume[jj]
                 else:
                     jj = j.replace(self.currency[0], '')
                     d = self.strategy[jj + self.currency[-1]].close_data[i] - buy_price[jj]
-                    balance["Available"] += valume[jj] * self.strategy[jj + self.currency[-1]].close_data[i]
+                    amount = self.strategy[jj + self.currency[-1]].close_data[i] * valume[jj]
 
                 if d > 0:
-                    profit.append(d * valume[jj])
+                    profit.append((d * valume[jj]) - (amount * 0.002))
                     profit_percents.append(profit[-1] / balance["Current"])
                     balance["Current"] += profit[-1]
-                    balance["All"].append(balance["Current"])
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
-                    valume[jj] = 0
                     isProfitOrLoss.append(1)
                 else:
-                    loss.append(abs(d) * valume[jj])
+                    loss.append((abs(d) * valume[jj]) + (amount * 0.002))
                     loss_percents.append(loss[-1] / balance["Current"])
-                    valume[jj] = 0
                     balance["Current"] -= loss[-1]
-                    balance["All"].append(balance["Current"])
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     isProfitOrLoss.append(0)
+                valume[jj] = 0
+                balance["All"].append(balance["Current"])
+                balance["Available"] += amount * 0.998
 
                 if valume[self.currency[0]] == 0 and len(action["Buy"]) == 0:
                     if j[3:] == self.currency[0]:
@@ -1393,53 +1392,61 @@ class Algorithm_5(Algorithm_4):
                         balance["Available"] = 0
 
             for j in action["SellNotAll"]:
-                sell_count +=1
+                sell_count += 1
                 if self.currency[-1] in j:
                     jj = j.replace(self.currency[-1], '')
                     d = self.strategy[j].close_data[i] - buy_price[jj]
-                    balance["Available"] += (valume[jj] / len(action["SellNotAll"] + action["Buy"])) *\
+                    amount = (valume[jj] / len(action["SellNotAll"] + action["Buy"])) *\
                                             len(action["Buy"]) * self.strategy[j].close_data[i]
+                    # balance["Available"] += (valume[jj] / len(action["SellNotAll"] + action["Buy"])) *\
+                    #                         len(action["Buy"]) * self.strategy[j].close_data[i]
                 else:
                     jj = j.replace(self.currency[0], '')
                     d = self.strategy[jj + self.currency[-1]].close_data[i] - buy_price[jj]
-                    balance["Available"] += (valume[jj] / len(action["SellNotAll"] + action["Buy"])) *\
+                    amount = (valume[jj] / len(action["SellNotAll"] + action["Buy"])) *\
                                             len(action["Buy"]) * self.strategy[jj + self.currency[-1]].close_data[i]
+                    # balance["Available"] += (valume[jj] / len(action["SellNotAll"] + action["Buy"])) *\
+                    #                         len(action["Buy"]) * self.strategy[jj + self.currency[-1]].close_data[i]
                 if d > 0:
-                    profit.append(d * (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
+                    profit.append((d * (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])) -
+                                  (amount * 0.002))
                     profit_percents.append(profit[-1] / balance["Current"])
-                    valume[jj] -= (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
                     balance["Current"] += profit[-1]
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     isProfitOrLoss.append(1)
                 else:
-                    loss.append(abs(d) * (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
+                    loss.append((abs(d) * (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"]))
+                                + (amount * 0.002))
                     loss_percents.append(loss[-1] / balance["Current"])
-                    valume[jj] -= (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
                     balance["Current"] -= loss[-1]
                     # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                     isProfitOrLoss.append(0)
 
+                valume[jj] -= (valume[jj] / len(action["SellNotAll"] + action["Buy"])) * len(action["Buy"])
+                balance["All"].append(balance["Current"])
+                balance["Available"] += amount * 0.998
             for j in action["Buy"]:
                 buy_count += 1
                 if valume[self.currency[0]] > 0 and len(j) > 0:
                     d = self.strategy[self.currency_pair[0]].close_data[i] - buy_price[self.currency[0]]
-                    balance["Available"] = valume[self.currency[0]] * \
-                                           self.strategy[self.currency_pair[0]].close_data[i]
+                    amount = valume[self.currency[0]] * self.strategy[self.currency_pair[0]].close_data[i]
+                    # balance["Available"] = valume[self.currency[0]] * \
+                    #                        self.strategy[self.currency_pair[0]].close_data[i]
                     if d > 0:
-                        profit.append(d * valume[self.currency[0]])
+                        profit.append((d * valume[self.currency[0]]) - (amount * 0.002))
                         profit_percents.append(profit[-1] / balance["Current"])
-                        valume[self.currency[0]] = 0
                         balance["Current"] += profit[-1]
                         # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                         isProfitOrLoss.append(1)
                     else:
-                        loss.append(abs(d) * valume[self.currency[0]])
+                        loss.append((abs(d) * valume[self.currency[0]]) + (amount * 0.002))
                         loss_percents.append(loss[-1] / balance["Current"])
-                        valume[self.currency[0]] = 0
                         balance["Current"] -= loss[-1]
                         # Max_DD_arr.append((max(balance["Current"]) - min(balance["Current"])) / max(balance["Current"]))
                         isProfitOrLoss.append(0)
-
+                    valume[self.currency[0]] = 0
+                    balance["All"].append(balance["Current"])
+                    balance["Available"] = amount * 0.998
                 if self.currency[-1] in j:
                     jj = j.replace(self.currency[-1], '')
                     buy_price[jj] = ((buy_price[jj] * valume[jj]) + self.strategy[j].close_data[i] *
