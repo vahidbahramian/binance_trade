@@ -227,7 +227,7 @@ class Algo_2(OnlineAlgorithm):
 
     def UpdateCandle(self, msg):
         time = datetime.datetime.utcfromtimestamp(msg["Time"] / 1000)
-        # print(time, msg["CurrencyPair"], msg["Close"], msg["High"], msg["Low"])
+        print(time, msg["CurrencyPair"], msg["Close"], msg["High"], msg["Low"])
         # print(self.LastTimeOfCandle[msg["CurrencyPair"]])
         if time > self.LastTimeOfCandle[msg["CurrencyPair"]]:
             for i in self.currency_pair + self.currency_pair_secondery:
