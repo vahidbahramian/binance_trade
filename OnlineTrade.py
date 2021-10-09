@@ -230,6 +230,7 @@ class Algo_2(OnlineAlgorithm):
         # print(time, msg["CurrencyPair"], msg["Close"], msg["High"], msg["Low"])
         # print(self.LastTimeOfCandle[msg["CurrencyPair"]])
         if time > self.LastTimeOfCandle[msg["CurrencyPair"]]:
+            self.LastTimeOfCandle[msg["CurrencyPair"]] = time
             for i in self.currency_pair + self.currency_pair_secondery:
                 # self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
                 self.GetKlines(i, Client.KLINE_INTERVAL_1HOUR,
@@ -255,7 +256,6 @@ class Algo_2(OnlineAlgorithm):
                 self.strategy[i].ComputeKeltnerChannel(self.param[i]["keltner_Window"], 12, self.param[i]["Multi_ATR"])
                 self.strategy[i].ComputeMcGinleyDynamic(self.param[i]["McGinley_Period"])
 
-                self.LastTimeOfCandle[i] = time
                 print(datetime.datetime.now(), i, self.exchange.close, self.exchange.high, self.exchange.low)
             self.update_candle_event.set()
 
