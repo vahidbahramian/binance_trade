@@ -297,8 +297,8 @@ class KuCoin(Exchange):
         self.loop_klinesocket[currency_pair] = asyncio.get_event_loop()
         self.loop_klinesocket[currency_pair].run_until_complete(self.KlineSubscribe(currency_pair, interval))
 
-        self.UnSubscribeKlineSocket(currency_pair, interval)
-        asyncio.sleep(1, loop=self.loop_klinesocket[currency_pair])
+        # self.UnSubscribeKlineSocket(currency_pair, interval)
+        # asyncio.sleep(1, loop=self.loop_klinesocket[currency_pair])
 
         self.loop_klinesocket[currency_pair].stop()
         for task in asyncio.Task.all_tasks():
