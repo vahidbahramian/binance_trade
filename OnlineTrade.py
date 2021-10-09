@@ -658,11 +658,11 @@ class Algo_3(Algo_2):
         # self.CreateWebSocketManager()
         # self.conn_key = {}
         time.sleep(5)
-        for i in self.currency_pair + self.currency_pair_secondery:
+        # for i in self.currency_pair + self.currency_pair_secondery:
             # self.CreateKlineSocket(i, Client.KLINE_INTERVAL_1HOUR)
-            k = threading.Thread(target=self.CreateKlineSocket, args=(i, Client.KLINE_INTERVAL_1HOUR))
-            k.start()
-            time.sleep(1)
+        k = threading.Thread(target=self.CreateKlineSocket, args=(self.currency_pair[0], Client.KLINE_INTERVAL_1HOUR))
+        k.start()
+        time.sleep(1)
         #     self.conn_key[i] = self.bsm.start_kline_socket(i, self.UpdateCandle,
         #                                                 interval=Client.KLINE_INTERVAL_1HOUR)
         # if not self.bsm.is_alive():
@@ -692,22 +692,23 @@ class Algo_3(Algo_2):
                 if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=5):
                     # print(datetime.datetime.now(), "    Thread is run!!!")
                     localtime = datetime.datetime.now()
-                    for i in self.currency_pair + self.currency_pair_secondery:
-                        if localtime - self.LastTimeOfCandle[i] > datetime.timedelta(minutes=60):
-                            self.StopAllKlineSocket()
-                            time.sleep(5)
-                            self.exchange.close_websocket = False
-                            time.sleep(5)
-                            c = threading.Thread(target=self.CreateWebSocketManager, args=())
-                            c.start()
-                            time.sleep(2)
-                            for i in self.currency_pair + self.currency_pair_secondery:
-                                k = threading.Thread(target=self.CreateKlineSocket, args=(i, Client.KLINE_INTERVAL_1HOUR))
-                                k.start()
-                                time.sleep(1)
-                            print(datetime.datetime.now(), "    ReCreate Kline Socket!!!")
-                            self.logger.info("ReCreate Kline Socket!!!")
-                            break
+                    # for i in self.currency_pair + self.currency_pair_secondery:
+                    if localtime - self.LastTimeOfCandle[self.currency_pair[0]] > datetime.timedelta(minutes=60):
+                        self.StopAllKlineSocket()
+                        time.sleep(5)
+                        self.exchange.close_websocket = False
+                        time.sleep(5)
+                        c = threading.Thread(target=self.CreateWebSocketManager, args=())
+                        c.start()
+                        time.sleep(2)
+                        # for i in self.currency_pair + self.currency_pair_secondery:
+                        k = threading.Thread(target=self.CreateKlineSocket, args=(self.currency_pair[0],
+                                                                                  Client.KLINE_INTERVAL_1HOUR))
+                        k.start()
+                        time.sleep(1)
+                        print(datetime.datetime.now(), "    ReCreate Kline Socket!!!")
+                        self.logger.info("ReCreate Kline Socket!!!")
+                            # break
                 if self.update_candle_event.is_set():
                     self.update_candle_event.clear()
                     print(datetime.datetime.now(), "    Event was set!!!")
