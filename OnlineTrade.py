@@ -231,38 +231,39 @@ class Algo_2(OnlineAlgorithm):
         # print(self.LastTimeOfCandle[msg["CurrencyPair"]])
         if time > self.LastTimeOfCandle[msg["CurrencyPair"]]:
             self.LastTimeOfCandle[msg["CurrencyPair"]] = time
-            for i in self.currency_pair + self.currency_pair_secondery:
+            self.update_count += 1
+            # for i in self.currency_pair + self.currency_pair_secondery:
                 # self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
-                self.GetKlines(i, Client.KLINE_INTERVAL_1HOUR,
+            self.GetKlines(msg["CurrencyPair"], Client.KLINE_INTERVAL_1HOUR,
                                int(time.timestamp()) + time.astimezone().utcoffset().seconds - 3600,
-                               int(time.timestamp()) + time.astimezone().utcoffset().seconds)
+                           int(time.timestamp()) + time.astimezone().utcoffset().seconds)
 
-                self.strategy[i].high_data.pop(0)
-                self.strategy[i].high_data.reset_index(drop=True, inplace=True)
-                self.strategy[i].low_data.pop(0)
-                self.strategy[i].low_data.reset_index(drop=True, inplace=True)
-                self.strategy[i].close_data = numpy.delete(self.strategy[i].close_data, 0)
+            self.strategy[msg["CurrencyPair"]].high_data.pop(0)
+            self.strategy[msg["CurrencyPair"]].high_data.reset_index(drop=True, inplace=True)
+            self.strategy[msg["CurrencyPair"]].low_data.pop(0)
+            self.strategy[msg["CurrencyPair"]].low_data.reset_index(drop=True, inplace=True)
+            self.strategy[msg["CurrencyPair"]].close_data = numpy.delete(self.strategy[msg["CurrencyPair"]].close_data, 0)
 
-                self.strategy[i].high_data = self.strategy[i].high_data.append(pd.Series(self.exchange.high),
-                                                                               ignore_index=True)
-                self.strategy[i].low_data = self.strategy[i].low_data.append(pd.Series(self.exchange.low),
-                                                                             ignore_index=True)
-                self.strategy[i].close_data = numpy.append(self.strategy[i].close_data, self.exchange.close)
+            self.strategy[msg["CurrencyPair"]].high_data = self.strategy[msg["CurrencyPair"]].high_data.append(pd.Series(self.exchange.high),
+                                                                           ignore_index=True)
+            self.strategy[msg["CurrencyPair"]].low_data = self.strategy[msg["CurrencyPair"]].low_data.append(pd.Series(self.exchange.low),
+                                                                         ignore_index=True)
+            self.strategy[msg["CurrencyPair"]].close_data = numpy.append(self.strategy[msg["CurrencyPair"]].close_data, self.exchange.close)
 
-                self.strategy[i].ComputeIchimoku_A(self.param[i]["Win1"], self.param[i]["Win2"])
-                self.strategy[i].ComputeIchimoku_B(self.param[i]["Win2"], self.param[i]["Win3"])
-                self.strategy[i].ComputeIchimoku_Base_Line(self.param[i]["Win1"], self.param[i]["Win2"])
-                self.strategy[i].ComputeIchimoku_Conversion_Line(self.param[i]["Win1"], self.param[i]["Win2"])
-                self.strategy[i].ComputeKeltnerChannel(self.param[i]["keltner_Window"], 12, self.param[i]["Multi_ATR"])
-                self.strategy[i].ComputeMcGinleyDynamic(self.param[i]["McGinley_Period"])
+            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_A(self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
+            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_B(self.param[msg["CurrencyPair"]]["Win2"], self.param[msg["CurrencyPair"]]["Win3"])
+            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_Base_Line(self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
+            self.strategy[msg["CurrencyPair"]].ComputeIchimoku_Conversion_Line(self.param[msg["CurrencyPair"]]["Win1"], self.param[msg["CurrencyPair"]]["Win2"])
+            self.strategy[msg["CurrencyPair"]].ComputeKeltnerChannel(self.param[msg["CurrencyPair"]]["keltner_Window"], 12, self.param[msg["CurrencyPair"]]["Multi_ATR"])
+            self.strategy[msg["CurrencyPair"]].ComputeMcGinleyDynamic(self.param[msg["CurrencyPair"]]["McGinley_Period"])
 
-                print(datetime.datetime.now(), i, self.exchange.close, self.exchange.high, self.exchange.low)
+            print(datetime.datetime.now(), msg["CurrencyPair"], self.exchange.close, self.exchange.high, self.exchange.low)
+        # self.update_candle_event.set()
+
+        if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
             self.update_candle_event.set()
+            self.update_count = 0
 
-        # if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
-        #     self.update_candle_event.set()
-        #     self.update_count = 0
-        #
         # FileWorking.Write(datetime.datetime.now())
         # print(datetime.datetime.now(), msg["CurrencyPair"], msg["Close"])
 
@@ -658,11 +659,11 @@ class Algo_3(Algo_2):
         # self.CreateWebSocketManager()
         # self.conn_key = {}
         time.sleep(5)
-        # for i in self.currency_pair + self.currency_pair_secondery:
+        for i in self.currency_pair + self.currency_pair_secondery:
             # self.CreateKlineSocket(i, Client.KLINE_INTERVAL_1HOUR)
-        k = threading.Thread(target=self.CreateKlineSocket, args=(self.currency_pair[0], Client.KLINE_INTERVAL_1HOUR))
-        k.start()
-        time.sleep(1)
+            k = threading.Thread(target=self.CreateKlineSocket, args=(i, Client.KLINE_INTERVAL_1HOUR))
+            k.start()
+            time.sleep(1)
         #     self.conn_key[i] = self.bsm.start_kline_socket(i, self.UpdateCandle,
         #                                                 interval=Client.KLINE_INTERVAL_1HOUR)
         # if not self.bsm.is_alive():
@@ -692,23 +693,22 @@ class Algo_3(Algo_2):
                 if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=5):
                     # print(datetime.datetime.now(), "    Thread is run!!!")
                     localtime = datetime.datetime.now()
-                    # for i in self.currency_pair + self.currency_pair_secondery:
-                    if localtime - self.LastTimeOfCandle[self.currency_pair[0]] > datetime.timedelta(minutes=60):
-                        self.StopAllKlineSocket()
-                        time.sleep(5)
-                        self.exchange.close_websocket = False
-                        time.sleep(5)
-                        c = threading.Thread(target=self.CreateWebSocketManager, args=())
-                        c.start()
-                        time.sleep(2)
-                        # for i in self.currency_pair + self.currency_pair_secondery:
-                        k = threading.Thread(target=self.CreateKlineSocket, args=(self.currency_pair[0],
-                                                                                  Client.KLINE_INTERVAL_1HOUR))
-                        k.start()
-                        time.sleep(1)
-                        print(datetime.datetime.now(), "    ReCreate Kline Socket!!!")
-                        self.logger.info("ReCreate Kline Socket!!!")
-                            # break
+                    for i in self.currency_pair + self.currency_pair_secondery:
+                        if localtime - self.LastTimeOfCandle[i] > datetime.timedelta(minutes=60):
+                            self.StopAllKlineSocket()
+                            time.sleep(5)
+                            self.exchange.close_websocket = False
+                            time.sleep(5)
+                            c = threading.Thread(target=self.CreateWebSocketManager, args=())
+                            c.start()
+                            time.sleep(2)
+                            for i in self.currency_pair + self.currency_pair_secondery:
+                                k = threading.Thread(target=self.CreateKlineSocket, args=(i, Client.KLINE_INTERVAL_1HOUR))
+                                k.start()
+                                time.sleep(1)
+                            print(datetime.datetime.now(), "    ReCreate Kline Socket!!!")
+                            self.logger.info("ReCreate Kline Socket!!!")
+                            break
                 if self.update_candle_event.is_set():
                     self.update_candle_event.clear()
                     print(datetime.datetime.now(), "    Event was set!!!")
