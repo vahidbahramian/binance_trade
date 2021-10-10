@@ -230,8 +230,6 @@ class Algo_2(OnlineAlgorithm):
         # print(time, msg["CurrencyPair"], msg["Close"], msg["High"], msg["Low"])
         # print(self.LastTimeOfCandle[msg["CurrencyPair"]])
         if time > self.LastTimeOfCandle[msg["CurrencyPair"]]:
-            self.LastTimeOfCandle[msg["CurrencyPair"]] = time
-            self.update_count += 1
             # for i in self.currency_pair + self.currency_pair_secondery:
                 # self.klines[i] = self.candle.getKlines(i, Client.KLINE_INTERVAL_1HOUR, "10 days ago UTC", "")
             self.GetKlines(msg["CurrencyPair"], Client.KLINE_INTERVAL_1HOUR,
@@ -259,7 +257,8 @@ class Algo_2(OnlineAlgorithm):
 
             print(datetime.datetime.now(), msg["CurrencyPair"], self.exchange.close, self.exchange.high, self.exchange.low)
         # self.update_candle_event.set()
-
+            self.LastTimeOfCandle[msg["CurrencyPair"]] = time
+            self.update_count += 1
         if self.update_count == len(self.currency_pair + self.currency_pair_secondery):
             self.update_candle_event.set()
             self.update_count = 0

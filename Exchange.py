@@ -209,12 +209,12 @@ class KuCoin(Exchange):
         return float(0)
 
     def GetKlines(self, currency_pair, kline_interval, start_date, end_date):
-        # self.mutex.acquire()
+        self.mutex.acquire()
         klines = self.client.get_kline_data(self.Correspond[currency_pair],
                                             self.KLINE_INTERVAL_CORRESPOND[kline_interval], start_date, end_date)
-        # self.mutex.release()
+        self.mutex.release()
         self.UnpackCandle(klines)
-        time.sleep(1)
+        # time.sleep(1)
 
     def UnpackCandle(self, klines):
         _timeUTC = []
