@@ -285,7 +285,7 @@ class KuCoin(Exchange):
         # await self.ksm.subscribe('/market/candles:' + str(self.Correspond['BTCUSDT']) + "_" +
         #                          self.KLINE_INTERVAL_CORRESPOND['1m'])
         while self.close_websocket:
-            await asyncio.sleep(5, loop=self.loop_web_socket)
+            await asyncio.sleep(20, loop=self.loop_web_socket)
         # asyncio.get_event_loop().stop()
         # await self.ksm.subscribe('/market/ticker:ETH-USDT')
         # for private topics such as '/account/balance' pass private=True
@@ -319,7 +319,7 @@ class KuCoin(Exchange):
                                  self.KLINE_INTERVAL_CORRESPOND[interval])
         self.close_klinesocket[currency_pair] = True
         while self.close_klinesocket[currency_pair]:
-            await asyncio.sleep(5)
+            await asyncio.sleep(20, loop=self.loop_klinesocket[currency_pair])
 
     async def KlineUnSubscribe(self, currency_pair, interval):
         await self.ksm.unsubscribe('/market/candles:' + str(self.Correspond[currency_pair]) + "_" +

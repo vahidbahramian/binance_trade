@@ -689,15 +689,15 @@ class Algo_3(Algo_2):
         while True:
             time.sleep(1)
             try:
-                if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=5):
+                if abs(datetime.datetime.now() - localtime) > datetime.timedelta(minutes=1):
                     # print(datetime.datetime.now(), "    Thread is run!!!")
                     localtime = datetime.datetime.now()
                     for i in self.currency_pair + self.currency_pair_secondery:
                         if localtime - self.LastTimeOfCandle[i] > datetime.timedelta(minutes=60):
                             self.StopAllKlineSocket()
-                            time.sleep(5)
+                            time.sleep(21)
                             self.exchange.close_websocket = False
-                            time.sleep(5)
+                            time.sleep(21)
                             c = threading.Thread(target=self.CreateWebSocketManager, args=())
                             c.start()
                             time.sleep(2)
