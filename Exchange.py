@@ -280,16 +280,21 @@ class KuCoin(Exchange):
             task.cancel()
 
     async def CreateWebSocket(self):
-        # global loop
-        self.ksm = await KucoinSocketManager.create(self.loop_web_socket, self.client, self.HandleEvent)
-        # await self.ksm.subscribe('/market/candles:' + str(self.Correspond['BTCUSDT']) + "_" +
-        #                          self.KLINE_INTERVAL_CORRESPOND['1m'])
+        # self.ksm = await KucoinSocketManager.create(self.loop_web_socket, self.client, self.HandleEvent)
+        # while self.close_websocket:
+        #     await asyncio.sleep(20, loop=self.loop_web_socket)
+
+
         while self.close_websocket:
-            await asyncio.sleep(20, loop=self.loop_web_socket)
-        # asyncio.get_event_loop().stop()
-        # await self.ksm.subscribe('/market/ticker:ETH-USDT')
-        # for private topics such as '/account/balance' pass private=True
-        # self.ksm_private = await KucoinSocketManager.create(self.loop, self.client, self.HandleEvent, private=True)
+            for key, value in self.Correspond.items():
+                try:
+                    self.GetKlines(key, '1h', int(datetime.datetime.now().timestamp()) - 3600,
+                                                   int(datetime.datetime.now().timestamp()))
+                    if len(self.timeUTC) > 0:
+                        await self.HandleEvent(key)
+                    await asyncio.sleep(0.5)
+                except KucoinAPIException as e:
+                    print(e)
 
     def CreateKlineSocket(self, currency_pair, interval):
 
@@ -327,14 +332,19 @@ class KuCoin(Exchange):
 
 
     async def HandleEvent(self, msg):
-        if msg['subject'] == 'trade.candles.update':
-            currency_pair = [k for k, v in self.Correspond.items() if v == msg['data']['symbol']][0]
-            # time_1 = datetime.datetime.utcfromtimestamp(int(msg['data']['candles'][0]))
-            time_1 = int(msg['data']['candles'][0]) * 1000
-            high = float(msg['data']['candles'][3])
-            low = float(msg['data']['candles'][4])
-            close = float(msg['data']['candles'][2])
-            result = {"CurrencyPair": currency_pair, "Time": time_1, "High": high, "Low": low, "Close": close}
-            self.events.on_change(result)
-        # else:
-        #     print(msg)
+        # if msg['subject'] == 'trade.candles.update':
+        #     currency_pair = [k for k, v in self.Correspond.items() if v == msg['data']['symbol']][0]
+        #     # time_1 = datetime.datetime.utcfromtimestamp(int(msg['data']['candles'][0]))
+        #     time_1 = int(msg['data']['candles'][0]) * 1000
+        #     high = float(msg['data']['candles'][3])
+        #     low = float(msg['data']['candles'][4])
+        #     close = float(msg['data']['candles'][2])
+        #     result = {"CurrencyPair": currency_pair, "Time": time_1, "High": high, "Low": low, "Close": close}
+        #     self.events.on_change(result)
+        currency_pair = msg
+        time = self.timeUTC[-1]
+        high = self.high[-1]
+        low = self.low[-1]
+        close = self.close[-1]
+        result = {"CurrencyPair": currency_pair, "Time": time, "High": high, "Low": low, "Close": close}
+        self.events.on_change(result)
