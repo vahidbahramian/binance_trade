@@ -288,7 +288,7 @@ class KuCoin(Exchange):
         while self.close_websocket:
             for key, value in self.Correspond.items():
                 try:
-                    self.GetKlines(key, '1h', int(datetime.datetime.now().timestamp()) - 3600,
+                    self.GetKlines(key, '1h', int(datetime.datetime.now().timestamp()) - 7200,
                                                    int(datetime.datetime.now().timestamp()))
                     if len(self.timeUTC) > 0:
                         await self.HandleEvent(key)
