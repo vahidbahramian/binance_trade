@@ -290,7 +290,7 @@ class KuCoin(Exchange):
                 try:
                     self.GetKlines(key, '1h', int(datetime.datetime.now().timestamp()) - 7200,
                                                    int(datetime.datetime.now().timestamp()))
-                    if len(self.timeUTC) > 0:
+                    if len(self.timeUTC) > 1:
                         await self.HandleEvent(key)
                     await asyncio.sleep(0.5)
                 except KucoinAPIException as e:
