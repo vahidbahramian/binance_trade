@@ -294,7 +294,7 @@ class KuCoin(Exchange):
                         await self.HandleEvent(key)
                     await asyncio.sleep(0.5)
                 except KucoinAPIException as e:
-                    print(e)
+                    pass
 
     def CreateKlineSocket(self, currency_pair, interval):
 
