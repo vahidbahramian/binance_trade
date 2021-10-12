@@ -222,7 +222,7 @@ class Algo_2(OnlineAlgorithm):
             self.strategy[i].ComputeKeltnerChannel(p["keltner_Window"], 12, p["Multi_ATR"])
             self.strategy[i].ComputeMcGinleyDynamic(p["McGinley_Period"])
 
-            self.LastTimeOfCandle[i] = self.exchange.timeUTC[-1]
+            self.LastTimeOfCandle[i] = self.exchange.timeUTC[-2]
         self.update_candle_event.set()
 
     def UpdateCandle(self, msg):
