@@ -3,6 +3,7 @@ import time
 from threading import Lock
 
 import numpy
+import requests
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceRequestException, BinanceOrderException
 from binance.websockets import BinanceSocketManager
@@ -294,6 +295,8 @@ class KuCoin(Exchange):
                         await self.HandleEvent(key)
                     await asyncio.sleep(0.5)
                 except KucoinAPIException as e:
+                    pass
+                except requests.exceptions.ConnectionError as e:
                     pass
 
     def CreateKlineSocket(self, currency_pair, interval):
