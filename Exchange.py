@@ -298,6 +298,8 @@ class KuCoin(Exchange):
                     pass
                 except requests.exceptions.ConnectionError as e:
                     pass
+                except requests.exceptions.ReadTimeout as e:
+                    pass
 
     def CreateKlineSocket(self, currency_pair, interval):
 
