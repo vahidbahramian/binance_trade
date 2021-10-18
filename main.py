@@ -118,7 +118,7 @@ def main(client, currency, param):
                 # keltner = [12, 18, 24]
                 # multi_atr = [1, 1.5, 2]
                 McGinley_period = [12]
-                keltner = [1]
+                keltner = [12]
                 multi_atr = [1]
                 for win1 in window1:
                     for win2 in window2:
