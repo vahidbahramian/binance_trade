@@ -959,7 +959,6 @@ class Algorithm_4(Algorithm_3):
         update_strategy = True
         isNotPos = True
         j = 1
-        print("BuySignalThread")
         while j < len(self.klines[currency]) - 1:
             if update_strategy:
                 self.strategy[currency].ComputeIchimoku_A(param[currency]["Win1"], param[currency]["Win2"])
@@ -1298,6 +1297,7 @@ class Algorithm_5(Algorithm_4):
         update_strategy = True
         isNotPos = True
         j = 1
+        print("BuySignalThread")
         while j < len(self.klines[currency]) - 1:
             if update_strategy:
                 self.strategy[currency].ComputeIchimoku_A(param[currency]["Win1"], param[currency]["Win2"])
