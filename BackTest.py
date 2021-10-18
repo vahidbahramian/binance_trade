@@ -949,7 +949,7 @@ class Algorithm_4(Algorithm_3):
             for i in self.currency_pair + self.currency_pair_secondery:
                 self.th[i] = threading.Thread(target=self.BuySignalThread, args=(param, i,))
                 self.th[i].start()
-                time.sleep(10)
+                # time.sleep(10)
         except:
             print("Error: unable to start thread")
 

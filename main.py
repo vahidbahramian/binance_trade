@@ -110,23 +110,16 @@ def main(client, currency, param):
                 window2 = [24, 48, 72]
                 window3 = [48, 72, 96, 120, 144]#[48, 96, 144]
                 t_ = [18, 26, 48]
-                # a_ = [0.03, 0.05, 0.07, 2]#[0, 0.01]
-                # b_ = [0.04, 0.05, 0.06]
-                # SL_arr = [0.025, 0.05]
-                #
-                # # window1 = [9]
-                # # window2 = [24]
-                # # window3 = [48]
-                # # t_ = [26]
-                # # a_ = [0.05]
-                # # b_ = [0.05]
+                # window1 = [9]
+                # window2 = [24]
+                # window3 = [48]
+                # t_ = [26]
                 McGinley_period = [12, 18, 24, 30]
                 keltner = [12, 18, 24]
                 multi_atr = [1, 1.5, 2]
                 # McGinley_period = [12]
                 # keltner = [18]
                 # multi_atr = [1.5]
-                # tema_period = [24, 36, 48]
                 for win1 in window1:
                     for win2 in window2:
                         if win1 < win2:
@@ -134,7 +127,6 @@ def main(client, currency, param):
                                 if win2 < win3:
                                     for t in t_:
                                         print(win1, " ", win2, " ", win3, " ", t, " ")
-                                        # for a in a_:
                                         for mc_ginley in McGinley_period:
                                             for k in keltner:
                                                 for atr in multi_atr:
