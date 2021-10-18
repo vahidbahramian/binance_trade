@@ -90,8 +90,8 @@ def main(client, currency, param):
         #                                             trade.Run()
         #         trade.LogResult()
 
-        c = {"BNB": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
-                     [date(2020, 1, 1), date(2021, 1, 1)], [date(2021, 1, 1), date(2021, 10, 1)]],
+        c = {#"BNB": [[date(2018, 1, 1), date(2019, 1, 1)], [date(2019, 1, 1), date(2020, 1, 1)],
+                     # [date(2020, 1, 1), date(2021, 1, 1)], [date(2021, 1, 1), date(2021, 10, 1)]],
              "DOGE": [[date(2019, 7, 1), date(2020, 7, 1)], [date(2020, 7, 1), date(2021, 7, 1)]],
              "XTZ": [[date(2019, 9, 1), date(2020, 9, 1)], [date(2020, 9, 1), date(2021, 9, 1)]],
              "DOT": [[date(2020, 8, 1), date(2021, 8, 1)], [date(2021, 3, 1), date(2021, 10, 1)]],
