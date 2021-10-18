@@ -929,7 +929,6 @@ class Algorithm_4(Algorithm_3):
         self.CreateThread(self.param)
         for i in self.currency_pair + self.currency_pair_secondery:
             self.th[i].join()
-            # print("CreateThread")
         self.ComputeBuySignal()
         self.RunAlgorithm()
 
@@ -950,7 +949,6 @@ class Algorithm_4(Algorithm_3):
             for i in self.currency_pair + self.currency_pair_secondery:
                 self.th[i] = threading.Thread(target=self.BuySignalThread, args=(param, i,))
                 self.th[i].start()
-                # time.sleep(10)
         except:
             print("Error: unable to start thread")
 
@@ -981,7 +979,6 @@ class Algorithm_4(Algorithm_3):
     def ComputeBuySignal(self):
         self.Buy_Signal = []
         BS = {}
-        # print("ComputeBuySignal")
         for i in range(0, len(self.BS[self.currency_pair[0]])):
             b = self.FindBuySignal(self.BS, i)
             if self.currency_pair[0] in b:

@@ -336,9 +336,8 @@ class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
                         self.WriteConfigFile(self.currency_pair, "Buy_1", True)
                     return True
                 if not self.buy_1:
-                    # if (self.mc_ginley[i] < self.keltner.keltner_channel_hband()[i] < self.close_data[i]) and \
-                    #         (self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1]):
-                    if (self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1]):
+                    if (self.mc_ginley[i] < self.keltner.keltner_channel_hband()[i] < self.close_data[i]) and \
+                            (self.close_data[i] >= self.ich_b[i - t + 1] and self.close_data[i] >= self.ich_a[i - t + 1]):
                         self.buy_1 = True
                         if sys.argv[2] == "o" or sys.argv[2] == "O":
                             self.WriteConfigFile(self.currency_pair, "Buy_2", True)
