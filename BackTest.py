@@ -981,6 +981,7 @@ class Algorithm_4(Algorithm_3):
     def ComputeBuySignal(self):
         self.Buy_Signal = []
         BS = {}
+        print("ComputeBuySignal")
         for i in range(0, len(self.BS[self.currency_pair[0]])):
             b = self.FindBuySignal(self.BS, i)
             if self.currency_pair[0] in b:
@@ -1297,7 +1298,6 @@ class Algorithm_5(Algorithm_4):
         update_strategy = True
         isNotPos = True
         j = 1
-        print("BuySignalThread")
         while j < len(self.klines[currency]) - 1:
             if update_strategy:
                 self.strategy[currency].ComputeIchimoku_A(param[currency]["Win1"], param[currency]["Win2"])
