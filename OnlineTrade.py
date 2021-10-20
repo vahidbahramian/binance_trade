@@ -7,6 +7,7 @@ from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceWithdrawException, BinanceRequestException,\
     BinanceOrderException
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects, RequestException
+from kucoin.exceptions import KucoinAPIException
 from Strategy import ICHIMOKU_2_Strategy, ICHIMOKU_Strategy_HMA, ICHIMOKU_Strategy_HMA_Keltner
 from Candles import Candles
 import pandas as pd
@@ -774,4 +775,6 @@ class Algo_3(Algo_2):
             except TooManyRedirects as e:
                 self.LogException(e)
             except RequestException as e:
+                self.LogException(e)
+            except KucoinAPIException as e:
                 self.LogException(e)
