@@ -6,8 +6,10 @@ from datetime import datetime
 from IO import FileWorking
 
 FLoatingPointCurrencyPair = {"BTCUSDT": 6, "ETHUSDT": 5, "ETHBTC": 3, "BNBUSDT": 4, "BNBBTC": 2, "LTCUSDT": 5,
-                             "LTCBTC": 2, "XRPUSDT": 2, "XRPBTC": 0, "TRXUSDT": 1, "TRXBTC": 0, "ADAUSDT": 2,
-                             "ADABTC": 1}
+                             "LTCBTC": 2, "XRPUSDT": 2, "XRPBTC": 1, "TRXUSDT": 1, "TRXBTC": 0, "ADAUSDT": 2,
+                             "ADABTC": 1, "DOGEUSDT": 1, "DOGEBTC": 0, "ALGOUSDT": 2, "ALGOBTC": 1, "FTMUSDT": 2,
+                             "FTMBTC": 1, "DOTUSDT": 3, "DOTBTC": 1, "XTZUSDT": 2, "XTZBTC": 1, "MATICUSDT": 2,
+                             "MATICBTC": 1}
 class OfflineAlgorithm(abc.ABC):
     @abc.abstractmethod
     def __init__(self):
