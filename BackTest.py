@@ -1263,7 +1263,7 @@ class Algorithm_5(Algorithm_4):
             self.correspond_currency[self.currency[i+1]] = self.currency_pair[i+1]
             self.correspond_currency[self.currency_pair[i+1]] = item
 
-        use_offline_data = False
+        use_offline_data = True
         for i in self.currency_pair + self.currency_pair_secondery:
             if use_offline_data:
                 self.klines[i] = (FileWorking.ReadKlines("Data\\" + i + "_1HOUR_" + start_time.isoformat() + "_" +
@@ -1278,10 +1278,11 @@ class Algorithm_5(Algorithm_4):
             low = pd.Series(candle.low)
 
             self.close_data = candle.close
+            self.candle_time = candle.timeUTC
 
             self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, self.close_data, i))
         self.file = CSVFiles("Result/Algorithm_6-" + start_time.strftime("%Y-%m-%d_") + end_time.strftime("%Y-%m-%d_") +
-                             self.currency_pair_secondery[0] + ".csv")
+                             self.currency_pair[0] + ".csv")
         self.result_row = []
         self.Buy_Signal = {}
         self.param = {}
@@ -1520,6 +1521,67 @@ class Algorithm_5(Algorithm_4):
 
         self.result_row.append(row)
         # print(row)
+
+class Algorithm_6(Algorithm_5):
+    def CalculateMinMax(self, input_max, input_min, s, e, w, type):
+        result_max = []
+        result_min = []
+        close = self.close_data[::-1]
+        time = self.candle_time[::-1]
+        for j,_ in enumerate(s):
+            for i in range(s[j], e[j]):
+                index_max = numpy.where(close[i-w[j]:i+w[j]] == numpy.amax(close[i-w[j]:i+w[j]]))
+                index_min = numpy.where(close[i - w[j]:i + w[j]] == numpy.amin(close[i - w[j]:i + w[j]]))
+                if (index_max[0]+(i-w[j]) == i).any():
+                    find = False
+                    for x in result_max + input_max:
+                        if x["Time"] == time[i]:
+                            find = True
+                    if not find:
+                        result_max.append({"Close": close[i], "Time": time[i], "Type": type})
+                if (index_min[0]+(i-w[j]) == i).any():
+                    find = False
+                    for x in result_min+ input_min:
+                        if x["Time"] == time[i]:
+                            find = True
+                    if not find:
+                        result_min.append({"Close": close[i], "Time": time[i]})
+        max = input_max + result_max
+        min = input_min + result_min
+        max.sort(key = lambda x:x["Time"])
+        min.sort(key = lambda x:x["Time"])
+        return max, min
+
+    def RangeForCloseData(self, max, min):
+        for i in max:
+            i["Close"] = [i["Close"]-1000, i["Close"]+1000]
+        for i in min:
+            i["Close"] = [i["Close"]-1000, i["Close"]+1000]
+        print(max)
+        print(min)
+
+        priority = 0
+        result = []
+        while len(max) > 0:
+            temp = max[0]["Close"]
+            priority = max[0]["Type"]
+            max.pop(0)
+            must_removed = []
+            for i in max:
+                if i["Close"][0] > temp[1] or i["Close"][1] < temp[0]:
+                    continue
+                else:
+                    if temp[0] >= i["Close"][0]:
+                        temp[0] = i["Close"][0]
+                    if temp[1] <= i["Close"][1]:
+                        temp[1] = i["Close"][1]
+                    priority += i["Type"]
+                    must_removed.append(i)
+            for j in must_removed:
+                max.remove(j)
+            result.append({"Range": temp, "Priority": priority})
+        print(result)
+
 
 
 

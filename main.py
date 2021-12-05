@@ -89,19 +89,21 @@ def main(client, currency, param):
         #                                             trade.SetAlgorithmParam(currency[1] + currency[0], p)
         #                                             trade.Run()
         #         trade.LogResult()
-        c = {"BTC": [[date(2017, 8, 1), date(2021, 10, 20)]], "ETH": [[date(2017, 8, 1), date(2021, 10, 20)]],
-             "XRP": [[date(2018, 5, 1), date(2021, 10, 20)]], "TRX": [[date(2018, 6, 1), date(2021, 10, 20)]],
-             "LTC": [[date(2017, 12, 1), date(2021, 10, 20)]], "ADA": [[date(2018, 4, 1), date(2021, 10, 20)]],
-             "BNB": [[date(2017, 11, 1), date(2021, 10, 20)]], "DOGE": [[date(2019, 7, 1), date(2021, 10, 20)]],
-             "XTZ": [[date(2019, 9, 1), date(2021, 10, 20)]], "DOT": [[date(2020, 8, 1), date(2021, 10, 20)]],
-             "MATIC": [[date(2019, 4, 1), date(2021, 10, 20)]], "FTM": [[date(2019, 6, 1), date(2021, 10, 20)]],
-             "ALGO": [[date(2019, 6, 1), date(2021, 10, 20)]]}
 
-        for i, j in c.items():
-            currency = [i, "USDT"]
-            start = j[0][0]
-            stop = j[0][1]
-            trade = BackTest.Algorithm_5(candle, currency, start, stop)
+
+        # c = {"BTC": [[date(2017, 8, 1), date(2021, 10, 20)]], "ETH": [[date(2017, 8, 1), date(2021, 10, 20)]],
+        #      "XRP": [[date(2018, 5, 1), date(2021, 10, 20)]], "TRX": [[date(2018, 6, 1), date(2021, 10, 20)]],
+        #      "LTC": [[date(2017, 12, 1), date(2021, 10, 20)]], "ADA": [[date(2018, 4, 1), date(2021, 10, 20)]],
+        #      "BNB": [[date(2017, 11, 1), date(2021, 10, 20)]], "DOGE": [[date(2019, 7, 1), date(2021, 10, 20)]],
+        #      "XTZ": [[date(2019, 9, 1), date(2021, 10, 20)]], "DOT": [[date(2020, 8, 1), date(2021, 10, 20)]],
+        #      "MATIC": [[date(2019, 4, 1), date(2021, 10, 20)]], "FTM": [[date(2019, 6, 1), date(2021, 10, 20)]],
+        #      "ALGO": [[date(2019, 6, 1), date(2021, 10, 20)]]}
+        #
+        # for i, j in c.items():
+        #     currency = [i, "USDT"]
+        #     start = j[0][0]
+        #     stop = j[0][1]
+        #     trade = BackTest.Algorithm_5(candle, currency, start, stop)
 
         # c = {"BNB": [[date(2019, 1, 1), date(2020, 1, 1)], #[date(2018, 1, 1), date(2019, 1, 1)],
         #              [date(2020, 1, 1), date(2021, 1, 1)], [date(2021, 1, 1), date(2021, 10, 1)]],
@@ -214,6 +216,36 @@ def main(client, currency, param):
         # trade.SetAlgorithmParam(currency[5] + currency[0], p)
         # trade.Run()
         # trade.LogResult()
+
+        currency = ["BTC", "USDT"]
+        start = date(2018, 1, 1)
+        stop = date(2021, 12, 1)
+        trade = BackTest.Algorithm_6(candle, currency, start, stop)
+        input_max = []
+        input_min = []
+        s = [1008, 4368, 8736, 17472]
+        e = [4368, 8736, 17472, len(trade.close_data)]
+        w = [1008, 2016, 3024, 4032]
+        result_max, result_min = trade.CalculateMinMax(input_max, input_min, s, e, w, 1)
+        print(result_max)
+        print(result_min)
+        print("\n")
+        s = [144, 720, 2160, 4320]
+        e = [720, 2160, 4320, 8640]
+        w = [144, 288, 432, 576]
+        result_max_1, result_min_1 = trade.CalculateMinMax(result_max, result_min, s, e, w, 2)
+        print(result_max_1)
+        print(result_min_1)
+        print("\n")
+        s = [24, 120, 360]
+        e = [120, 360, 720]
+        w = [24, 48, 72]
+        result_max_2, result_min_2 = trade.CalculateMinMax(result_max_1, result_min_1, s, e, w, 3)
+        print(result_max_2)
+        print(result_min_2)
+        print("\n")
+        trade.RangeForCloseData(result_max_2, result_min_2)
+
     else:
         # bsm.start()
         # bsm.close()
