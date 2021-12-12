@@ -221,30 +221,7 @@ def main(client, currency, param):
         start = date(2018, 1, 1)
         stop = date(2021, 12, 1)
         trade = BackTest.Algorithm_6(candle, currency, start, stop)
-        input_max = []
-        input_min = []
-        s = [1008, 4368, 8736, 17472]
-        e = [4368, 8736, 17472, len(trade.close_data)]
-        w = [1008, 2016, 3024, 4032]
-        result_max, result_min = trade.CalculateMinMax(input_max, input_min, s, e, w, 1)
-        print(result_max)
-        print(result_min)
-        print("\n")
-        s = [144, 720, 2160, 4320]
-        e = [720, 2160, 4320, 8640]
-        w = [144, 288, 432, 576]
-        result_max_1, result_min_1 = trade.CalculateMinMax(result_max, result_min, s, e, w, 2)
-        print(result_max_1)
-        print(result_min_1)
-        print("\n")
-        s = [24, 120, 360]
-        e = [120, 360, 720]
-        w = [24, 48, 72]
-        result_max_2, result_min_2 = trade.CalculateMinMax(result_max_1, result_min_1, s, e, w, 3)
-        print(result_max_2)
-        print(result_min_2)
-        print("\n")
-        trade.RangeForCloseData(result_max_2, result_min_2)
+        trade.Run()
 
     else:
         # bsm.start()

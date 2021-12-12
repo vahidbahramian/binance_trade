@@ -1523,51 +1523,110 @@ class Algorithm_5(Algorithm_4):
         # print(row)
 
 class Algorithm_6(Algorithm_5):
-    def CalculateMinMax(self, input_max, input_min, s, e, w, type):
+
+    def CreateThread(self, param):
+        self.th = {}
+        try:
+            for i in self.currency_pair + self.currency_pair_secondery:
+                self.th[i] = threading.Thread(target=self.CalculateSupportAndResistance, args=(param, i,))
+                self.th[i].start()
+        except:
+            print("Error: unable to start thread")
+
+    def CalculateSupportAndResistance(self, param, currency):
+        kline = 1
+        while kline < len(self.klines[currency]) - 1:
+            input_max = []
+            input_min = []
+            result_max, result_min = self.CalculateMinMax(input_max, input_min, param["Week"]["S"], param["Week"]["E"],
+                                                          param["Week"]["W"], param["Week"]["Priority"], kline)
+            result_max_1, result_min_1 = self.CalculateMinMax(result_max, result_min, param["Day"]["S"],
+                                                              param["Day"]["E"], param["Day"]["W"],
+                                                              param["Day"]["Priority"], kline)
+            result_max_2, result_min_2 = self.CalculateMinMax(result_max_1, result_min_1, param["4Hour"]["S"],
+                                                              param["4Hour"]["E"], param["4Hour"]["W"],
+                                                              param["4Hour"]["Priority"], kline)
+            self.RangeForCloseData(result_max_2, result_min_2)
+            kline +=1
+            print(kline)
+    def Run(self):
+        self.param = {}
+
+        # input_max = []
+        # input_min = []
+        s = [1008, 4368, 8736, 17472]
+        e = [4368, 8736, 17472, len(self.close_data)]
+        w = [1008, 2016, 3024, 4032]
+        self.param["Week"] = {"S": s, "E": e, "W": w, "Priority": 3}
+        # result_max, result_min = self.CalculateMinMax(input_max, input_min, s, e, w, 3)
+        # print(result_max)
+        # print(result_min)
+        # print("\n")
+        s = [144, 720, 2160, 4320]
+        e = [720, 2160, 4320, 8640]
+        w = [144, 288, 432, 576]
+        self.param["Day"] = {"S": s, "E": e, "W": w, "Priority": 2}
+        # result_max_1, result_min_1 = self.CalculateMinMax(result_max, result_min, s, e, w, 2)
+        # print(result_max_1)
+        # print(result_min_1)
+        # print("\n")
+        s = [24, 120, 360]
+        e = [120, 360, 720]
+        w = [24, 48, 72]
+        self.param["4Hour"] = {"S": s, "E": e, "W": w, "Priority": 1}
+        # result_max_2, result_min_2 = self.CalculateMinMax(result_max_1, result_min_1, s, e, w, 1)
+        # print(result_max_2)
+        # print(result_min_2)
+        # print("\n")
+        # self.RangeForCloseData(result_max_2, result_min_2)
+        self.CreateThread(self.param)
+    def CalculateMinMax(self, input_max, input_min, s, e, w, type, index):
         result_max = []
         result_min = []
-        close = self.close_data[::-1]
-        time = self.candle_time[::-1]
-        for j,_ in enumerate(s):
-            for i in range(s[j], e[j]):
-                index_max = numpy.where(close[i-w[j]:i+w[j]] == numpy.amax(close[i-w[j]:i+w[j]]))
-                index_min = numpy.where(close[i - w[j]:i + w[j]] == numpy.amin(close[i - w[j]:i + w[j]]))
-                if (index_max[0]+(i-w[j]) == i).any():
-                    find = False
-                    for x in result_max + input_max:
-                        if x["Time"] == time[i]:
-                            find = True
-                    if not find:
-                        result_max.append({"Close": close[i], "Time": time[i], "Type": type})
-                if (index_min[0]+(i-w[j]) == i).any():
-                    find = False
-                    for x in result_min+ input_min:
-                        if x["Time"] == time[i]:
-                            find = True
-                    if not find:
-                        result_min.append({"Close": close[i], "Time": time[i]})
+        close = self.close_data[:index][::-1]
+        time = self.candle_time[:index][::-1]
+        for j, _ in enumerate(s):
+            if index >= e[j] + w[j]:
+                for i in range(s[j], e[j]):
+                    index_max = numpy.where(close[i-w[j]:i+w[j]] == numpy.amax(close[i-w[j]:i+w[j]]))
+                    index_min = numpy.where(close[i-w[j]:i+w[j]] == numpy.amin(close[i-w[j]:i+w[j]]))
+                    if (index_max[0]+(i-w[j]) == i).any():
+                        find = False
+                        for x in result_max + input_max:
+                            if x["Time"] == time[i]:
+                                find = True
+                        if not find:
+                            result_max.append({"Close": close[i], "Time": time[i], "Priority": type})
+                    if (index_min[0]+(i-w[j]) == i).any():
+                        find = False
+                        for x in result_min+ input_min:
+                            if x["Time"] == time[i]:
+                                find = True
+                        if not find:
+                            result_min.append({"Close": close[i], "Time": time[i], "Priority": type})
+            else:
+                break
         max = input_max + result_max
         min = input_min + result_min
-        max.sort(key = lambda x:x["Time"])
-        min.sort(key = lambda x:x["Time"])
+        max.sort(key = lambda x:x["Close"])
+        min.sort(key = lambda x:x["Close"])
         return max, min
 
     def RangeForCloseData(self, max, min):
-        for i in max:
+        data = max + min
+        for i in data:
             i["Close"] = [i["Close"]-1000, i["Close"]+1000]
-        for i in min:
-            i["Close"] = [i["Close"]-1000, i["Close"]+1000]
-        print(max)
-        print(min)
+        data.sort(key=lambda x: x["Close"][0])
+        # print(data)
 
         priority = 0
         result = []
-        while len(max) > 0:
-            temp = max[0]["Close"]
-            priority = max[0]["Type"]
-            max.pop(0)
+        while len(data) > 0:
+            temp = data[0]["Close"]
+            priority = data[0]["Priority"]
+            data.pop(0)
             must_removed = []
-            for i in max:
+            for i in data:
                 if i["Close"][0] > temp[1] or i["Close"][1] < temp[0]:
                     continue
                 else:
@@ -1575,12 +1634,12 @@ class Algorithm_6(Algorithm_5):
                         temp[0] = i["Close"][0]
                     if temp[1] <= i["Close"][1]:
                         temp[1] = i["Close"][1]
-                    priority += i["Type"]
+                    priority += i["Priority"]
                     must_removed.append(i)
             for j in must_removed:
-                max.remove(j)
+                data.remove(j)
             result.append({"Range": temp, "Priority": priority})
-        print(result)
+        # print(result)
 
 
 

@@ -136,6 +136,9 @@ class ICHIMOKU_2_Strategy(IStrategy):
         self.mc_ginley = Indicator.McGinleyDynamic(self.close_data, period=period)
         self.mc_ginley = np.pad(self.mc_ginley.output_values, int(period)-1, 'constant')
 
+    def ComputeATR(self, period):
+        self.atr = Indicator.ATR(self.high_data, self.low_data, self.close_data, period=period)
+
     def BuyStrategy(self, i, t, a, b):
         if i - t + 1 > 0:
             if (self.close_data[i] >= self.ich_base_line[i] and self.ich_a[i] >= self.ich_b[i] and
