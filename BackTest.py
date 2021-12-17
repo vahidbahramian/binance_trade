@@ -911,7 +911,10 @@ class Algorithm_4(Algorithm_3):
             high = pd.Series(candle.high)
             low = pd.Series(candle.low)
 
+            self.high_data = candle.high
+            self.low_data = candle.low
             self.close_data = candle.close
+            self.open_data = candle.open
 
             self.strategy[i] = (ICHIMOKU_2_Strategy(high, low, self.close_data))
         self.file = CSVFiles("Algorithm_7-" + start_time.strftime("%Y-%m-%d_") + end_time.strftime("%Y-%m-%d_") +
@@ -949,6 +952,7 @@ class Algorithm_4(Algorithm_3):
             for i in self.currency_pair + self.currency_pair_secondery:
                 self.th[i] = threading.Thread(target=self.BuySignalThread, args=(param, i,))
                 self.th[i].start()
+                # time.sleep(10)
         except:
             print("Error: unable to start thread")
 
@@ -1276,11 +1280,15 @@ class Algorithm_5(Algorithm_4):
             candle.unpackCandle(self.klines[i])
             high = pd.Series(candle.high)
             low = pd.Series(candle.low)
+            close = pd.Series(candle.close)
 
             self.close_data = candle.close
             self.candle_time = candle.timeUTC
+            self.high_data = candle.high
+            self.low_data = candle.low
+            self.open_data = candle.open
 
-            self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, self.close_data, i))
+            self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, close, i))
         self.file = CSVFiles("Result/Algorithm_6-" + start_time.strftime("%Y-%m-%d_") + end_time.strftime("%Y-%m-%d_") +
                              self.currency_pair[0] + ".csv")
         self.result_row = []
@@ -1523,7 +1531,10 @@ class Algorithm_5(Algorithm_4):
         # print(row)
 
 class Algorithm_6(Algorithm_5):
-
+    def LogResult(self):
+        fieldnames = ['Date', 'Buy_Price', 'Support_Price', 'Resistance_Price', 'R/R', 'Support_Priority',
+                      'Resistance_Priority', 'Volume($)', 'Volume(%)', 'No. Open_Order']
+        self.WriteResult(fieldnames, self.result_row)
     def CreateThread(self, param):
         self.th = {}
         try:
@@ -1534,8 +1545,10 @@ class Algorithm_6(Algorithm_5):
             print("Error: unable to start thread")
 
     def CalculateSupportAndResistance(self, param, currency):
-        kline = 1
-        while kline < len(self.klines[currency]) - 1:
+        self.strategy[currency].ComputeATR(24)
+        atr = self.strategy[currency].atr
+        kline = 1 #len(self.klines[currency])-1
+        while kline < len(self.klines[currency]):
             input_max = []
             input_min = []
             result_max, result_min = self.CalculateMinMax(input_max, input_min, param["Week"]["S"], param["Week"]["E"],
@@ -1546,39 +1559,66 @@ class Algorithm_6(Algorithm_5):
             result_max_2, result_min_2 = self.CalculateMinMax(result_max_1, result_min_1, param["4Hour"]["S"],
                                                               param["4Hour"]["E"], param["4Hour"]["W"],
                                                               param["4Hour"]["Priority"], kline)
-            self.RangeForCloseData(result_max_2, result_min_2)
-            kline +=1
-            print(kline)
+            final_result = self.RangeForCloseData(result_max_2, result_min_2, atr[kline])
+            R, S, T = self.CreateRS(final_result, kline)
+            # print(T)
+            if len(S) != 0:
+                if len(R) == 0:
+                    R.append({"Range": [1000000, 1000100], "Priority": 100})
+                if self.EnterCondition_1(S, kline) and self.EnterCondition_2(T) and self.EnterCondition_3(R, atr, kline)\
+                        and self.EnterCondition_4(R, S, kline):
+                    row = [self.candle_time[kline], self.close_data[kline], S[-1]["Range"][0], R[0]["Range"][0],
+                           (R[0]["Range"][0] - self.close_data[kline]) / (self.close_data[kline] - S[-1]["Range"][0]),
+                           S[-1]["Priority"], R[0]["Priority"], 0, 0, 0]
+                    self.result_row.append(row)
+                    print(self.candle_time[kline])
+            kline += 1
+        self.LogResult()
+            # print(result_max_2)
+            # print(result_min_2)
+            # print(kline)
+    def EnterCondition_1(self, S, index):
+        if self.close_data[index - 1] < self.open_data[index - 1] \
+                and self.high_data[index - 1] - self.open_data[index - 1] <= self.open_data[index - 1] - self.close_data[index - 1] \
+                and self.close_data[index - 1] - self.low_data[index - 1] <= self.open_data[index - 1] - self.close_data[index - 1] \
+                and self.high_data[index] - self.close_data[index] <= self.close_data[index] - self.open_data[index] \
+                and self.open_data[index] - self.low_data[index] <= self.close_data[index] - self.open_data[index] \
+                and self.open_data[index] < self.close_data[index] \
+                and self.close_data[index] > self.open_data[index - 1] \
+                and self.high_data[index] > self.high_data[index - 1] \
+                and self.low_data[index - 1] <= S[-1]["Range"][1] < self.close_data[index]:
+            return True
+        else:
+            return False
+    def EnterCondition_2(self, T):
+        if len(T) == 0:
+            return True
+        else:
+            return False
+    def EnterCondition_3(self, R, atr, index):
+        if (R[0]["Range"][0] - self.close_data[index]) > atr[index]:
+            return True
+        else:
+            return False
+    def EnterCondition_4(self, R, S, index):
+        if (R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) > 1:
+            return True
+        else:
+            return False
     def Run(self):
         self.param = {}
-
-        # input_max = []
-        # input_min = []
         s = [1008, 4368, 8736, 17472]
         e = [4368, 8736, 17472, len(self.close_data)]
         w = [1008, 2016, 3024, 4032]
         self.param["Week"] = {"S": s, "E": e, "W": w, "Priority": 3}
-        # result_max, result_min = self.CalculateMinMax(input_max, input_min, s, e, w, 3)
-        # print(result_max)
-        # print(result_min)
-        # print("\n")
         s = [144, 720, 2160, 4320]
         e = [720, 2160, 4320, 8640]
         w = [144, 288, 432, 576]
         self.param["Day"] = {"S": s, "E": e, "W": w, "Priority": 2}
-        # result_max_1, result_min_1 = self.CalculateMinMax(result_max, result_min, s, e, w, 2)
-        # print(result_max_1)
-        # print(result_min_1)
-        # print("\n")
         s = [24, 120, 360]
         e = [120, 360, 720]
         w = [24, 48, 72]
         self.param["4Hour"] = {"S": s, "E": e, "W": w, "Priority": 1}
-        # result_max_2, result_min_2 = self.CalculateMinMax(result_max_1, result_min_1, s, e, w, 1)
-        # print(result_max_2)
-        # print(result_min_2)
-        # print("\n")
-        # self.RangeForCloseData(result_max_2, result_min_2)
         self.CreateThread(self.param)
     def CalculateMinMax(self, input_max, input_min, s, e, w, type, index):
         result_max = []
@@ -1610,16 +1650,17 @@ class Algorithm_6(Algorithm_5):
         min = input_min + result_min
         max.sort(key = lambda x:x["Close"])
         min.sort(key = lambda x:x["Close"])
+        # print(self.close_data[index], self.candle_time[index])
+        # print(max)
+        # print(min)
         return max, min
 
-    def RangeForCloseData(self, max, min):
+    def RangeForCloseData(self, max, min, atr):
         data = max + min
         for i in data:
-            i["Close"] = [i["Close"]-1000, i["Close"]+1000]
+            i["Close"] = [i["Close"]-atr/2, i["Close"]+atr/2]
         data.sort(key=lambda x: x["Close"][0])
         # print(data)
-
-        priority = 0
         result = []
         while len(data) > 0:
             temp = data[0]["Close"]
@@ -1640,6 +1681,22 @@ class Algorithm_6(Algorithm_5):
                 data.remove(j)
             result.append({"Range": temp, "Priority": priority})
         # print(result)
+        return result
+
+    def CreateRS(self, input, index):
+        R = []
+        S = []
+        T = []
+        for i in input:
+            if i["Range"][0] > self.close_data[index]:
+                R.append(i)
+            elif i["Range"][1] < self.close_data[index]:
+                S.append(i)
+            else:
+                T.append(i)
+        # print(R)
+        # print(S)
+        return R, S, T
 
 
 

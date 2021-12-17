@@ -79,5 +79,6 @@ class Indicator:
     def McGinleyDynamic(close_data, period):
         return McGinleyDynamic(period, close_data)
 
-    def ATR(self, high_data, low_data, close_data, period):
-        return talib.ATR(high_data, low_data, close_data, period)
+    @staticmethod
+    def ATR(high_data, low_data, close_data, period):
+        return volatility.average_true_range(high_data, low_data, close_data)
