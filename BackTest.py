@@ -1532,8 +1532,9 @@ class Algorithm_5(Algorithm_4):
 
 class Algorithm_6(Algorithm_5):
     def LogResult(self):
-        fieldnames = ['Date', 'Buy_Price', 'Support_Price', 'Resistance_Price', 'R/R', 'Support_Priority',
-                      'Resistance_Priority', 'Volume($)', 'Volume(%)', 'No. Open_Order']
+        fieldnames = ['Buy_Date', 'No. Enter', 'Buy_Price', 'Support_Price', 'Resistance_Price', 'R/R', 'Support_Priority',
+                      'Resistance_Priority', 'Volume($)', 'Volume(%)', 'No. Open_Order', 'Sell_Date', 'No. Exit',
+                      'Sell_Price', 'Profit_Loss', 'Balance']
         self.WriteResult(fieldnames, self.result_row)
     def CreateThread(self, param):
         self.th = {}
@@ -1545,6 +1546,12 @@ class Algorithm_6(Algorithm_5):
             print("Error: unable to start thread")
 
     def CalculateSupportAndResistance(self, param, currency):
+        balance = {"USDT": 1000, "Currency": 0}
+        self.order = []
+        self.SL = 0
+        self.TP = 0
+        isPos = False
+        valid_exitCondition_2 = False
         self.strategy[currency].ComputeATR(24)
         atr = self.strategy[currency].atr
         kline = 1 #len(self.klines[currency])-1
@@ -1562,22 +1569,83 @@ class Algorithm_6(Algorithm_5):
             final_result = self.RangeForCloseData(result_max_2, result_min_2, atr[kline])
             R, S, T = self.CreateRS(final_result, kline)
             # print(T)
-            if len(S) != 0:
-                if len(R) == 0:
-                    R.append({"Range": [1000000, 1000100], "Priority": 100})
-                if self.EnterCondition_1(S, kline) and self.EnterCondition_2(T) and self.EnterCondition_3(R, atr, kline)\
-                        and self.EnterCondition_4(R, S, kline):
-                    row = [self.candle_time[kline], self.close_data[kline], S[-1]["Range"][0], R[0]["Range"][0],
-                           (R[0]["Range"][0] - self.close_data[kline]) / (self.close_data[kline] - S[-1]["Range"][0]),
-                           S[-1]["Priority"], R[0]["Priority"], 0, 0, 0]
-                    self.result_row.append(row)
-                    print(self.candle_time[kline])
+            balance["Currency"] = (balance["Currency"]/self.close_data[kline-1]) * self.close_data[kline]
+            if isPos:
+                if len(R) > 0 and R[0]["Range"][0] > self.TP:
+                    self.TP = R[0]["Range"][0]
+                if len(R) > 0 and self.TP < self.high_data[kline]:
+                    valid_exitCondition_2 = True
+                if len(S) > 0 and S[-1]["Range"][1] > self.SL:
+                    self.SL = S[-1]["Range"][1]
+                    valid_exitCondition_2 = False
+                if valid_exitCondition_2:
+                    if self.ExitCondition_2(kline, self.TP, atr):
+                        print("Sell: ", self.candle_time[kline])
+                        valid_exitCondition_2 = False
+                        for i in self.order:
+                            i["Sell_Date"] = self.candle_time[kline]
+                            i["Sell_Price"] = self.close_data[kline]
+                            i["Profit_Loss"] = i["Buy_Price"] - i["Sell_Price"]
+                            i["No. Exit"] = 2
+                            i["Balance"] = balance["USDT"] + (i["Volume($)"]/i["Buy_Price"]) * i["Sell_Price"]
+                            row = [i['Buy_Date'], i['No. Enter'], i['Buy_Price'], i['Support_Price'],
+                                   i['Resistance_Price'], i['R/R'], i['Support_Priority'], i['Resistance_Priority'],
+                                   i['Volume($)'], i['Volume(%)'], i['No. Open_Order'], i['Sell_Date'], i['No. Exit'],
+                                   i['Sell_Price'], i['Profit_Loss'], i['Balance']]
+                            print(row)
+                            self.result_row.append(row)
+                        balance["USDT"] += balance["Currency"]
+                        balance["Currency"] = 0
+                        isPos = False
+                        self.order.clear()
+                        self.SL = 0
+                        continue
+                if self.ExitCondition_1(kline, self.SL) or self.ExitCondition_3(R, kline):
+                    print("Sell: ", self.candle_time[kline])
+                    for i in self.order:
+                        i["Sell_Date"] = self.candle_time[kline]
+                        i["Sell_Price"] = self.close_data[kline]
+                        i["Profit_Loss"] = i["Buy_Price"] - i["Sell_Price"]
+                        i["No. Exit"] = 13
+                        i["Balance"] = balance["USDT"] + (i["Volume($)"] / i["Buy_Price"]) * i["Sell_Price"]
+                        row = [i['Buy_Date'], i['No. Enter'], i['Buy_Price'], i['Support_Price'],
+                               i['Resistance_Price'], i['R/R'], i['Support_Priority'], i['Resistance_Priority'],
+                               i['Volume($)'], i['Volume(%)'], i['No. Open_Order'], i['Sell_Date'], i['No. Exit'],
+                               i['Sell_Price'], i['Profit_Loss'], i['Balance']]
+                        print(row)
+                        self.result_row.append(row)
+                    balance["USDT"] += balance["Currency"]
+                    balance["Currency"] = 0
+                    isPos = False
+                    self.order.clear()
+                    self.SL = 0
+                    continue
+            if len(R) == 0:
+                R.append({"Range": [1000000, 1000100], "Priority": 100})
+            if self.EnterCondition_1(S, kline) and self.EnterCondition_2(T) and self.EnterCondition_3(R, atr, kline)\
+                    and self.EnterCondition_4(R, S, kline):
+                print("Buy: ", self.candle_time[kline])
+                buy_ratio = 0.005/((self.close_data[kline] - S[-1]["Range"][0])/self.close_data[kline])
+                volume = buy_ratio * (balance["USDT"] + balance["Currency"])
+                if balance["USDT"] > volume:
+                    valid_exitCondition_2 = False
+                    isPos = True
+                    balance["USDT"] -= volume
+                    balance["Currency"] += volume
+                    self.order.append({"Buy_Date": self.candle_time[kline], "No. Enter": 1,
+                                       "Buy_Price": self.close_data[kline], "Support_Price": S[-1]["Range"][0],
+                                       "Resistance_Price": R[0]["Range"][0],
+                                       "R/R": (R[0]["Range"][0] - self.close_data[kline]) / (self.close_data[kline] - S[-1]["Range"][0]),
+                                       "Support_Priority": S[-1]["Priority"], "Resistance_Priority": R[0]["Priority"],
+                                       "Volume($)": volume, "Volume(%)": buy_ratio, 'No. Open_Order': len(self.order)+1})
             kline += 1
         self.LogResult()
             # print(result_max_2)
             # print(result_min_2)
             # print(kline)
     def EnterCondition_1(self, S, index):
+        if len(S) == 0:
+            return False
         if self.close_data[index - 1] < self.open_data[index - 1] \
                 and self.high_data[index - 1] - self.open_data[index - 1] <= self.open_data[index - 1] - self.close_data[index - 1] \
                 and self.close_data[index - 1] - self.low_data[index - 1] <= self.open_data[index - 1] - self.close_data[index - 1] \
@@ -1586,7 +1654,8 @@ class Algorithm_6(Algorithm_5):
                 and self.open_data[index] < self.close_data[index] \
                 and self.close_data[index] > self.open_data[index - 1] \
                 and self.high_data[index] > self.high_data[index - 1] \
-                and self.low_data[index - 1] <= S[-1]["Range"][1] < self.close_data[index]:
+                and self.low_data[index - 1] <= S[-1]["Range"][1] < self.close_data[index]\
+                and self.close_data[index - 2] > S[-1]["Range"][1]:
             return True
         else:
             return False
@@ -1596,12 +1665,43 @@ class Algorithm_6(Algorithm_5):
         else:
             return False
     def EnterCondition_3(self, R, atr, index):
+        if len(R) == 0:
+            return False;
         if (R[0]["Range"][0] - self.close_data[index]) > atr[index]:
             return True
         else:
             return False
     def EnterCondition_4(self, R, S, index):
+        if len(S) == 0 or len(R) == 0:
+            return False
         if (R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) > 1:
+            return True
+        else:
+            return False
+
+    def ExitCondition_1(self, index, sl):
+        if self.close_data[index] < sl:
+            return True
+        else:
+            return False
+
+    def ExitCondition_2(self, index, tp, atr):
+        if tp - self.close_data[index] > atr[index]:
+            return True
+        else:
+            return False
+
+    def ExitCondition_3(self, R, index):
+        if len(R) == 0:
+            return False
+        if self.close_data[index - 2] > self.open_data[index - 2] \
+                and self.low_data[index - 1] >= (self.close_data[index - 2] + self.open_data[index - 2]) / 2 \
+                and self.high_data[index - 1] > self.high_data[index - 2] \
+                and numpy.abs(self.open_data[index - 1] - self.close_data[index - 1]) <= (self.close_data[index - 2] - self.open_data[index - 2])/4 \
+                and self.close_data[index] < self.open_data[index] \
+                and self.high_data[index - 1] > self.high_data[index] \
+                and self.close_data[index] < (self.open_data[index - 2] + self.close_data[index - 2])/2 \
+                and self.high_data[index - 1] >= R[0]["Range"][0] > self.close_data[index]:
             return True
         else:
             return False
