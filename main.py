@@ -217,11 +217,14 @@ def main(client, currency, param):
         # trade.Run()
         # trade.LogResult()
 
-        currency = ["BTC", "USDT"]
-        start = date(2021, 1, 1)
-        stop = date(2021, 12, 14)
-        trade = BackTest.Algorithm_6(candle, currency, start, stop)
-        trade.Run()
+        # c = ["ETH", "XRP", "ADA", "FTM", "DOT", "BTC"]
+        c = ["SOL"]
+        for i in c:
+            currency = [i, "USDT"]
+            start = date(2020, 11, 1)
+            stop = date(2021, 12, 14)
+            trade = BackTest.Algorithm_6(candle, currency, start, stop)
+            trade.Run()
         # trade.LogResult()
     else:
         # bsm.start()
