@@ -4,7 +4,7 @@ from datetime import date
 
 from Candles import Candles
 from ExchangeFactory import ExchangeFactory
-from OnlineTrade import Algo_1, Algo_2, Algo_3
+from OnlineTrade import Algo_1, Algo_2, Algo_3, Algo_4
 import BackTest
 from threading import Lock
 import ast
@@ -218,11 +218,13 @@ def main(client, currency, param):
         # trade.LogResult()
 
         # c = ["ETH", "XRP", "ADA", "FTM", "DOT", "BTC"]
-        c = ["SOL"]
+        # c = ["ETH", "XRP", "ADA", "FTM", "DOT", "BTC", "LTC", "SOL", "MATIC", "BNB", "DOGE", "XTZ", "TOMO", "TRX"]
+        c = ["ETH", "XRP", "ADA", "FTM", "BTC", "SOL", "MATIC", "BNB", "DOGE", "XTZ", "TRX"]
+        # c = ["AVAX"]
         for i in c:
             currency = [i, "USDT"]
-            start = date(2020, 11, 1)
-            stop = date(2021, 12, 14)
+            start = date(2018, 11, 1)
+            stop = date(2020, 1, 1)
             trade = BackTest.Algorithm_6(candle, currency, start, stop)
             trade.Run()
         # trade.LogResult()
@@ -247,11 +249,14 @@ def main(client, currency, param):
         # trade.RunTradeThread()
 
         # currency = ["BTC", "USDT"]
-        trade = Algo_3(exchange, currency)
+        # trade = Algo_3(exchange, currency)
         # p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0, "McGinley_Period": 24, "keltner_Window": 24,
         #      "Multi_ATR": 2}
-        for i, j in param.items():
-            trade.SetAlgorithmParam(i, j)
+
+        trade = Algo_4(exchange, currency)
+        trade.SetAlgorithmParam()
+        # for i, j in param.items():
+        #     trade.SetAlgorithmParam(i, j)
         # trade.SetAlgorithmParam("ETHUSDT", p)
         # trade.SetAlgorithmParam("BNBUSDT", p)
         # trade.SetAlgorithmParam("LTCUSDT", window1=9, window2=24, window3=144, t=26, a=0.06, b=0.05)

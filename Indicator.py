@@ -1,6 +1,7 @@
 import talib
 from ta import trend, momentum, volatility
 from talipp.indicators import HMA, McGinleyDynamic, EMA
+import pandas_ta as pandasTa
 
 class Indicator:
 
@@ -82,3 +83,7 @@ class Indicator:
     @staticmethod
     def ATR(high_data, low_data, close_data, period):
         return volatility.average_true_range(high_data, low_data, close_data)
+
+    @staticmethod
+    def SuperTrend(high_data, low_data, close_data, length, multiplier):
+        return pandasTa.supertrend(high_data, low_data, close_data, length, multiplier)

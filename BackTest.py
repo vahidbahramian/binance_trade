@@ -1281,6 +1281,8 @@ class Algorithm_5(Algorithm_4):
             high = pd.Series(candle.high)
             low = pd.Series(candle.low)
             close = pd.Series(candle.close)
+            open = pd.Series(candle.open)
+            time = pd.Series(candle.timeUTC)
 
             self.close_data = candle.close
             self.candle_time = candle.timeUTC
@@ -1288,7 +1290,7 @@ class Algorithm_5(Algorithm_4):
             self.low_data = candle.low
             self.open_data = candle.open
 
-            self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, close, i))
+            self.strategy[i] = (ICHIMOKU_Strategy_HMA_Keltner(high, low, close, open, time, i))
         self.file = CSVFiles("Result/Algorithm_6-" + start_time.strftime("%Y-%m-%d_") + end_time.strftime("%Y-%m-%d_") +
                              self.currency_pair[0] + ".csv")
         self.result_row = []
@@ -1533,10 +1535,11 @@ class Algorithm_5(Algorithm_4):
 class Algorithm_6(Algorithm_5):
     def LogResult(self):
         self.file.SefFileName("Result/Algorithm_6-" + self.currency[0] + "-1H" + ".csv")
-        fieldnames = ['Buy_Date', 'No. Enter', 'Buy_Price', 'Support_Price', 'Resistance_Price', 'R/R', 'Support_Priority',
+        fieldnames = ['Buy_Date', 'No. Enter', 'Buy_Price', 'Support_Price', 'Resistance_Price', 'R/R', 'R(ATR)', 'Support_Priority',
                       'Resistance_Priority', 'Volume($)', 'Volume(%)', 'No. Open_Order', 'Sell_Date', 'No. Exit',
                       'Sell_Price', 'Profit_Loss', 'Profit_Loss(%)', 'Profit_Loss(% Balance)', 'Balance', 'Body_Length',
-                      'Up_Shadow_Length', 'Down_Shadow_Length', 'Trend', 'Tenken', 'Previous_Candle']
+                      'Up_Shadow_Length', 'Down_Shadow_Length', 'Cloud_length', 'Trend', 'Kijen',
+                      'Tenken', 'Previous_Candle', 'SuperTrend']
         self.WriteResult(fieldnames, self.result_row)
     def CreateThread(self, param):
         self.th = {}
@@ -1556,17 +1559,20 @@ class Algorithm_6(Algorithm_5):
         valid_exitCondition_2 = False
         self.exit_number = 0
         self.enter_number = 0
-        self.strategy[currency].ComputeATR(24)
+        TS = 0
+        self.strategy[currency].ComputeATR(12)
         self.strategy[currency].ComputeIchimoku_A(216, 624)
         self.strategy[currency].ComputeIchimoku_B(624, 1248)
         self.strategy[currency].ComputeIchimoku_Base_Line(216, 624)
         self.strategy[currency].ComputeIchimoku_Conversion_Line(216, 624)
+        self.strategy[currency].ComputeSuperTrend(12, 3)
         atr = self.strategy[currency].atr
         ich_a = self.strategy[currency].ich_a
         ich_b = self.strategy[currency].ich_b
         ich_base_line = self.strategy[currency].ich_base_line
         ich_conversion_line = self.strategy[currency].ich_conversion_line
-        kline = 1 #len(self.klines[currency])-1
+        superTrend = self.strategy[currency].superTrend
+        kline = 1 # len(self.klines[currency])-1
         while kline < len(self.klines[currency]):
             input_max = []
             input_min = []
@@ -1588,9 +1594,13 @@ class Algorithm_6(Algorithm_5):
                 if len(S) > 0 and S[-1]["Range"][1] > self.SL:
                     self.SL = S[-1]["Range"][0]
                     valid_exitCondition_2 = False
-                if (valid_exitCondition_2 and self.ExitCondition_2(kline, self.TP, atr, T)) or \
-                        self.ExitCondition_1(kline, self.SL) or self.ExitCondition_3(R, T, kline) \
-                        or self.ExitCondition_4(R, T, kline):
+                if self.close_data[kline] - 2 * atr[kline] > self.order[0]["Buy_Price"] and\
+                        TS < self.close_data[kline] - 2 * atr[kline]:
+                    TS = self.close_data[kline] - 2 * atr[kline]
+                if (valid_exitCondition_2 and self.ExitCondition_2(kline, self.TP, atr, T, R))\
+                        or self.ExitCondition_1(kline, self.SL) or self.ExitCondition_3(R, T, kline)\
+                        or self.ExitCondition_4(R, T, kline): # or self.ExitCondition_5(R, T, kline, TS, currency):
+                        # (valid_exitCondition_2 and self.ExitCondition_2(kline, self.TP, atr, T, R))\
                         print("Sell: ", self.candle_time[kline])
                         valid_exitCondition_2 = False
                         for i in self.order:
@@ -1602,11 +1612,11 @@ class Algorithm_6(Algorithm_5):
                             i["No. Exit"] = self.exit_number
                             i["Balance"] = balance["USDT"] + (i["Volume($)"]/i["Buy_Price"]) * i["Sell_Price"]
                             row = [i['Buy_Date'], i['No. Enter'], i['Buy_Price'], i['Support_Price'],
-                                   i['Resistance_Price'], i['R/R'], i['Support_Priority'], i['Resistance_Priority'],
+                                   i['Resistance_Price'], i['R/R'], i['R(ATR)'], i['Support_Priority'], i['Resistance_Priority'],
                                    i['Volume($)'], i['Volume(%)'], i['No. Open_Order'], i['Sell_Date'], i['No. Exit'],
                                    i['Sell_Price'], i['Profit_Loss'], i["Profit_Loss(%)"], i["Profit_Loss(% Balance)"],
                                    i['Balance'], i['Body_Length'], i['Up_Shadow_Length'], i['Down_Shadow_Length'],
-                                   i['Trend'], i['Tenken'], i['Previous_Candle']]
+                                   i['Cloud_length'], i['Trend'], i['Kijen'], i['Tenken'], i['Previous_Candle'], i['SuperTrend']]
                             print(row)
                             self.result_row.append(row)
                         balance["USDT"] += balance["Currency"]
@@ -1615,9 +1625,11 @@ class Algorithm_6(Algorithm_5):
                         self.order.clear()
                         self.SL = 0
                         continue
-            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T) and self.EnterCondition_3(R, atr, kline):
-            # if (self.EnterCondition_1_2(S, kline) or self.EnterCondition_1_3(S, kline))\
-            #         and self.EnterCondition_2(T) and self.EnterCondition_3(R, atr, kline):
+            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T):
+                    # and self.EnterCondition_4(R, S, kline): # and self.EnterCondition_5(R, T, kline, currency):
+                    # self.EnterCondition_3(R, atr, kline) and\
+                    # if (self.EnterCondition_1_2(S, kline) or self.EnterCondition_1_3(S, kline))\
+                    #   and self.EnterCondition_2(T) and self.EnterCondition_3(R, atr, kline):
                     # and self.EnterCondition_4(R, S, kline):
                 print("Buy: ", self.candle_time[kline])
                 buy_ratio = 0.005/((self.close_data[kline] - S[-1]["Range"][0])/self.close_data[kline])
@@ -1633,18 +1645,24 @@ class Algorithm_6(Algorithm_5):
                                        "Buy_Price": self.close_data[kline], "Support_Price": S[-1]["Range"][0],
                                        "Resistance_Price": R[0]["Range"][0],
                                        "R/R": (R[0]["Range"][0] - self.close_data[kline]) / (self.close_data[kline] - S[-1]["Range"][0]),
+                                       "R(ATR)": (R[0]["Range"][0] - self.close_data[kline])/atr[kline],
                                        "Support_Priority": S[-1]["Priority"], "Resistance_Priority": R[0]["Priority"],
                                        "Volume($)": volume, "Volume(%)": buy_ratio, 'No. Open_Order': len(self.order)+1,
                                        "Body_Length": (self.close_data[kline] - self.open_data[kline])/atr[kline],
                                        "Up_Shadow_Length": (self.high_data[kline] - self.close_data[kline])/
                                                            (self.close_data[kline] - self.open_data[kline]),
                                        "Down_Shadow_Length": (self.open_data[kline] - self.low_data[kline])/
-                                                           (self.close_data[kline] - self.open_data[kline])})
+                                                           (self.close_data[kline] - self.open_data[kline]),
+                                       "Cloud_length": abs(ich_a[kline] - ich_b[kline])/atr[kline]})
                     if ich_a[kline] >= ich_b[kline] and self.close_data[kline] >= ich_b[kline - 26 + 1]:
                         self.order[-1]["Trend"] = "True"
                     else:
                         self.order[-1]["Trend"] = "False"
-                    if ich_conversion_line[kline] >= ich_base_line[kline]:
+                    if ich_base_line[kline] < self.close_data[kline]:
+                        self.order[-1]["Kijen"] = "True"
+                    else:
+                        self.order[-1]["Kijen"] = "False"
+                    if ich_conversion_line[kline] < self.close_data[kline]:
                         self.order[-1]["Tenken"] = "True"
                     else:
                         self.order[-1]["Tenken"] = "False"
@@ -1652,6 +1670,10 @@ class Algorithm_6(Algorithm_5):
                         self.order[-1]["Previous_Candle"] = "True"
                     else:
                         self.order[-1]["Previous_Candle"] = "False"
+                    if superTrend['SUPERTd_12_3.0'][kline] > 0:
+                        self.order[-1]["SuperTrend"] = "True"
+                    else:
+                        self.order[-1]["SuperTrend"] = "False"
 
             kline += 1
         self.LogResult()
@@ -1712,10 +1734,10 @@ class Algorithm_6(Algorithm_5):
             return False
         if self.close_data[index] > S[-1]["Range"][2] > self.low_data[index] \
                 and self.close_data[index] > self.open_data[index]:
-            for i in range(1,9):
-                if S[-1]["Range"][2] < self.close_data[index - i]:
-                    self.enter_number = 4
-                    return True
+             #for i in range(1, 9):
+                #if S[-1]["Range"][1] < self.close_data[index - i]:
+            self.enter_number = 4
+            return True
         else:
             return False
     def EnterCondition_2(self, T):
@@ -1733,8 +1755,33 @@ class Algorithm_6(Algorithm_5):
     def EnterCondition_4(self, R, S, index):
         if len(S) == 0 or len(R) == 0:
             return False
-        if (R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) > 1:
+        if (R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) < 4 or \
+            R[0]["Priority"] == 100:
             return True
+        else:
+            return False
+
+    def EnterCondition_5(self, R, T, index, currency):
+        self.strategy[currency].ComputeATR(12)
+        self.strategy[currency].ComputeIchimoku_Conversion_Line(216, 624)
+        self.strategy[currency].ComputeIchimoku_A(216, 624)
+        self.strategy[currency].ComputeIchimoku_B(624, 1248)
+        ich_conversion_line = self.strategy[currency].ich_conversion_line
+        atr = self.strategy[currency].atr
+        ich_a = self.strategy[currency].ich_a
+        ich_b = self.strategy[currency].ich_b
+        if len(R) == 0 or len(T) > 0:
+            # (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) or\
+            # R[0]["Priority"] != 100:
+            return False
+        if (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and \
+             abs(ich_a[index] - ich_b[index]) < 5 * atr[index]:
+            return True
+        elif (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and \
+             abs(ich_a[index] - ich_b[index]) > 5 * atr[index] and ich_conversion_line[index] < self.close_data[index]:
+             return True
+        elif abs(ich_a[index] - ich_b[index]) < 5 * atr[index] and ich_conversion_line[index] < self.close_data[index]:
+             return True
         else:
             return False
 
@@ -1745,8 +1792,10 @@ class Algorithm_6(Algorithm_5):
         else:
             return False
 
-    def ExitCondition_2(self, index, tp, atr, T):
-        if tp - self.close_data[index] > atr[index] and len(T) == 0:
+    def ExitCondition_2(self, index, tp, atr, R, T):
+        if len(R) == 0 or len(T) > 0:
+            return False
+        if tp - self.close_data[index] > 2 * atr[index]:
             self.exit_number = 2
             return True
         else:
@@ -1773,10 +1822,30 @@ class Algorithm_6(Algorithm_5):
             return False
         if self.close_data[index] < R[0]["Range"][0] < self.open_data[index] \
                 and self.close_data[index] < self.open_data[index]:
-            self.exit_number = 4
+              for i in range(1, 5):
+                 if R[0]["Range"][0] > self.close_data[index - i]:
+                   self.exit_number = 4
+                   return True
+        else:
+            return False
+
+    def ExitCondition_5(self, R, T, index, TS, currency):
+        self.strategy[currency].ComputeIchimoku_Conversion_Line(216, 624)
+        self.strategy[currency].ComputeIchimoku_A(216, 624)
+        self.strategy[currency].ComputeIchimoku_B(624, 1248)
+        ich_conversion_line = self.strategy[currency].ich_conversion_line
+        ich_a = self.strategy[currency].ich_a
+        ich_b = self.strategy[currency].ich_b
+        if len(R) == 0 or len(T) > 0 or ich_conversion_line[index] < self.close_data[index]:
+                #(ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) or\
+                # R[0]["Priority"] != 100:
+            return False
+        if self.close_data[index] < TS:
+            self.exit_number = 5
             return True
         else:
             return False
+
     def Run(self):
         self.param = {}
         # s = [1008, 4368, 8736, 17472]
@@ -1787,9 +1856,9 @@ class Algorithm_6(Algorithm_5):
         # e = [720, 2160, 4320, 8640]
         # w = [144, 288, 432, 576]
         # self.param["Day"] = {"S": s, "E": e, "W": w, "Priority": 2}
-        s = [24, 120, 360]
-        e = [120, 360, 720]
-        w = [24, 48, 72]
+        s = [24, 240, 360, 480, 720]
+        e = [240, 360, 480, 720, 1440]
+        w = [24, 36, 48, 72, 144]
         self.param["4Hour"] = {"S": s, "E": e, "W": w, "Priority": 1}
         self.CreateThread(self.param)
     def CalculateMinMax(self, input_max, input_min, s, e, w, type, index):
@@ -1811,7 +1880,7 @@ class Algorithm_6(Algorithm_5):
                             result_max.append({"Close": close[i], "Time": time[i], "Priority": type})
                     if (index_min[0]+(i-w[j]) == i).any():
                         find = False
-                        for x in result_min+ input_min:
+                        for x in result_min + input_min:
                             if x["Time"] == time[i]:
                                 find = True
                         if not find:
@@ -1830,7 +1899,7 @@ class Algorithm_6(Algorithm_5):
     def RangeForCloseData(self, max, min, atr):
         data = max + min
         for i in data:
-            i["Close"] = [i["Close"]-atr/2, i["Close"], i["Close"]+atr/2]
+            i["Close"] = [i["Close"] - atr/2, i["Close"], i["Close"] + atr/2]
         data.sort(key=lambda x: x["Close"][1])
         # print(data)
         result = []

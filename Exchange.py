@@ -185,8 +185,8 @@ class KuCoin(Exchange):
     def CreateCorrespondCurrencyPair(self, currency):
         for i in currency[:-1]:
             self.Correspond[i + currency[-1]] = i + "-" + currency[-1]
-        for i in currency[1:-1]:
-            self.Correspond[i + currency[0]] = i + "-" + currency[0]
+        # for i in currency[1:-1]:
+        #     self.Correspond[i + currency[0]] = i + "-" + currency[0]
     def Connect(self):
         try:
             self.client = kucoin.client.Client(self.API_Key, self.Secret_Key, self.API_Passphrase)

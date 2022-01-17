@@ -83,10 +83,12 @@ class EMA_Stocastic_Strategy(IStrategy):
 
 class ICHIMOKU_2_Strategy(IStrategy):
 
-    def __init__(self, high, low, close):
+    def __init__(self, high, low, close, open, time):
         self.high_data = high
         self.low_data = low
         self.close_data = close
+        self.open_data = open
+        self.time_data = time
 
     def ComputeIchimoku_A(self, win1, win2):
         self.ich_a = Indicator.ICHIMOKU_A(self.high_data, self.low_data, win1, win2)
@@ -138,6 +140,9 @@ class ICHIMOKU_2_Strategy(IStrategy):
 
     def ComputeATR(self, period):
         self.atr = Indicator.ATR(self.high_data, self.low_data, self.close_data, period=period)
+
+    def ComputeSuperTrend(self, length, multiplier):
+        self.superTrend = Indicator.SuperTrend(self.high_data, self.low_data, self.close_data, length, multiplier)
 
     def BuyStrategy(self, i, t, a, b):
         if i - t + 1 > 0:
@@ -317,8 +322,8 @@ class ICHIMOKU_Strategy_HMA(ICHIMOKU_2_Strategy):
 
 class ICHIMOKU_Strategy_HMA_Keltner(ICHIMOKU_2_Strategy):
 
-    def __init__(self, high, low, close, cp):
-        super().__init__(high, low, close)
+    def __init__(self, high, low, close, open, time, cp):
+        super().__init__(high, low, close, open, time)
         self.currency_pair = cp
         if sys.argv[2] == "o" or sys.argv[2] == "O":
             strategy_param = self.ReadConfigFile(self.currency_pair)
