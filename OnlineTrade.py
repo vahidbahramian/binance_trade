@@ -889,7 +889,7 @@ class Algo_4(Algo_3):
                 self.EnterCondition_3(R, atr):
             buy_ratio = 0.005 / ((self.close_data[-1] - S[-1]["Range"][0]) / self.close_data[-1])
             volume = buy_ratio * (balance["USDT"] + balance["Currency"])
-            if balance["USDT"] > volume and volume > 10:
+            if balance["USDT"] < volume and volume > 10:
                 volume = balance["USDT"]
             elif balance["USDT"] < 10:
                 return order, volume
