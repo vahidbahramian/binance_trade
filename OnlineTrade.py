@@ -842,7 +842,7 @@ class Algo_4(Algo_3):
             self.strategy[msg["CurrencyPair"]].ComputeIchimoku_Conversion_Line(216, 624)
             self.strategy[msg["CurrencyPair"]].ComputeSuperTrend(12, 3)
 
-            print(datetime.datetime.now(), msg["CurrencyPair"], msg["Close"], msg["High"], msg["Low"])
+            # print(datetime.datetime.now(), msg["CurrencyPair"], msg["Close"], msg["High"], msg["Low"])
             self.LastTimeOfCandle[msg["CurrencyPair"]] = time
             # self.update_count += 1
         # if self.update_count == len(self.currency_pair):
@@ -1190,6 +1190,7 @@ class Algo_4(Algo_3):
                         isPosition[i] = self.SetIsPosition(i, currency_balance)
                         R, S, T = self.Calculate_R_S_T(i+self.currency[-1])
                         order, volume = self.CheckAction(R, S, T, i, isPosition[i])
+                        print(order)
                         self.SetOrder(order, volume, i + self.currency[-1])
                 if update_candle_set:
                     update_candle_set = False
