@@ -1625,12 +1625,7 @@ class Algorithm_6(Algorithm_5):
                         self.order.clear()
                         self.SL = 0
                         continue
-            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T):
-                    # and self.EnterCondition_4(R, S, kline): # and self.EnterCondition_5(R, T, kline, currency):
-                    # self.EnterCondition_3(R, atr, kline) and\
-                    # if (self.EnterCondition_1_2(S, kline) or self.EnterCondition_1_3(S, kline))\
-                    #   and self.EnterCondition_2(T) and self.EnterCondition_3(R, atr, kline):
-                    # and self.EnterCondition_4(R, S, kline):
+            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T) and self.EnterCondition_Not():
                 print("Buy: ", self.candle_time[kline])
                 buy_ratio = 0.005/((self.close_data[kline] - S[-1]["Range"][0])/self.close_data[kline])
                 volume = buy_ratio * (balance["USDT"] + balance["Currency"])
@@ -1784,6 +1779,15 @@ class Algorithm_6(Algorithm_5):
              return True
         else:
             return False
+
+    # def EnterCondition_Not(self):
+    #     if not (ich_a[kline] >= ich_b[kline] and self.close_data[kline] >= ich_b[kline - 26 + 1]) and \
+    #             ich_base_line[kline] >= self.close_data[kline] and \
+    #             ich_conversion_line[kline] >= self.close_data[kline] and S[-1]["Priority"] < 3
+    #             or \
+    #             not (ich_a[kline] >= ich_b[kline] and self.close_data[kline] >= ich_b[kline - 26 + 1]) and \
+    #             ich_base_line[kline] >= self.close_data[kline] and \
+    #             ich_conversion_line[kline] >= self.close_data[kline] and
 
     def ExitCondition_1(self, index, sl):
         if self.close_data[index] < sl:

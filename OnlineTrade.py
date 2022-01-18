@@ -12,7 +12,7 @@ import numpy
 import time
 import datetime
 from Algorithm import OnlineAlgorithm
-from IO import FileWorking
+from IO import FileWorking, CSVFiles
 
 import sqlite3
 
@@ -784,11 +784,17 @@ class Algo_4(Algo_3):
         self.update_candle_event = {}
         for i in self.currency[:-1]:
             self.update_candle_event[i + self.currency[-1]] = threading.Event()
+        self.file = CSVFiles("OrderInfo.csv")
+        self.fieldnames = ['Buy_Date', 'No. Enter', 'Buy_Price', 'Support_Price', 'Resistance_Price', 'R/R', 'R(ATR)', 'Support_Priority',
+                      'Resistance_Priority', 'Volume($)', 'Volume(%)', 'No. Open_Order', 'Sell_Date', 'No. Exit',
+                      'Sell_Price', 'Profit_Loss', 'Profit_Loss(%)', 'Profit_Loss(% Balance)', 'Balance', 'Body_Length',
+                      'Up_Shadow_Length', 'Down_Shadow_Length', 'Cloud_length', 'Trend', 'Kijen',
+                      'Tenken', 'Previous_Candle', 'SuperTrend']
 
     def SetAlgorithmParam(self):
-        s = [36, 360, 480, 720]
-        e = [360, 480, 720, 2160]
-        w = [36, 48, 72, 216]
+        s = [24, 240, 360, 480, 720]
+        e = [240, 360, 480, 720, 1440]
+        w = [24, 36, 48, 72, 144]
         self.param["4Hour"] = {"S": s, "E": e, "W": w, "Priority": 1}
 
     def InitCandle(self):
@@ -882,11 +888,10 @@ class Algo_4(Algo_3):
             if (self.database_data[currency_pair]["Valid_ExitCondition2"] and
                 self.ExitCondition_2(self.database_data[currency_pair]["TP"], atr, T)) or \
                     self.ExitCondition_1(self.database_data[currency_pair]["SL"]) or self.ExitCondition_3(R, T) \
-                    or self.ExitCondition_4(R, T) or self.ExitCondition_5(R, T, self.database_data[currency_pair]["TS"]):
+                    or self.ExitCondition_4(R, T):
                 self.database_data[currency_pair]["Valid_ExitCondition2"] = False
                 order = "Sell"
-        elif self.EnterCondition_1_4(S) and self.EnterCondition_2(T) and \
-                self.EnterCondition_3(R, atr):
+        elif self.EnterCondition_1_4(S) and self.EnterCondition_2(T):
             buy_ratio = 0.005 / ((self.close_data[-1] - S[-1]["Range"][0]) / self.close_data[-1])
             volume = buy_ratio * (balance["USDT"] + balance["Currency"])
             if balance["USDT"] < volume and volume > 10:
@@ -896,6 +901,39 @@ class Algo_4(Algo_3):
             self.database_data[currency_pair]["Valid_ExitCondition2"] = False
             self.database_data[currency_pair]["SL"] = S[-1]["Range"][0]
             self.database_data[currency_pair]["TP"] = R[0]["Range"][0]
+            # self.orderInfo = {"Buy_Date": self.candle_time[-1], "No. Enter": self.enter_number,
+            #                   "Support_Price": S[-1]["Range"][0], "Resistance_Price": R[0]["Range"][0],
+            #                    "R/R": (R[0]["Range"][0] - self.close_data[-1]) /
+            #                           (self.close_data[-1] - S[-1]["Range"][0]),
+            #                    "R(ATR)": (R[0]["Range"][0] - self.close_data[-1]) / atr.iat[-1],
+            #                    "Support_Priority": S[-1]["Priority"], "Resistance_Priority": R[0]["Priority"],
+            #                    "Volume($)": volume, "Volume(%)": buy_ratio, 'No. Open_Order': len(self.order) + 1,
+            #                    "Body_Length": (self.close_data[kline] - self.open_data[kline]) / atr[kline],
+            #                    "Up_Shadow_Length": (self.high_data[kline] - self.close_data[kline]) /
+            #                                        (self.close_data[kline] - self.open_data[kline]),
+            #                    "Down_Shadow_Length": (self.open_data[kline] - self.low_data[kline]) /
+            #                                          (self.close_data[kline] - self.open_data[kline]),
+            #                    "Cloud_length": abs(ich_a[kline] - ich_b[kline]) / atr[kline]})
+            # if ich_a[kline] >= ich_b[kline] and self.close_data[kline] >= ich_b[kline - 26 + 1]:
+            #     self.order[-1]["Trend"] = "True"
+            # else:
+            #     self.order[-1]["Trend"] = "False"
+            # if ich_base_line[kline] < self.close_data[kline]:
+            #     self.order[-1]["Kijen"] = "True"
+            # else:
+            #     self.order[-1]["Kijen"] = "False"
+            # if ich_conversion_line[kline] < self.close_data[kline]:
+            #     self.order[-1]["Tenken"] = "True"
+            # else:
+            #     self.order[-1]["Tenken"] = "False"
+            # if self.close_data[kline - 1] > self.open_data[kline - 1]:
+            #     self.order[-1]["Previous_Candle"] = "True"
+            # else:
+            #     self.order[-1]["Previous_Candle"] = "False"
+            # if superTrend['SUPERTd_12_3.0'][kline] > 0:
+            #     self.order[-1]["SuperTrend"] = "True"
+            # else:
+            #     self.order[-1]["SuperTrend"] = "False"
             order = "Buy"
         return order, volume
 
@@ -999,7 +1037,7 @@ class Algo_4(Algo_3):
 
     def ExitCondition_2(self, tp, atr, T):
         index = len(self.close_data) - 1
-        if tp - self.close_data[index] > atr[index] and len(T) > 0:
+        if tp - self.close_data[index] > 2 * atr[index] and len(T) > 0:
             self.exit_number = 2
             return True
         else:
@@ -1130,17 +1168,20 @@ class Algo_4(Algo_3):
             balance += self.GetBalance(i) * self.GetPrice(i+self.currency[-1])
         return balance
 
-    def SetOrder(self, order, volume, currency_pair):
+    def SetOrder(self, order, volume, currency):
+        currency_pair = currency + self.currency[-1]
         if order == "Buy":
             buy_price = self.GetPrice(currency_pair)
             order = self.SetMarketBuyOrder(currency_pair,
                                            self.SetQuntity(volume / buy_price, currency_pair))
             self.database_data[currency_pair]["Buy_Price"] = buy_price
+            self.SetLimitSellOrder(currency_pair, self.SetQuntity(volume / buy_price, currency_pair),
+                                   buy_price - ((buy_price - self.database_data[currency_pair]["SL"]) * 2))
             self.logger.info(order)
             print(order)
         if order == "Sell":
             order = self.SetMarketSellOrder(currency_pair,
-                                            self.SetQuntity(self.GetBalance(currency_pair), currency_pair))
+                                            self.SetQuntity(self.GetBalance(currency), currency_pair))
             self.logger.info(order)
             print(order)
 
@@ -1191,7 +1232,7 @@ class Algo_4(Algo_3):
                         R, S, T = self.Calculate_R_S_T(i+self.currency[-1])
                         order, volume = self.CheckAction(R, S, T, i, isPosition[i])
                         print(order)
-                        self.SetOrder(order, volume, i + self.currency[-1])
+                        self.SetOrder(order, volume, i)
                 if update_candle_set:
                     update_candle_set = False
                     self.UpdateDatabase()
