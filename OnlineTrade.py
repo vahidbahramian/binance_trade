@@ -1139,7 +1139,8 @@ class Algo_4(Algo_3):
         else:
             return False
 
-    def ExitCondition_4(self, R, T, index):
+    def ExitCondition_4(self, R, T):
+        index = len(self.close_data) - 1
         if len(R) == 0 or len(T) > 0:
             return False
         if self.close_data[index] < R[0]["Range"][0] < self.open_data[index] \
