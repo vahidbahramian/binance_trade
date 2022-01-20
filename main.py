@@ -219,12 +219,12 @@ def main(client, currency, param):
 
         # c = ["ETH", "XRP", "ADA", "FTM", "DOT", "BTC"]
         # c = ["ETH", "XRP", "ADA", "FTM", "DOT", "BTC", "LTC", "SOL", "MATIC", "BNB", "DOGE", "XTZ", "TOMO", "TRX"]
-        c = ["ETH", "XRP", "ADA", "FTM", "BTC", "SOL", "MATIC", "BNB", "DOGE", "XTZ", "TRX"]
-        # c = ["AVAX"]
+        # c = ["ETH", "XRP", "ADA", "FTM", "BTC", "SOL", "MATIC", "BNB", "DOGE", "XTZ", "TRX"]
+        c = ["BTC"]
         for i in c:
             currency = [i, "USDT"]
-            start = date(2018, 11, 1)
-            stop = date(2020, 1, 1)
+            start = date(2019, 11, 1)
+            stop = date(2021, 1, 1)
             trade = BackTest.Algorithm_6(candle, currency, start, stop)
             trade.Run()
         # trade.LogResult()

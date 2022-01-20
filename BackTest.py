@@ -1625,7 +1625,8 @@ class Algorithm_6(Algorithm_5):
                         self.order.clear()
                         self.SL = 0
                         continue
-            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T) and self.EnterCondition_Not():
+            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T) and \
+                    self.EnterCondition_Not(kline, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
                 print("Buy: ", self.candle_time[kline])
                 buy_ratio = 0.005/((self.close_data[kline] - S[-1]["Range"][0])/self.close_data[kline])
                 volume = buy_ratio * (balance["USDT"] + balance["Currency"])
@@ -1780,14 +1781,79 @@ class Algorithm_6(Algorithm_5):
         else:
             return False
 
-    # def EnterCondition_Not(self):
-    #     if not (ich_a[kline] >= ich_b[kline] and self.close_data[kline] >= ich_b[kline - 26 + 1]) and \
-    #             ich_base_line[kline] >= self.close_data[kline] and \
-    #             ich_conversion_line[kline] >= self.close_data[kline] and S[-1]["Priority"] < 3
-    #             or \
-    #             not (ich_a[kline] >= ich_b[kline] and self.close_data[kline] >= ich_b[kline - 26 + 1]) and \
-    #             ich_base_line[kline] >= self.close_data[kline] and \
-    #             ich_conversion_line[kline] >= self.close_data[kline] and
+    def EnterCondition_Not(self, index, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
+         if ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] >= self.close_data[index] and
+             ich_conversion_line[index] >= self.close_data[index] and S[-1]["Priority"] < 3) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] >= self.close_data[index] and
+             ich_conversion_line[index] >= self.close_data[index] and
+             abs(ich_a[index] - ich_b[index])/atr[index] > 6) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and
+             abs(ich_a[index] - ich_b[index]) / atr[index] > 9) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and
+             (R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) > 3) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and R[0]["Priority"] < 2) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and S[-1]["Priority"] > 3) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] < self.close_data[index] <= ich_conversion_line[index] and
+             (R[0]["Range"][0] - self.close_data[index]) / atr[index] > 1) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] < self.close_data[index] <= ich_conversion_line[index] and
+             abs(ich_a[index] - ich_b[index]) / atr[index] > 8) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] < self.close_data[index] and
+             ich_conversion_line[index] < self.close_data[index] and
+             abs(ich_a[index] - ich_b[index]) / atr[index] > 15 and
+             (R[0]["Range"][0] - self.close_data[index])/atr[index] < 1) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] < self.close_data[index] and
+             ich_conversion_line[index] < self.close_data[index] and
+             (R[0]["Range"][0] - self.close_data[index]) / atr[index] < 1 and
+             R[0]["Priority"] < 2 and S[-1]["Priority"] > 1) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] < self.close_data[index] and
+             ich_conversion_line[index] < self.close_data[index] and
+             abs(ich_a[index] - ich_b[index]) / atr[index] > 2 and R[0]["Priority"] > 1) or \
+            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
+             ich_base_line[index] < self.close_data[index] and
+             ich_conversion_line[index] < self.close_data[index] and
+             (R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) > 3 and
+             R[0]["Priority"] != 100) or \
+            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
+             ich_base_line[index] >= self.close_data[index] and
+             ich_conversion_line[index] >= self.close_data[index] and R[0]["Priority"] > 3) or \
+            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
+             ich_base_line[index] >= self.close_data[index] and
+             ich_conversion_line[index] >= self.close_data[index] and
+             (R[0]["Range"][0] - self.close_data[index]) / atr[index] > 5) or \
+            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
+             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and
+             abs(ich_a[index] - ich_b[index]) / atr[index] < 7) or \
+            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
+             ich_base_line[index] < self.close_data[index] <= ich_conversion_line[index] and
+             S[-1]["Priority"] > 1) or \
+            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
+             ich_base_line[index] < self.close_data[index] and
+             ich_conversion_line[index] < self.close_data[index] and
+             (R[0]["Range"][0] - self.close_data[index]) / atr[index] > 4 and R[0]["Priority"] != 100) or \
+            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
+             ich_base_line[index] < self.close_data[index] and
+             ich_conversion_line[index] < self.close_data[index] and
+             R[0]["Priority"] > 3 and R[0]["Priority"] != 100) or \
+            ((self.close_data[index] - self.open_data[index]) / atr[index] < 0.5 and
+             (self.high_data[index] - self.close_data[index]) / (self.close_data[index] - self.open_data[index]) > 1 and
+             R[0]["Priority"] == 100)or \
+            ((self.close_data[index] - self.open_data[index]) / atr[index] < 0.5 and
+             (self.high_data[index] - self.close_data[index]) / (self.close_data[index] - self.open_data[index]) > 1 and
+             self.close_data[index - 1] > self.open_data[index - 1]):
+             return False
+         else:
+             return True
 
     def ExitCondition_1(self, index, sl):
         if self.close_data[index] < sl:
