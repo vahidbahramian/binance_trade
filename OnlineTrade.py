@@ -871,10 +871,10 @@ class Algo_4(Algo_3):
         currency_pair = currency + self.currency[-1]
         balance = {"USDT": self.GetBalance(self.currency[-1]), "Currency": self.GetCurrencyBalance()}
         atr = self.strategy[currency_pair].atr
-        ich_a = self.strategy[currency].ich_a
-        ich_b = self.strategy[currency].ich_b
-        ich_base_line = self.strategy[currency].ich_base_line
-        ich_conversion_line = self.strategy[currency].ich_conversion_line
+        ich_a = self.strategy[currency_pair].ich_a
+        ich_b = self.strategy[currency_pair].ich_b
+        ich_base_line = self.strategy[currency_pair].ich_base_line
+        ich_conversion_line = self.strategy[currency_pair].ich_conversion_line
         if len(R) == 0:
             R.append({"Range": [999900, 1000000, 1000100], "Priority": 100})
         if isPos:
