@@ -785,7 +785,7 @@ class Algo_4(Algo_3):
         for i in self.currency[:-1]:
             self.update_candle_event[i + self.currency[-1]] = threading.Event()
         self.file = CSVFiles("OrderInfo.csv")
-        self.fieldnames = ['Buy_Date', 'No. Enter', 'Buy_Price', 'Support_Price', 'Resistance_Price', 'R/R', 'R(ATR)', 'Support_Priority',
+        self.fieldnames = ['Currency','Buy_Date', 'No. Enter', 'Buy_Price', 'Support_Price', 'Resistance_Price', 'R/R', 'R(ATR)', 'Support_Priority',
                       'Resistance_Priority', 'Volume($)', 'Volume(%)', 'No. Open_Order', 'Sell_Date', 'No. Exit',
                       'Sell_Price', 'Profit_Loss', 'Profit_Loss(%)', 'Profit_Loss(% Balance)', 'Balance', 'Body_Length',
                       'Up_Shadow_Length', 'Down_Shadow_Length', 'Cloud_length', 'Trend', 'Kijen',
@@ -868,6 +868,7 @@ class Algo_4(Algo_3):
     def CheckAction(self, R, S, T, currency, isPos):
         order = ""
         volume = 0
+        orderInfo = []
         currency_pair = currency + self.currency[-1]
         balance = {"USDT": self.GetBalance(self.currency[-1]), "Currency": self.GetCurrencyBalance()}
         atr = self.strategy[currency_pair].atr
@@ -875,6 +876,7 @@ class Algo_4(Algo_3):
         ich_b = self.strategy[currency_pair].ich_b
         ich_base_line = self.strategy[currency_pair].ich_base_line
         ich_conversion_line = self.strategy[currency_pair].ich_conversion_line
+        superTrend = self.strategy[currency].superTrend
         if len(R) == 0:
             R.append({"Range": [999900, 1000000, 1000100], "Priority": 100})
         if isPos:
@@ -906,39 +908,39 @@ class Algo_4(Algo_3):
             self.database_data[currency_pair]["Valid_ExitCondition2"] = False
             self.database_data[currency_pair]["SL"] = S[-1]["Range"][0]
             self.database_data[currency_pair]["TP"] = R[0]["Range"][0]
-            # self.orderInfo = {"Buy_Date": self.candle_time[-1], "No. Enter": self.enter_number,
+            # orderInfo.append({"Currency": currency_pair, "Buy_Date": self.candle_time[-1], "No. Enter": self.enter_number,
             #                   "Support_Price": S[-1]["Range"][0], "Resistance_Price": R[0]["Range"][0],
             #                    "R/R": (R[0]["Range"][0] - self.close_data[-1]) /
             #                           (self.close_data[-1] - S[-1]["Range"][0]),
             #                    "R(ATR)": (R[0]["Range"][0] - self.close_data[-1]) / atr.iat[-1],
             #                    "Support_Priority": S[-1]["Priority"], "Resistance_Priority": R[0]["Priority"],
-            #                    "Volume($)": volume, "Volume(%)": buy_ratio, 'No. Open_Order': len(self.order) + 1,
-            #                    "Body_Length": (self.close_data[kline] - self.open_data[kline]) / atr[kline],
-            #                    "Up_Shadow_Length": (self.high_data[kline] - self.close_data[kline]) /
-            #                                        (self.close_data[kline] - self.open_data[kline]),
-            #                    "Down_Shadow_Length": (self.open_data[kline] - self.low_data[kline]) /
-            #                                          (self.close_data[kline] - self.open_data[kline]),
-            #                    "Cloud_length": abs(ich_a[kline] - ich_b[kline]) / atr[kline]})
-            # if ich_a[kline] >= ich_b[kline] and self.close_data[kline] >= ich_b[kline - 26 + 1]:
-            #     self.order[-1]["Trend"] = "True"
+            #                    "Volume($)": volume, "Volume(%)": buy_ratio, 'No. Open_Order': 1,
+            #                    "Body_Length": (self.close_data[-1] - self.open_data[-1]) / atr.iat[-1],
+            #                    "Up_Shadow_Length": (self.high_data[-1] - self.close_data[-1]) /
+            #                                        (self.close_data[-1] - self.open_data[-1]),
+            #                    "Down_Shadow_Length": (self.open_data[-1] - self.low_data[-1]) /
+            #                                          (self.close_data[-1] - self.open_data[-1]),
+            #                    "Cloud_length": abs(ich_a.iat[-1] - ich_b.iat[-1]) / atr.iat[-1]})
+            # if ich_a.iat[-1] >= ich_b.iat[-1] and self.close_data[-1] >= ich_b.iat[-1 - 26 + 1]:
+            #     orderInfo[-1]["Trend"] = "True"
             # else:
-            #     self.order[-1]["Trend"] = "False"
-            # if ich_base_line[kline] < self.close_data[kline]:
-            #     self.order[-1]["Kijen"] = "True"
+            #     orderInfo[-1]["Trend"] = "False"
+            # if ich_base_line.iat[-1] < self.close_data[-1]:
+            #     orderInfo[-1]["Kijen"] = "True"
             # else:
-            #     self.order[-1]["Kijen"] = "False"
-            # if ich_conversion_line[kline] < self.close_data[kline]:
-            #     self.order[-1]["Tenken"] = "True"
+            #     orderInfo[-1]["Kijen"] = "False"
+            # if ich_conversion_line.iat[-1] < self.close_data[-1]:
+            #     orderInfo[-1]["Tenken"] = "True"
             # else:
-            #     self.order[-1]["Tenken"] = "False"
-            # if self.close_data[kline - 1] > self.open_data[kline - 1]:
-            #     self.order[-1]["Previous_Candle"] = "True"
+            #     orderInfo[-1]["Tenken"] = "False"
+            # if self.close_data[-2] > self.open_data[-2]:
+            #     orderInfo[-1]["Previous_Candle"] = "True"
             # else:
-            #     self.order[-1]["Previous_Candle"] = "False"
-            # if superTrend['SUPERTd_12_3.0'][kline] > 0:
-            #     self.order[-1]["SuperTrend"] = "True"
+            #     orderInfo[-1]["Previous_Candle"] = "False"
+            # if superTrend['SUPERTd_12_3.0'].iat[-1] > 0:
+            #     orderInfo[-1]["SuperTrend"] = "True"
             # else:
-            #     self.order[-1]["SuperTrend"] = "False"
+            #     orderInfo[-1]["SuperTrend"] = "False"
             order = "Buy"
         return order, volume
 
@@ -1103,6 +1105,7 @@ class Algo_4(Algo_3):
          self.close_data[index - 1] > self.open_data[index - 1]):
             return False
         else:
+            self.enter_number = 5
             return True
 
     def ExitCondition_1(self, sl):
@@ -1311,7 +1314,8 @@ class Algo_4(Algo_3):
                         isPosition[i] = self.SetIsPosition(i, currency_balance)
                         R, S, T = self.Calculate_R_S_T(i+self.currency[-1])
                         order, volume = self.CheckAction(R, S, T, i, isPosition[i])
-                        print(order)
+                        if not order == "":
+                            print(order)
                         self.SetOrder(order, volume, i)
                 if update_candle_set:
                     update_candle_set = False
