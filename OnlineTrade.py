@@ -876,7 +876,7 @@ class Algo_4(Algo_3):
         ich_b = self.strategy[currency_pair].ich_b
         ich_base_line = self.strategy[currency_pair].ich_base_line
         ich_conversion_line = self.strategy[currency_pair].ich_conversion_line
-        superTrend = self.strategy[currency].superTrend
+        superTrend = self.strategy[currency_pair].superTrend
         if len(R) == 0:
             R.append({"Range": [999900, 1000000, 1000100], "Priority": 100})
         if isPos:
