@@ -9,7 +9,7 @@ FLoatingPointCurrencyPair = {"BTCUSDT": 6, "ETHUSDT": 5, "ETHBTC": 3, "BNBUSDT":
                              "LTCBTC": 2, "XRPUSDT": 2, "XRPBTC": 1, "TRXUSDT": 1, "TRXBTC": 0, "ADAUSDT": 2,
                              "ADABTC": 1, "DOGEUSDT": 1, "DOGEBTC": 0, "ALGOUSDT": 2, "ALGOBTC": 1, "FTMUSDT": 2,
                              "FTMBTC": 1, "DOTUSDT": 3, "DOTBTC": 1, "XTZUSDT": 2, "XTZBTC": 1, "MATICUSDT": 2,
-                             "MATICBTC": 1}
+                             "MATICBTC": 1, "SOLUSDT": 4, "SOLBTC": 2}
 class OfflineAlgorithm(abc.ABC):
     @abc.abstractmethod
     def __init__(self):
