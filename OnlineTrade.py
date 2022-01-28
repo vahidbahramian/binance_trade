@@ -1235,6 +1235,7 @@ class Algo_4(Algo_3):
     def SetOrder(self, order, volume, currency):
         currency_pair = currency + self.currency[-1]
         if order == "Buy":
+            print(volume)
             buy_price = self.GetPrice(currency_pair)
             order = self.SetMarketBuyOrder(currency_pair,
                                            self.SetQuntity(volume / buy_price, currency_pair))
