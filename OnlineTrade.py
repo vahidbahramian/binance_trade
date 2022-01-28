@@ -825,6 +825,7 @@ class Algo_4(Algo_3):
     def UpdateCandle(self, msg):
         time = msg["Time"]
         if time > self.LastTimeOfCandle[msg["CurrencyPair"]]:
+            self.LastTimeOfCandle[msg["CurrencyPair"]] = time
             self.strategy[msg["CurrencyPair"]].high_data.pop(0)
             self.strategy[msg["CurrencyPair"]].high_data.reset_index(drop=True, inplace=True)
             self.strategy[msg["CurrencyPair"]].low_data.pop(0)
@@ -849,7 +850,6 @@ class Algo_4(Algo_3):
             self.strategy[msg["CurrencyPair"]].ComputeSuperTrend(12, 3)
 
             # print(datetime.datetime.now(), msg["CurrencyPair"], msg["Close"], msg["High"], msg["Low"])
-            self.LastTimeOfCandle[msg["CurrencyPair"]] = time
             # self.update_count += 1
         # if self.update_count == len(self.currency_pair):
             self.update_candle_event[msg["CurrencyPair"]].set()
@@ -877,6 +877,8 @@ class Algo_4(Algo_3):
         ich_base_line = self.strategy[currency_pair].ich_base_line
         ich_conversion_line = self.strategy[currency_pair].ich_conversion_line
         superTrend = self.strategy[currency_pair].superTrend
+        # print("ich_a", ich_a.iat[-1])
+        # print("R = ", R[0]["Range"][0], "S = ", S[-1]["Range"][2], "T = ", T)
         if len(R) == 0:
             R.append({"Range": [999900, 1000000, 1000100], "Priority": 100})
         if isPos:
@@ -897,8 +899,8 @@ class Algo_4(Algo_3):
                     or self.ExitCondition_4(R, T):
                 self.database_data[currency_pair]["Valid_ExitCondition2"] = False
                 order = "Sell"
-        elif self.EnterCondition_1_4(S) and self.EnterCondition_2(T) and \
-                self.EnterCondition_Not(ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
+        elif self.EnterCondition_1_4(S) and self.EnterCondition_2(T): #and \
+                # self.EnterCondition_Not(ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
             buy_ratio = 0.005 / ((self.close_data[-1] - S[-1]["Range"][0]) / self.close_data[-1])
             volume = buy_ratio * (balance["USDT"] + balance["Currency"])
             if balance["USDT"] < volume and volume > 10:
@@ -1004,6 +1006,7 @@ class Algo_4(Algo_3):
         if self.close_data[index] > S[-1]["Range"][2] > self.low_data[index] \
                 and self.close_data[index] > self.open_data[index]:
             self.enter_number = 4
+            # print("EnterCondition_1_4")
             return True
         else:
             return False
@@ -1033,6 +1036,7 @@ class Algo_4(Algo_3):
             return False
 
     def EnterCondition_Not(self, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
+        # print("EnterCondition_Not")
         index = len(self.close_data) - 1
         if ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]:
             if ich_base_line[index] < self.close_data[index]:
@@ -1280,13 +1284,13 @@ class Algo_4(Algo_3):
                     if self.update_candle_event[i + self.currency[-1]].is_set():
                         update_candle_set = True
                         self.update_candle_event[i + self.currency[-1]].clear()
-                        print(datetime.datetime.now(), i + self.currency[-1], " Event was set!!!")
                         currency_balance[self.currency[-1]] = self.GetBalance(self.currency[-1])
                         self.close_data = numpy.array(self.strategy[i+self.currency[-1]].close_data.values.tolist())
                         self.candle_time = numpy.array(self.strategy[i+self.currency[-1]].time_data.values.tolist())
                         self.high_data = numpy.array(self.strategy[i+self.currency[-1]].high_data.values.tolist())
                         self.low_data = numpy.array(self.strategy[i+self.currency[-1]].low_data.values.tolist())
                         self.open_data = numpy.array(self.strategy[i+self.currency[-1]].open_data.values.tolist())
+                        print(datetime.datetime.now(), i + self.currency[-1], "Close_Data = ", self.close_data[-1])
                         currency_balance[i] = self.GetBalance(i)
                         isPosition[i] = self.SetIsPosition(i, currency_balance)
                         R, S, T = self.Calculate_R_S_T(i+self.currency[-1])
