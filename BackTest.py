@@ -1539,7 +1539,7 @@ class Algorithm_6(Algorithm_5):
                       'Resistance_Priority', 'Volume($)', 'Volume(%)', 'No. Open_Order', 'Sell_Date', 'No. Exit',
                       'Sell_Price', 'Profit_Loss', 'Profit_Loss(%)', 'Profit_Loss(% Balance)', 'Balance', 'Body_Length',
                       'Up_Shadow_Length', 'Down_Shadow_Length', 'Cloud_length', 'Trend', 'Kijen',
-                      'Tenken', 'Previous_Candle', 'SuperTrend']
+                      'Tenken', 'Previous_Candle', 'SuperTrend', 'Stoc', 'tema']
         self.WriteResult(fieldnames, self.result_row)
     def CreateThread(self, param):
         self.th = {}
@@ -1566,12 +1566,17 @@ class Algorithm_6(Algorithm_5):
         self.strategy[currency].ComputeIchimoku_Base_Line(216, 624)
         self.strategy[currency].ComputeIchimoku_Conversion_Line(216, 624)
         self.strategy[currency].ComputeSuperTrend(12, 3)
+        self.strategy[currency].ComputeSTOCASTIC(10, 3, 2)
+        self.strategy[currency].ComputeTEMA(200)
         atr = self.strategy[currency].atr
         ich_a = self.strategy[currency].ich_a
         ich_b = self.strategy[currency].ich_b
         ich_base_line = self.strategy[currency].ich_base_line
         ich_conversion_line = self.strategy[currency].ich_conversion_line
         superTrend = self.strategy[currency].superTrend
+        stocastic_k = self.strategy[currency].stocastic_k
+        stocastic_d = self.strategy[currency].stocastic_d
+        tema=self.strategy[currency].tema
         kline = 1 # len(self.klines[currency])-1
         while kline < len(self.klines[currency]):
             input_max = []
@@ -1616,7 +1621,8 @@ class Algorithm_6(Algorithm_5):
                                    i['Volume($)'], i['Volume(%)'], i['No. Open_Order'], i['Sell_Date'], i['No. Exit'],
                                    i['Sell_Price'], i['Profit_Loss'], i["Profit_Loss(%)"], i["Profit_Loss(% Balance)"],
                                    i['Balance'], i['Body_Length'], i['Up_Shadow_Length'], i['Down_Shadow_Length'],
-                                   i['Cloud_length'], i['Trend'], i['Kijen'], i['Tenken'], i['Previous_Candle'], i['SuperTrend']]
+                                   i['Cloud_length'], i['Trend'], i['Kijen'], i['Tenken'], i['Previous_Candle'],
+                                   i['SuperTrend'], i['Stoc'],i['tema']]
                             print(row)
                             self.result_row.append(row)
                         balance["USDT"] += balance["Currency"]
@@ -1625,8 +1631,8 @@ class Algorithm_6(Algorithm_5):
                         self.order.clear()
                         self.SL = 0
                         continue
-            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T) and \
-                    self.EnterCondition_Not(kline, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
+            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T): # and \
+                   #self.EnterCondition_Not(kline, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
                 print("Buy: ", self.candle_time[kline])
                 buy_ratio = 0.005/((self.close_data[kline] - S[-1]["Range"][0])/self.close_data[kline])
                 volume = buy_ratio * (balance["USDT"] + balance["Currency"])
@@ -1670,6 +1676,14 @@ class Algorithm_6(Algorithm_5):
                         self.order[-1]["SuperTrend"] = "True"
                     else:
                         self.order[-1]["SuperTrend"] = "False"
+                    if stocastic_k[kline] > stocastic_d[kline]:
+                        self.order[-1]["Stoc"] = "True"
+                    else:
+                        self.order[-1]["Stoc"] = "False"
+                    if tema[kline] < self.close_data[kline]:
+                        self.order[-1]["tema"] = "True"
+                    else:
+                        self.order[-1]["tema"] = "False"
 
             kline += 1
         self.LogResult()
@@ -1782,78 +1796,55 @@ class Algorithm_6(Algorithm_5):
             return False
 
     def EnterCondition_Not(self, index, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
-         if ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] >= self.close_data[index] and
-             ich_conversion_line[index] >= self.close_data[index] and S[-1]["Priority"] < 3) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] >= self.close_data[index] and
-             ich_conversion_line[index] >= self.close_data[index] and
-             abs(ich_a[index] - ich_b[index])/atr[index] > 6) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and
-             abs(ich_a[index] - ich_b[index]) / atr[index] > 9) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and
-             (R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) > 3) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and R[0]["Priority"] < 2) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and S[-1]["Priority"] > 3) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] < self.close_data[index] <= ich_conversion_line[index] and
-             (R[0]["Range"][0] - self.close_data[index]) / atr[index] > 1) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] < self.close_data[index] <= ich_conversion_line[index] and
-             abs(ich_a[index] - ich_b[index]) / atr[index] > 8) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] < self.close_data[index] and
-             ich_conversion_line[index] < self.close_data[index] and
-             abs(ich_a[index] - ich_b[index]) / atr[index] > 15 and
-             (R[0]["Range"][0] - self.close_data[index])/atr[index] < 1) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] < self.close_data[index] and
-             ich_conversion_line[index] < self.close_data[index] and
-             (R[0]["Range"][0] - self.close_data[index]) / atr[index] < 1 and
-             R[0]["Priority"] < 2 and S[-1]["Priority"] > 1) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] < self.close_data[index] and
-             ich_conversion_line[index] < self.close_data[index] and
-             abs(ich_a[index] - ich_b[index]) / atr[index] > 2 and R[0]["Priority"] > 1) or \
-            ((not (ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1])) and
-             ich_base_line[index] < self.close_data[index] and
-             ich_conversion_line[index] < self.close_data[index] and
-             (R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) > 3 and
-             R[0]["Priority"] != 100) or \
-            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
-             ich_base_line[index] >= self.close_data[index] and
-             ich_conversion_line[index] >= self.close_data[index] and R[0]["Priority"] > 3) or \
-            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
-             ich_base_line[index] >= self.close_data[index] and
-             ich_conversion_line[index] >= self.close_data[index] and
-             (R[0]["Range"][0] - self.close_data[index]) / atr[index] > 5) or \
-            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
-             ich_base_line[index] >= self.close_data[index] > ich_conversion_line[index] and
-             abs(ich_a[index] - ich_b[index]) / atr[index] < 7) or \
-            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
-             ich_base_line[index] < self.close_data[index] <= ich_conversion_line[index] and
-             S[-1]["Priority"] > 1) or \
-            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
-             ich_base_line[index] < self.close_data[index] and
-             ich_conversion_line[index] < self.close_data[index] and
-             (R[0]["Range"][0] - self.close_data[index]) / atr[index] > 4 and R[0]["Priority"] != 100) or \
-            ((ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]) and
-             ich_base_line[index] < self.close_data[index] and
-             ich_conversion_line[index] < self.close_data[index] and
-             R[0]["Priority"] > 3 and R[0]["Priority"] != 100) or \
-            ((self.close_data[index] - self.open_data[index]) / atr[index] < 0.5 and
+        if ich_a[index] >= ich_b[index] and self.close_data[index] >= ich_b[index - 26 + 1]:
+            if ich_base_line[index] < self.close_data[index]:
+                if ich_conversion_line[index] < self.close_data[index]:
+                    if ((R[0]["Range"][0] - self.close_data[index]) / atr[index] > 4 and R[0]["Priority"] != 100) or \
+                            (R[0]["Priority"] > 3 and R[0]["Priority"] != 100):
+                        return False
+                else:
+                    if S[-1]["Priority"] > 1:
+                        return False
+            else:
+                if ich_conversion_line[index] < self.close_data[index]:
+                    if abs(ich_a[index] - ich_b[index]) / atr[index] < 7:
+                        return False
+                else:
+                    if R[0]["Priority"] > 3 or (R[0]["Range"][0] - self.close_data[index]) / atr[index] > 5:
+                        return False
+        else:
+            if ich_base_line[index] < self.close_data[index]:
+                if ich_conversion_line[index] < self.close_data[index]:
+                    if (abs(ich_a[index] - ich_b[index]) / atr[index] > 15 and\
+                            (R[0]["Range"][0] - self.close_data[index])/atr[index] < 1) or \
+                            ((R[0]["Range"][0] - self.close_data[index]) / atr[index] < 1 and R[0]["Priority"] < 2 and
+                             S[-1]["Priority"] > 1) or \
+                            (abs(ich_a[index] - ich_b[index]) / atr[index] > 2 and R[0]["Priority"] > 1) or \
+                            ((R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) > 3
+                             and R[0]["Priority"] != 100):
+                        return False
+                else:
+                    if (R[0]["Range"][0] - self.close_data[index]) / atr[index] > 1 or \
+                            abs(ich_a[index] - ich_b[index]) / atr[index] > 8:
+                        return False
+            else:
+                if ich_conversion_line[index] < self.close_data[index]:
+                    if abs(ich_a[index] - ich_b[index]) / atr[index] > 9 or\
+                            (R[0]["Range"][0] - self.close_data[index]) / (self.close_data[index] - S[-1]["Range"][0]) > 3\
+                            or R[0]["Priority"] < 2 or S[-1]["Priority"] > 3:
+                        return False
+                else:
+                    if S[-1]["Priority"] < 3 or abs(ich_a[index] - ich_b[index]) / atr[index] > 6:
+                        return False
+        if ((self.close_data[index] - self.open_data[index]) / atr[index] < 0.5 and
              (self.high_data[index] - self.close_data[index]) / (self.close_data[index] - self.open_data[index]) > 1 and
-             R[0]["Priority"] == 100)or \
+             R[0]["Priority"] == 100) or \
             ((self.close_data[index] - self.open_data[index]) / atr[index] < 0.5 and
              (self.high_data[index] - self.close_data[index]) / (self.close_data[index] - self.open_data[index]) > 1 and
              self.close_data[index - 1] > self.open_data[index - 1]):
-             return False
-         else:
-             return True
+            return False
+
+        return True
 
     def ExitCondition_1(self, index, sl):
         if self.close_data[index] < sl:
