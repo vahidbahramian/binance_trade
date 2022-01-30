@@ -1599,9 +1599,9 @@ class Algorithm_6(Algorithm_5):
                 if len(S) > 0 and S[-1]["Range"][1] > self.SL:
                     self.SL = S[-1]["Range"][0]
                     valid_exitCondition_2 = False
-                if self.close_data[kline] - 2 * atr[kline] > self.order[0]["Buy_Price"] and\
-                        TS < self.close_data[kline] - 2 * atr[kline]:
-                    TS = self.close_data[kline] - 2 * atr[kline]
+                if self.close_data[kline] - atr[kline] > self.order[0]["Buy_Price"] and\
+                        TS < self.close_data[kline] - atr[kline]:
+                    TS = self.close_data[kline] - atr[kline]
                 if (valid_exitCondition_2 and self.ExitCondition_2(kline, self.TP, atr, T, R))\
                         or self.ExitCondition_1(kline, self.SL) or self.ExitCondition_3(R, T, kline)\
                         or self.ExitCondition_4(R, T, kline): # or self.ExitCondition_5(R, T, kline, TS, currency):
@@ -1622,7 +1622,7 @@ class Algorithm_6(Algorithm_5):
                                    i['Sell_Price'], i['Profit_Loss'], i["Profit_Loss(%)"], i["Profit_Loss(% Balance)"],
                                    i['Balance'], i['Body_Length'], i['Up_Shadow_Length'], i['Down_Shadow_Length'],
                                    i['Cloud_length'], i['Trend'], i['Kijen'], i['Tenken'], i['Previous_Candle'],
-                                   i['SuperTrend'], i['Stoc'],i['tema']]
+                                   i['SuperTrend'], i['Stoc'], i['tema']]
                             print(row)
                             self.result_row.append(row)
                         balance["USDT"] += balance["Currency"]
@@ -1631,8 +1631,8 @@ class Algorithm_6(Algorithm_5):
                         self.order.clear()
                         self.SL = 0
                         continue
-            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T): # and \
-                   #self.EnterCondition_Not(kline, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
+            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T):# and \
+                   # self.EnterCondition_Not(kline, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
                 print("Buy: ", self.candle_time[kline])
                 buy_ratio = 0.005/((self.close_data[kline] - S[-1]["Range"][0])/self.close_data[kline])
                 volume = buy_ratio * (balance["USDT"] + balance["Currency"])
@@ -1854,13 +1854,14 @@ class Algorithm_6(Algorithm_5):
             return False
 
     def ExitCondition_2(self, index, tp, atr, R, T):
-        if len(R) == 0 or len(T) > 0:
+        if len(R) == 0:# or len(T) > 0:
             return False
-        if tp - self.close_data[index] > 2 * atr[index]:
+        if tp - self.close_data[index] > 2 * atr[index] and len(T) > 0:
             self.exit_number = 2
             return True
         else:
             return False
+
 
     def ExitCondition_3(self, R, T, index):
         if len(R) == 0 or len(T) > 0:
@@ -1881,7 +1882,7 @@ class Algorithm_6(Algorithm_5):
     def ExitCondition_4(self, R, T, index):
         if len(R) == 0 or len(T) > 0:
             return False
-        if self.close_data[index] < R[0]["Range"][0] < self.open_data[index] \
+        if self.close_data[index] < R[0]["Range"][0] < self.high_data[index] \
                 and self.close_data[index] < self.open_data[index]:
               for i in range(1, 5):
                  if R[0]["Range"][0] > self.close_data[index - i]:
