@@ -1127,7 +1127,7 @@ class Algo_4(Algo_3):
         index = len(self.close_data) - 1
         if len(R) == 0 or len(T) > 0:
             return False
-        if self.close_data[index] < R[0]["Range"][0] < self.open_data[index] \
+        if self.close_data[index] < R[0]["Range"][0] < self.high_data[index] \
                 and self.close_data[index] < self.open_data[index]:
             for i in range(1, 5):
                 if R[0]["Range"][0] > self.close_data[index - i]:
