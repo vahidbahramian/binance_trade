@@ -1291,10 +1291,11 @@ class Algo_4(Algo_3):
                         self.high_data = numpy.array(self.strategy[i+self.currency[-1]].high_data.values.tolist())
                         self.low_data = numpy.array(self.strategy[i+self.currency[-1]].low_data.values.tolist())
                         self.open_data = numpy.array(self.strategy[i+self.currency[-1]].open_data.values.tolist())
-                        print(datetime.datetime.now(), i + self.currency[-1], "Close_Data = ", self.close_data[-1])
+                        # print(datetime.datetime.now(), i + self.currency[-1], "Close_Data = ", self.close_data[-1])
                         currency_balance[i] = self.GetBalance(i)
                         isPosition[i] = self.SetIsPosition(i, currency_balance)
                         R, S, T = self.Calculate_R_S_T(i+self.currency[-1])
+                        print(datetime.datetime.now(), i + self.currency[-1], "R = ", R[0]["Range"][0], "S = ", S[0]["Range"][0])
                         order, volume = self.CheckAction(R, S, T, i, isPosition[i])
                         if not order == "":
                             print(order)
