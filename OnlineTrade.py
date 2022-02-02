@@ -1295,7 +1295,8 @@ class Algo_4(Algo_3):
                         currency_balance[i] = self.GetBalance(i)
                         isPosition[i] = self.SetIsPosition(i, currency_balance)
                         R, S, T = self.Calculate_R_S_T(i+self.currency[-1])
-                        print(datetime.datetime.now(), i + self.currency[-1], "R = ", R[0]["Range"][0], "S = ", S[0]["Range"][0])
+                        print(datetime.datetime.now(), i + self.currency[-1], "R = ", R[0]["Range"][0], "S = ",
+                              S[-1]["Range"][0], "T = ", T, isPosition[i])
                         order, volume = self.CheckAction(R, S, T, i, isPosition[i])
                         if not order == "":
                             print(order)
