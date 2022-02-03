@@ -1244,12 +1244,12 @@ class Algo_4(Algo_3):
             order = self.SetMarketBuyOrder(currency_pair,
                                            self.SetQuntity(volume / buy_price, currency_pair))
             self.database_data[currency_pair]["Buy_Price"] = buy_price
-            time.sleep(2)
-            self.SetLimitSellOrder(currency_pair, self.SetQuntity(volume / buy_price, currency_pair),
-                                   buy_price - ((buy_price - self.database_data[currency_pair]["SL"]) * 2))
             self.logger.info(order)
             print(order, "Volume = ", volume, "Buy_Price = ", buy_price,
                   "Sell Limit = ", buy_price - ((buy_price - self.database_data[currency_pair]["SL"]) * 2))
+            time.sleep(2)
+            self.SetLimitSellOrder(currency_pair, self.SetQuntity(volume / buy_price, currency_pair),
+                                   buy_price - ((buy_price - self.database_data[currency_pair]["SL"]) * 2))
         if order == "Sell":
             order = self.SetMarketSellOrder(currency_pair,
                                             self.SetQuntity(self.GetBalance(currency), currency_pair))
