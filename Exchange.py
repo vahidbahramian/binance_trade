@@ -351,5 +351,6 @@ class KuCoin(Exchange):
         high = self.high[-2]
         low = self.low[-2]
         close = self.close[-2]
-        result = {"CurrencyPair": currency_pair, "Time": time, "High": high, "Low": low, "Close": close}
+        open = self.open[-2]
+        result = {"CurrencyPair": currency_pair, "Time": time, "High": high, "Low": low, "Close": close, "Open": open}
         self.events.on_change(result)

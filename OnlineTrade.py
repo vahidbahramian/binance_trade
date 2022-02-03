@@ -832,7 +832,10 @@ class Algo_4(Algo_3):
             self.strategy[msg["CurrencyPair"]].low_data.reset_index(drop=True, inplace=True)
             self.strategy[msg["CurrencyPair"]].close_data.pop(0)
             self.strategy[msg["CurrencyPair"]].close_data.reset_index(drop=True, inplace=True)
-            # self.strategy[msg["CurrencyPair"]].close_data = numpy.delete(self.strategy[msg["CurrencyPair"]].close_data, 0)
+            self.strategy[msg["CurrencyPair"]].open_data.pop(0)
+            self.strategy[msg["CurrencyPair"]].open_data.reset_index(drop=True, inplace=True)
+            self.strategy[msg["CurrencyPair"]].time_data.pop(0)
+            self.strategy[msg["CurrencyPair"]].time_data.reset_index(drop=True, inplace=True)
 
             self.strategy[msg["CurrencyPair"]].high_data = self.strategy[msg["CurrencyPair"]].high_data.append(pd.Series(msg["High"]),
                                                                            ignore_index=True)
@@ -840,7 +843,10 @@ class Algo_4(Algo_3):
                                                                          ignore_index=True)
             self.strategy[msg["CurrencyPair"]].close_data = self.strategy[msg["CurrencyPair"]].close_data.append(pd.Series(msg["Close"]),
                                                                          ignore_index=True)
-            # self.strategy[msg["CurrencyPair"]].close_data = numpy.append(self.strategy[msg["CurrencyPair"]].close_data, msg["Close"])
+            self.strategy[msg["CurrencyPair"]].open_data = self.strategy[msg["CurrencyPair"]].open_data.append(pd.Series(msg["Open"]),
+                                                                         ignore_index=True)
+            self.strategy[msg["CurrencyPair"]].time_data = self.strategy[msg["CurrencyPair"]].time_data.append(pd.Series(msg["Time"]),
+                                                                         ignore_index=True)
 
             self.strategy[msg["CurrencyPair"]].ComputeATR(12)
             self.strategy[msg["CurrencyPair"]].ComputeIchimoku_A(216, 624)
@@ -1006,7 +1012,6 @@ class Algo_4(Algo_3):
         if self.close_data[index] > S[-1]["Range"][2] > self.low_data[index] \
                 and self.close_data[index] > self.open_data[index]:
             self.enter_number = 4
-            # print("EnterCondition_1_4")
             return True
         else:
             return False
@@ -1235,15 +1240,16 @@ class Algo_4(Algo_3):
     def SetOrder(self, order, volume, currency):
         currency_pair = currency + self.currency[-1]
         if order == "Buy":
-            print(volume)
             buy_price = self.GetPrice(currency_pair)
             order = self.SetMarketBuyOrder(currency_pair,
                                            self.SetQuntity(volume / buy_price, currency_pair))
             self.database_data[currency_pair]["Buy_Price"] = buy_price
+            time.sleep(2)
             self.SetLimitSellOrder(currency_pair, self.SetQuntity(volume / buy_price, currency_pair),
                                    buy_price - ((buy_price - self.database_data[currency_pair]["SL"]) * 2))
             self.logger.info(order)
-            print(order)
+            print(order, "Volume = ", volume, "Buy_Price = ", buy_price,
+                  "Sell Limit = ", buy_price - ((buy_price - self.database_data[currency_pair]["SL"]) * 2))
         if order == "Sell":
             order = self.SetMarketSellOrder(currency_pair,
                                             self.SetQuntity(self.GetBalance(currency), currency_pair))
@@ -1291,12 +1297,10 @@ class Algo_4(Algo_3):
                         self.high_data = numpy.array(self.strategy[i+self.currency[-1]].high_data.values.tolist())
                         self.low_data = numpy.array(self.strategy[i+self.currency[-1]].low_data.values.tolist())
                         self.open_data = numpy.array(self.strategy[i+self.currency[-1]].open_data.values.tolist())
-                        # print(datetime.datetime.now(), i + self.currency[-1], "Close_Data = ", self.close_data[-1])
+                        print(datetime.datetime.now(), i + self.currency[-1])
                         currency_balance[i] = self.GetBalance(i)
                         isPosition[i] = self.SetIsPosition(i, currency_balance)
                         R, S, T = self.Calculate_R_S_T(i+self.currency[-1])
-                        print(datetime.datetime.now(), i + self.currency[-1], "R = ", R[0]["Range"][0], "S = ",
-                              S[-1]["Range"][0], "T = ", T, isPosition[i])
                         order, volume = self.CheckAction(R, S, T, i, isPosition[i])
                         if not order == "":
                             print(order)
