@@ -779,8 +779,9 @@ class Algo_3(Algo_2):
 
 class Algo_4(Algo_3):
 
-    def __init__(self, exchange, currency):
+    def __init__(self, exchange, currency, api):
         super().__init__(exchange, currency)
+        api.events.on_change += self.SetUserOrder
         self.update_candle_event = {}
         for i in self.currency[:-1]:
             self.update_candle_event[i + self.currency[-1]] = threading.Event()
@@ -950,7 +951,7 @@ class Algo_4(Algo_3):
             # else:
             #     orderInfo[-1]["SuperTrend"] = "False"
             order = "Buy"
-        return order, volume
+        return order, volume, buy_ratio
 
     def EnterCondition_1_1(self, S):
         if len(S) == 0:
@@ -1256,6 +1257,8 @@ class Algo_4(Algo_3):
             self.logger.info(order)
             print(order)
 
+    def SetUserOrder(self, msg):
+
     def RunTrade(self):
         currency_balance = {}
         isPosition = {}
@@ -1301,7 +1304,7 @@ class Algo_4(Algo_3):
                         currency_balance[i] = self.GetBalance(i)
                         isPosition[i] = self.SetIsPosition(i, currency_balance)
                         R, S, T = self.Calculate_R_S_T(i+self.currency[-1])
-                        order, volume = self.CheckAction(R, S, T, i, isPosition[i])
+                        order, volume, buy_ratio = self.CheckAction(R, S, T, i, isPosition[i])
                         if not order == "":
                             print(order)
                         self.SetOrder(order, volume, i)
