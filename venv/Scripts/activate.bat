@@ -1,6 +1,6 @@
 @echo off
 
-set "VIRTUAL_ENV=C:\Users\Arvan User\PycharmProjects\binance_trade\venv"
+set "VIRTUAL_ENV=C:\Users\vahid\Documents\Project\Github\binance_trade\venv"
 
 if defined _OLD_VIRTUAL_PROMPT (
     set "PROMPT=%_OLD_VIRTUAL_PROMPT%"
