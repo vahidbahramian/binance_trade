@@ -6,7 +6,6 @@ from threading import Lock
 
 import numpy
 import requests
-import zmq
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceRequestException, BinanceOrderException
 from binance.websockets import BinanceSocketManager

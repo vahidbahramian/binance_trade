@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 import threading
 
-import zmq
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceWithdrawException, BinanceRequestException,\
     BinanceOrderException
@@ -1312,6 +1311,7 @@ class Algo_4(Algo_3):
                         if not order == "":
                             print(order)
                         self.SetOrder(order, volume, i)
+                        self.Go_Api.PostOrder("Buy", "BTC", 10)
                 if update_candle_set:
                     update_candle_set = False
                     self.UpdateDatabase()

@@ -3,8 +3,6 @@ import sys
 import threading
 from datetime import date
 
-import zmq
-
 from MainCode import BackTest
 from MainCode.API import API
 from MainCode.Candles import Candles
@@ -272,11 +270,10 @@ class Main():
             #      "Multi_ATR": 2}
 
             api = API()
-            user_exchange = []
-            # users = api.GetAllUsers()
-            users = []
+            user_exchange = {}
+            users = api.GetAllUsers()
             for user in users:
-                exchange_API = []
+                exchange_API = {}
                 exchange_API["API_Key"] = user["API_Key"]
                 exchange_API["Secret_Key"] = user["Secret_Key"]
                 exchange_API["API_Passpharse"] = user["API_Passpharse"]

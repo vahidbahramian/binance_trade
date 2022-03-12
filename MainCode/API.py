@@ -1,3 +1,5 @@
+import json
+
 import requests
 from events import Events
 
@@ -13,5 +15,7 @@ class API():
         return result
 
     def PostOrder(self, order_side, currency_pair, buy_ratio):
-        data = {"Side": order_side, "Currency": currency_pair, "Ratio": buy_ratio}
-        requests.post(self.api_url+"/api/order", json=data)
+        data = json.dumps({"Side": order_side, "Currency": currency_pair, "Ratio": buy_ratio})
+        headers = {'Content-Type': 'application/json'}
+        r = requests.post(self.api_url+"/api/serve_order", headers=headers, data=data, verify=False)
+        print(f"Status Code: {r.status_code}, Response: {r.json()}")

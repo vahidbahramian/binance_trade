@@ -9,14 +9,17 @@ import copy
 
 from MainCode import main
 
-a = main.Main()
 
 class setData(View):
-
+	global a
+	##if not a:
+	a = main.Main()
 	def get(self, request):
 		###### Write your code here if it is get method
 
-		return True
+		response = {'Result': True}
+		response = json.dumps(response)
+		return HttpResponse(response, content_type='application.json')
 
 	def post(self, request):
 		try:
