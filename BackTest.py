@@ -1538,8 +1538,10 @@ class Algorithm_6(Algorithm_5):
         fieldnames = ['Buy_Date', 'No. Enter', 'Buy_Price', 'Support_Price', 'Resistance_Price', 'R/R', 'R(ATR)', 'Support_Priority',
                       'Resistance_Priority', 'Volume($)', 'Volume(%)', 'No. Open_Order', 'Sell_Date', 'No. Exit',
                       'Sell_Price', 'Profit_Loss', 'Profit_Loss(%)', 'Profit_Loss(% Balance)', 'Balance', 'Body_Length',
-                      'Up_Shadow_Length', 'Down_Shadow_Length', 'Cloud_length', 'Trend', 'Kijen',
-                      'Tenken', 'Previous_Candle', 'SuperTrend', 'Stoc', 'tema']
+                      'Up_Shadow_Length', 'Down_Shadow_Length', 'Cloud_length', 'ATR', 'ATR_20', 'ATR_50', 'ATR_200',
+                      'ATR_500', 'Avg_0_20', 'Avg_20_40',
+                      'Avg_0_50', 'Avg_50_100', 'Avg_0_200', 'Avg_200_400', 'Avg_0_500', 'Avg_500_1000',
+                      'Trend', 'Kijen', 'Tenken', 'Previous_Candle', 'SuperTrend', 'Stoc', 'tema']
         self.WriteResult(fieldnames, self.result_row)
     def CreateThread(self, param):
         self.th = {}
@@ -1560,7 +1562,6 @@ class Algorithm_6(Algorithm_5):
         self.exit_number = 0
         self.enter_number = 0
         TS = 0
-        self.strategy[currency].ComputeATR(12)
         self.strategy[currency].ComputeIchimoku_A(216, 624)
         self.strategy[currency].ComputeIchimoku_B(624, 1248)
         self.strategy[currency].ComputeIchimoku_Base_Line(216, 624)
@@ -1568,7 +1569,16 @@ class Algorithm_6(Algorithm_5):
         self.strategy[currency].ComputeSuperTrend(12, 3)
         self.strategy[currency].ComputeSTOCASTIC(10, 3, 2)
         self.strategy[currency].ComputeTEMA(200)
+        self.strategy[currency].ComputeATR(12)
         atr = self.strategy[currency].atr
+        self.strategy[currency].ComputeATR(20)
+        atr_20 = self.strategy[currency].atr
+        self.strategy[currency].ComputeATR(50)
+        atr_50 = self.strategy[currency].atr
+        self.strategy[currency].ComputeATR(200)
+        atr_200 = self.strategy[currency].atr
+        self.strategy[currency].ComputeATR(500)
+        atr_500 = self.strategy[currency].atr
         ich_a = self.strategy[currency].ich_a
         ich_b = self.strategy[currency].ich_b
         ich_base_line = self.strategy[currency].ich_base_line
@@ -1621,7 +1631,10 @@ class Algorithm_6(Algorithm_5):
                                    i['Volume($)'], i['Volume(%)'], i['No. Open_Order'], i['Sell_Date'], i['No. Exit'],
                                    i['Sell_Price'], i['Profit_Loss'], i["Profit_Loss(%)"], i["Profit_Loss(% Balance)"],
                                    i['Balance'], i['Body_Length'], i['Up_Shadow_Length'], i['Down_Shadow_Length'],
-                                   i['Cloud_length'], i['Trend'], i['Kijen'], i['Tenken'], i['Previous_Candle'],
+                                   i['Cloud_length'], i['ATR'], i['ATR_20'], i['ATR_50'], i['ATR_200'], i['ATR_500'],
+                                   i['Avg_0_20'], i['Avg_20_40'], i['Avg_0_50'],
+                                   i['Avg_50_100'], i['Avg_0_200'], i['Avg_200_400'], i['Avg_0_500'], i['Avg_500_1000'],
+                                   i['Trend'], i['Kijen'], i['Tenken'], i['Previous_Candle'],
                                    i['SuperTrend'], i['Stoc'], i['tema']]
                             print(row)
                             self.result_row.append(row)
@@ -1630,8 +1643,8 @@ class Algorithm_6(Algorithm_5):
                         isPos = False
                         self.order.clear()
                         self.SL = 0
-                        continue
-            elif self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T):# and \
+                        # continue
+            if self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T): # and \
                    # self.EnterCondition_Not(kline, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
                 print("Buy: ", self.candle_time[kline])
                 buy_ratio = 0.005/((self.close_data[kline] - S[-1]["Range"][0])/self.close_data[kline])
@@ -1655,7 +1668,20 @@ class Algorithm_6(Algorithm_5):
                                                            (self.close_data[kline] - self.open_data[kline]),
                                        "Down_Shadow_Length": (self.open_data[kline] - self.low_data[kline])/
                                                            (self.close_data[kline] - self.open_data[kline]),
-                                       "Cloud_length": abs(ich_a[kline] - ich_b[kline])/atr[kline]})
+                                       "Cloud_length": abs(ich_a[kline] - ich_b[kline])/atr[kline],
+                                       "ATR": atr[kline],
+                                       "ATR_20": atr_20[kline],
+                                       "ATR_50": atr_50[kline],
+                                       "ATR_200": atr_200[kline],
+                                       "ATR_500": atr_500[kline],
+                                       "Avg_0_20": self.MeanCandle(kline, 0, 20),
+                                       "Avg_20_40": self.MeanCandle(kline, 20, 40),
+                                       "Avg_0_50": self.MeanCandle(kline, 0, 50),
+                                       "Avg_50_100": self.MeanCandle(kline, 50, 100),
+                                       "Avg_0_200": self.MeanCandle(kline, 0, 200),
+                                       "Avg_200_400": self.MeanCandle(kline, 200, 400),
+                                       "Avg_0_500": self.MeanCandle(kline, 0, 500),
+                                       "Avg_500_1000": self.MeanCandle(kline, 500, 1000)})
                     if ich_a[kline] >= ich_b[kline] and self.close_data[kline] >= ich_b[kline - 26 + 1]:
                         self.order[-1]["Trend"] = "True"
                     else:
@@ -1684,12 +1710,20 @@ class Algorithm_6(Algorithm_5):
                         self.order[-1]["tema"] = "True"
                     else:
                         self.order[-1]["tema"] = "False"
-
             kline += 1
         self.LogResult()
-            # print(result_max_2)
-            # print(result_min_2)
-            # print(kline)
+
+    def MeanCandle(self, index, start, end):
+        avg = []
+        close = self.close_data[:index]
+        if start == 0:
+            for i in close[-1 * end:]:
+                avg.append(i)
+        else:
+            for i in close[index + (-1 * end):-1 * start]:
+                avg.append(i)
+        return numpy.average(avg)
+
     def EnterCondition_1_1(self, S, index):
         if len(S) == 0:
             return False
@@ -1742,7 +1776,7 @@ class Algorithm_6(Algorithm_5):
     def EnterCondition_1_4(self, S, index):
         if len(S) == 0:
             return False
-        if self.close_data[index] > S[-1]["Range"][2] > self.low_data[index] \
+        if self.close_data[index] > S[-1]["Range"][2] > self.open_data[index] \
                 and self.close_data[index] > self.open_data[index]:
              #for i in range(1, 9):
                 #if S[-1]["Range"][1] < self.close_data[index - i]:
@@ -1854,9 +1888,9 @@ class Algorithm_6(Algorithm_5):
             return False
 
     def ExitCondition_2(self, index, tp, atr, R, T):
-        if len(R) == 0:# or len(T) > 0:
+        if len(R) == 0 or len(T) > 0:
             return False
-        if tp - self.close_data[index] > 2 * atr[index] and len(T) > 0:
+        if tp - self.close_data[index] > 2 * atr[index]:
             self.exit_number = 2
             return True
         else:
@@ -1882,7 +1916,7 @@ class Algorithm_6(Algorithm_5):
     def ExitCondition_4(self, R, T, index):
         if len(R) == 0 or len(T) > 0:
             return False
-        if self.close_data[index] < R[0]["Range"][0] < self.high_data[index] \
+        if self.close_data[index] < R[0]["Range"][0] < self.open_data[index] \
                 and self.close_data[index] < self.open_data[index]:
               for i in range(1, 5):
                  if R[0]["Range"][0] > self.close_data[index - i]:
@@ -1961,7 +1995,7 @@ class Algorithm_6(Algorithm_5):
     def RangeForCloseData(self, max, min, atr):
         data = max + min
         for i in data:
-            i["Close"] = [i["Close"] - atr/2, i["Close"], i["Close"] + atr/2]
+            i["Close"] = [i["Close"] - atr/1.5, i["Close"], i["Close"] + atr/1.5]
         data.sort(key=lambda x: x["Close"][1])
         # print(data)
         result = []

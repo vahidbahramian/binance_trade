@@ -82,7 +82,7 @@ class Indicator:
 
     @staticmethod
     def ATR(high_data, low_data, close_data, period):
-        return volatility.average_true_range(high_data, low_data, close_data)
+        return volatility.average_true_range(high_data, low_data, close_data, window=period)
 
     @staticmethod
     def SuperTrend(high_data, low_data, close_data, length, multiplier):

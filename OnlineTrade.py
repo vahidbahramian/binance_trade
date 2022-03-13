@@ -1257,7 +1257,7 @@ class Algo_4(Algo_3):
             self.logger.info(order)
             print(order)
 
-    def SetUserOrder(self, msg):
+    # def SetUserOrder(self, msg):
 
     def RunTrade(self):
         currency_balance = {}
