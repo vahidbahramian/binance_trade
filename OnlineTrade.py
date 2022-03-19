@@ -779,9 +779,8 @@ class Algo_3(Algo_2):
 
 class Algo_4(Algo_3):
 
-    def __init__(self, exchange, currency, api):
+    def __init__(self, exchange, currency):
         super().__init__(exchange, currency)
-        api.events.on_change += self.SetUserOrder
         self.update_candle_event = {}
         for i in self.currency[:-1]:
             self.update_candle_event[i + self.currency[-1]] = threading.Event()
