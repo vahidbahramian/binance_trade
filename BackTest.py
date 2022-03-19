@@ -1540,7 +1540,7 @@ class Algorithm_6(Algorithm_5):
                       'Sell_Price', 'Profit_Loss', 'Profit_Loss(%)', 'Profit_Loss(% Balance)', 'Balance', 'Body_Length',
                       'Up_Shadow_Length', 'Down_Shadow_Length', 'Cloud_length', 'ATR', 'ATR_20', 'ATR_50', 'ATR_200',
                       'ATR_500', 'Avg_0_20', 'Avg_20_40',
-                      'Avg_0_50', 'Avg_50_100', 'Avg_0_200', 'Avg_200_400', 'Avg_0_500', 'Avg_500_1000',
+                      'Avg_0_50', 'Avg_50_100', 'Avg_0_200', 'Avg_200_400', 'Avg_0_500', 'Avg_500_1000', 'Code',
                       'Trend', 'Kijen', 'Tenken', 'Previous_Candle', 'SuperTrend', 'Stoc', 'tema']
         self.WriteResult(fieldnames, self.result_row)
     def CreateThread(self, param):
@@ -1600,6 +1600,7 @@ class Algorithm_6(Algorithm_5):
             balance["Currency"] = (balance["Currency"]/self.close_data[kline-1]) * self.close_data[kline]
             if len(R) == 0:
                 R.append({"Range": [999900, 1000000, 1000100], "Priority": 100})
+            enter_condition_code = self.CalculateEnterCondition_6(kline, atr_50, atr_200)
             if isPos:
                 if len(R) > 0 and R[0]["Range"][1] < self.TP and len(T) == 0:
                     self.TP = R[0]["Range"][0]
@@ -1634,7 +1635,7 @@ class Algorithm_6(Algorithm_5):
                                    i['Cloud_length'], i['ATR'], i['ATR_20'], i['ATR_50'], i['ATR_200'], i['ATR_500'],
                                    i['Avg_0_20'], i['Avg_20_40'], i['Avg_0_50'],
                                    i['Avg_50_100'], i['Avg_0_200'], i['Avg_200_400'], i['Avg_0_500'], i['Avg_500_1000'],
-                                   i['Trend'], i['Kijen'], i['Tenken'], i['Previous_Candle'],
+                                   i["Code"], i['Trend'], i['Kijen'], i['Tenken'], i['Previous_Candle'],
                                    i['SuperTrend'], i['Stoc'], i['tema']]
                             print(row)
                             self.result_row.append(row)
@@ -1644,7 +1645,8 @@ class Algorithm_6(Algorithm_5):
                         self.order.clear()
                         self.SL = 0
                         # continue
-            if self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T): # and \
+            if self.EnterCondition_1_4(S, kline) and self.EnterCondition_2(T)\
+                    and self.EnterCondition_6(enter_condition_code): # and \
                    # self.EnterCondition_Not(kline, ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
                 print("Buy: ", self.candle_time[kline])
                 buy_ratio = 0.005/((self.close_data[kline] - S[-1]["Range"][0])/self.close_data[kline])
@@ -1681,7 +1683,8 @@ class Algorithm_6(Algorithm_5):
                                        "Avg_0_200": self.MeanCandle(kline, 0, 200),
                                        "Avg_200_400": self.MeanCandle(kline, 200, 400),
                                        "Avg_0_500": self.MeanCandle(kline, 0, 500),
-                                       "Avg_500_1000": self.MeanCandle(kline, 500, 1000)})
+                                       "Avg_500_1000": self.MeanCandle(kline, 500, 1000),
+                                       "Code": enter_condition_code})
                     if ich_a[kline] >= ich_b[kline] and self.close_data[kline] >= ich_b[kline - 26 + 1]:
                         self.order[-1]["Trend"] = "True"
                     else:
@@ -1826,6 +1829,43 @@ class Algorithm_6(Algorithm_5):
              return True
         elif abs(ich_a[index] - ich_b[index]) < 5 * atr[index] and ich_conversion_line[index] < self.close_data[index]:
              return True
+        else:
+            return False
+
+    def CalculateEnterCondition_6(self, index, atr_50, atr_200):
+        long_time_code = ""
+        long_time = (self.MeanCandle(index, 0, 200) - self.MeanCandle(index, 200, 400)) / atr_200[index]
+        if -3 < long_time <= 3:
+            long_time_code = "1"
+        elif long_time > 3:
+            long_time_code = "2"
+        elif -3 >= long_time:
+            long_time_code = "3"
+
+        middle_time_code = ""
+        middle_time = (self.MeanCandle(index, 0, 50) - self.MeanCandle(index, 50, 100)) / atr_50[index]
+        if -1.5 < middle_time <= 1.5:
+            middle_time_code = "1"
+        elif middle_time > 1.5:
+            middle_time_code = "2"
+        elif -1.5 >= middle_time:
+            middle_time_code = "3"
+
+        if self.MeanCandle(index, 0, 50) > self.MeanCandle(index, 0, 200):
+            middle_cross_code = "1"
+        else:
+            middle_cross_code = "2"
+
+        if self.MeanCandle(index, 0, 20) > self.MeanCandle(index, 0, 50):
+            short_cross_code = "1"
+        else:
+            short_cross_code = "2"
+
+        return long_time_code + middle_time_code + middle_cross_code + short_cross_code
+
+    def EnterCondition_6(self, enter_condition_code):
+        if enter_condition_code in ["1111", "1112", "1211", "1212", "1221", "2111", "2121", "2212", "2312", "3321"]:
+            return True
         else:
             return False
 

@@ -849,7 +849,6 @@ class Algo_4(Algo_3):
             self.strategy[msg["CurrencyPair"]].time_data = self.strategy[msg["CurrencyPair"]].time_data.append(pd.Series(msg["Time"]),
                                                                          ignore_index=True)
 
-            self.strategy[msg["CurrencyPair"]].ComputeATR(12)
             self.strategy[msg["CurrencyPair"]].ComputeIchimoku_A(216, 624)
             self.strategy[msg["CurrencyPair"]].ComputeIchimoku_B(624, 1248)
             self.strategy[msg["CurrencyPair"]].ComputeIchimoku_Base_Line(216, 624)
@@ -875,19 +874,18 @@ class Algo_4(Algo_3):
     def CheckAction(self, R, S, T, currency, isPos):
         order = ""
         volume = 0
-        orderInfo = []
+        buy_ratio = 0
         currency_pair = currency + self.currency[-1]
         balance = {"USDT": self.GetBalance(self.currency[-1]), "Currency": self.GetCurrencyBalance()}
+        self.strategy[currency_pair].ComputeATR(12)
         atr = self.strategy[currency_pair].atr
-        ich_a = self.strategy[currency_pair].ich_a
-        ich_b = self.strategy[currency_pair].ich_b
-        ich_base_line = self.strategy[currency_pair].ich_base_line
-        ich_conversion_line = self.strategy[currency_pair].ich_conversion_line
-        superTrend = self.strategy[currency_pair].superTrend
-        # print("ich_a", ich_a.iat[-1])
-        # print("R = ", R[0]["Range"][0], "S = ", S[-1]["Range"][2], "T = ", T)
+        self.strategy[currency_pair].ComputeATR(50)
+        atr_50 = self.strategy[currency_pair].atr
+        self.strategy[currency_pair].ComputeATR(200)
+        atr_200 = self.strategy[currency_pair].atr
         if len(R) == 0:
             R.append({"Range": [999900, 1000000, 1000100], "Priority": 100})
+        enter_condition_code = self.CalculateEnterCondition_6(atr_50, atr_200)
         if isPos:
             if len(R) > 0 and R[0]["Range"][1] < self.database_data[currency_pair]["TP"] and len(T) == 0:
                 self.database_data[currency_pair]["TP"] = R[0]["Range"][0]
@@ -906,8 +904,7 @@ class Algo_4(Algo_3):
                     or self.ExitCondition_4(R, T):
                 self.database_data[currency_pair]["Valid_ExitCondition2"] = False
                 order = "Sell"
-        elif self.EnterCondition_1_4(S) and self.EnterCondition_2(T): #and \
-                # self.EnterCondition_Not(ich_a, ich_b, ich_base_line, ich_conversion_line, atr, S, R):
+        elif self.EnterCondition_1_4(S) and self.EnterCondition_2(T) and self.EnterCondition_6(enter_condition_code):
             buy_ratio = 0.005 / ((self.close_data[-1] - S[-1]["Range"][0]) / self.close_data[-1])
             volume = buy_ratio * (balance["USDT"] + balance["Currency"])
             if balance["USDT"] < volume and volume > 10:
@@ -917,39 +914,6 @@ class Algo_4(Algo_3):
             self.database_data[currency_pair]["Valid_ExitCondition2"] = False
             self.database_data[currency_pair]["SL"] = S[-1]["Range"][0]
             self.database_data[currency_pair]["TP"] = R[0]["Range"][0]
-            # orderInfo.append({"Currency": currency_pair, "Buy_Date": self.candle_time[-1], "No. Enter": self.enter_number,
-            #                   "Support_Price": S[-1]["Range"][0], "Resistance_Price": R[0]["Range"][0],
-            #                    "R/R": (R[0]["Range"][0] - self.close_data[-1]) /
-            #                           (self.close_data[-1] - S[-1]["Range"][0]),
-            #                    "R(ATR)": (R[0]["Range"][0] - self.close_data[-1]) / atr.iat[-1],
-            #                    "Support_Priority": S[-1]["Priority"], "Resistance_Priority": R[0]["Priority"],
-            #                    "Volume($)": volume, "Volume(%)": buy_ratio, 'No. Open_Order': 1,
-            #                    "Body_Length": (self.close_data[-1] - self.open_data[-1]) / atr.iat[-1],
-            #                    "Up_Shadow_Length": (self.high_data[-1] - self.close_data[-1]) /
-            #                                        (self.close_data[-1] - self.open_data[-1]),
-            #                    "Down_Shadow_Length": (self.open_data[-1] - self.low_data[-1]) /
-            #                                          (self.close_data[-1] - self.open_data[-1]),
-            #                    "Cloud_length": abs(ich_a.iat[-1] - ich_b.iat[-1]) / atr.iat[-1]})
-            # if ich_a.iat[-1] >= ich_b.iat[-1] and self.close_data[-1] >= ich_b.iat[-1 - 26 + 1]:
-            #     orderInfo[-1]["Trend"] = "True"
-            # else:
-            #     orderInfo[-1]["Trend"] = "False"
-            # if ich_base_line.iat[-1] < self.close_data[-1]:
-            #     orderInfo[-1]["Kijen"] = "True"
-            # else:
-            #     orderInfo[-1]["Kijen"] = "False"
-            # if ich_conversion_line.iat[-1] < self.close_data[-1]:
-            #     orderInfo[-1]["Tenken"] = "True"
-            # else:
-            #     orderInfo[-1]["Tenken"] = "False"
-            # if self.close_data[-2] > self.open_data[-2]:
-            #     orderInfo[-1]["Previous_Candle"] = "True"
-            # else:
-            #     orderInfo[-1]["Previous_Candle"] = "False"
-            # if superTrend['SUPERTd_12_3.0'].iat[-1] > 0:
-            #     orderInfo[-1]["SuperTrend"] = "True"
-            # else:
-            #     orderInfo[-1]["SuperTrend"] = "False"
             order = "Buy"
         return order, volume, buy_ratio
 
@@ -1151,6 +1115,55 @@ class Algo_4(Algo_3):
             return True
         else:
             return False
+
+    def CalculateEnterCondition_6(self, atr_50, atr_200):
+        index = len(self.close_data) - 1
+        long_time_code = ""
+        long_time = (self.MeanCandle(index, 0, 200) - self.MeanCandle(index, 200, 400)) / atr_200[index]
+        if -3 < long_time <= 3:
+            long_time_code = "1"
+        elif long_time > 3:
+            long_time_code = "2"
+        elif -3 >= long_time:
+            long_time_code = "3"
+
+        middle_time_code = ""
+        middle_time = (self.MeanCandle(index, 0, 50) - self.MeanCandle(index, 50, 100)) / atr_50[index]
+        if -1.5 < middle_time <= 1.5:
+            middle_time_code = "1"
+        elif middle_time > 1.5:
+            middle_time_code = "2"
+        elif -1.5 >= middle_time:
+            middle_time_code = "3"
+
+        if self.MeanCandle(index, 0, 50) > self.MeanCandle(index, 0, 200):
+            middle_cross_code = "1"
+        else:
+            middle_cross_code = "2"
+
+        if self.MeanCandle(index, 0, 20) > self.MeanCandle(index, 0, 50):
+            short_cross_code = "1"
+        else:
+            short_cross_code = "2"
+
+        return long_time_code + middle_time_code + middle_cross_code + short_cross_code
+
+    def EnterCondition_6(self, enter_condition_code):
+        if enter_condition_code in ["1111", "1112", "1211", "1212", "1221", "2111", "2121", "2212", "2312", "3321"]:
+            return True
+        else:
+            return False
+
+    def MeanCandle(self, index, start, end):
+        avg = []
+        close = self.close_data[:index]
+        if start == 0:
+            for i in close[-1 * end:]:
+                avg.append(i)
+        else:
+            for i in close[index + (-1 * end):-1 * start]:
+                avg.append(i)
+        return numpy.average(avg)
 
     def CalculateMinMax(self, input_max, input_min, param):
         result_max = []
@@ -1354,3 +1367,4 @@ class Algo_4(Algo_3):
             cur = self.db.cursor()
             cur.execute(sql, ( k, v['Buy_Price'], v['TP'], v['SL'], v['TS'], v['Valid_ExitCondition2']))
             self.db.commit()
+
