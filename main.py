@@ -255,8 +255,7 @@ def main(client, currency, param):
         # p = {"Win1": 9, "Win2": 24, "Win3": 144, "t": 18, "a": 0, "McGinley_Period": 24, "keltner_Window": 24,
         #      "Multi_ATR": 2}
 
-        api = API()
-        trade = Algo_4(exchange, currency, api)
+        trade = Algo_4(exchange, currency)
         trade.SetAlgorithmParam()
         # for i, j in param.items():
         #     trade.SetAlgorithmParam(i, j)
