@@ -909,7 +909,7 @@ class Algo_4(Algo_3):
             if balance["USDT"] < volume and volume > 10:
                 volume = balance["USDT"]
             if balance["USDT"] < 10:
-                return order, volume
+                return order, volume, buy_ratio
             self.database_data[currency_pair]["Valid_ExitCondition2"] = False
             self.database_data[currency_pair]["SL"] = S[-1]["Range"][0]
             self.database_data[currency_pair]["TP"] = R[0]["Range"][0]
